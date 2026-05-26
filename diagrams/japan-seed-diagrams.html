@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Japan Seed Diagrams</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --button: #0f172a;
+      --button-text: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    p.lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      background: var(--button);
+      color: var(--button-text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .chart-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      min-height: 420px;
+      padding: 12px;
+    }
+
+    .mermaid {
+      min-width: 1100px;
+    }
+
+    .help {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .legend {
+      margin-top: 24px;
+      padding: 16px 18px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .legend ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Japan Seed Diagrams</h1>
+    <p class="lead">Split views of the Japan seed model. Each card can be downloaded as SVG, and your browser zoom will work much better here than in chat.</p>
+
+    <div class="grid" id="diagram-grid"></div>
+
+    <section class="legend">
+      <strong>Notes</strong>
+      <ul>
+        <li>Solid arrows are active/current seed relationships.</li>
+        <li>Dotted arrows are planned or speculative CHM-facing relationships.</li>
+        <li><code>SBI</code> means <code>Standardized Batch Identifier</code>.</li>
+        <li>Use browser zoom for large-format viewing and the horizontal scroll area for wide diagrams.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      themeVariables: {
+        fontFamily: 'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontSize: '20px',
+        primaryColor: '#dbeafe',
+        primaryTextColor: '#0f172a',
+        primaryBorderColor: '#1d4ed8',
+        lineColor: '#334155',
+        tertiaryColor: '#f8fafc',
+        background: '#ffffff'
+      }
+    });
+
+    const diagrams = [
+      {
+        id: 'japan-hierarchy',
+        title: '1. Japan Hierarchy',
+        code: `
+graph TD
+  JPN["Japan"]
+  MEXT["MEXT"]
+  JAMSTEC["JAMSTEC"]
+  GODAC["GODAC"]
+  BISMAL["BISMaL"]
+  IPT["JAMSTEC IPT interface"]
+  JODC["Japan Oceanographic Data Center"]
+  NIG["National Institute of Genetics"]
+  DDBJ["DDBJ"]
+
+  JPN --> JAMSTEC
+  JPN --> JODC
+  JPN --> MEXT
+  JPN --> NIG
+  JAMSTEC --> GODAC
+  GODAC --> BISMAL
+  BISMAL --> IPT
+  NIG --> DDBJ
+        `
+      },
+      {
+        id: 'biodiversity-path',
+        title: '2. Biodiversity Publishing Path',
+        code: `
+graph LR
+  JAMSTEC["JAMSTEC / GODAC"]
+  BISMAL["BISMaL"]
+  IPT["IPT interface"]
+  DWC["Darwin Core"]
+  DWCA["DwC-A"]
+  OBIS["OBIS"]
+  CHM["BBNJ CHM"]
+
+  JAMSTEC --> BISMAL
+  BISMAL --> IPT
+  IPT -->|"uses_standard"| DWC
+  IPT -->|"emits_artifact"| DWCA
+  BISMAL -->|"publishes_to"| OBIS
+  OBIS -. "planned" .-> CHM
+        `
+      },
+      {
+        id: 'identifier-sequence',
+        title: '3. Identifier And Sequence Path',
+        code: `
+graph LR
+  CHM["BBNJ CHM"]
+  SBI["SBI"]
+  DOI["DOI"]
+  INSDC["INSDC"]
+  NIG["National Institute of Genetics"]
+  DDBJ["DDBJ"]
+
+  CHM -->|"generates"| SBI
+  SBI -. "planned: aligned_with" .-> DOI
+  SBI -. "planned: potential_connection_to" .-> INSDC
+  NIG --> DDBJ
+  DDBJ -->|"member_of"| INSDC
+        `
+      },
+      {
+        id: 'support-systems',
+        title: '4. CHM Support Systems',
+        code: `
+graph LR
+  ODIS["ODIS"]
+  OTGA["OTGA"]
+  OEX["OceanExpert"]
+  ANRRC["ANRRC"]
+  CHM["BBNJ CHM"]
+
+  ODIS -. "planned: supports" .-> CHM
+  OTGA -. "planned: supports" .-> CHM
+  OEX -. "planned: supports" .-> CHM
+  ANRRC -. "speculative: potential_connection_to" .-> CHM
+        `
+      }
+    ];
+
+    const grid = document.getElementById('diagram-grid');
+
+    function downloadSvg(cardId, title) {
+      const svg = document.querySelector(`#${cardId} svg`);
+      if (!svg) return;
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const serialized = new XMLSerializer().serializeToString(clone);
+      const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function openSvg(cardId) {
+      const svg = document.querySelector(`#${cardId} svg`);
+      if (!svg) return;
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const serialized = new XMLSerializer().serializeToString(clone);
+      const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    for (const diagram of diagrams) {
+      const card = document.createElement('section');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header">
+          <h2>${diagram.title}</h2>
+          <div class="actions">
+            <button data-action="download">Download SVG</button>
+            <button class="secondary" data-action="open">Open SVG</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="mermaid" id="${diagram.id}">${diagram.code}</div>
+        </div>
+        <div class="help">If the diagram still feels cramped, use browser zoom and horizontal scroll in this panel.</div>
+      `;
+      grid.appendChild(card);
+
+      const downloadBtn = card.querySelector('[data-action="download"]');
+      const openBtn = card.querySelector('[data-action="open"]');
+      downloadBtn.addEventListener('click', () => downloadSvg(diagram.id, diagram.title));
+      openBtn.addEventListener('click', () => openSvg(diagram.id));
+    }
+
+    await mermaid.run({
+      querySelector: '.mermaid'
+    });
+  </script>
+</body>
+</html>

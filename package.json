@@ -1,0 +1,17 @@
+{
+  "name": "chm-network",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
+    "build": "npm --workspace server run build && npm --workspace client run build",
+    "start": "concurrently -n server,client -c blue,green \"npm --workspace server run start\" \"npm --workspace client run preview -- --host 0.0.0.0\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
+

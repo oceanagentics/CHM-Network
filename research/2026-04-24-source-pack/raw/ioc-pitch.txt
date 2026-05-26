@@ -1,0 +1,563 @@
+Designing and implementing the BBNJ Clearing-House Mechanism (CHM): Contribution from the Intergovernmental Oceanographic Commission 
+Technical Considerations and Operational Framework for the BBNJ Clearing-House Mechanism 
+Information for the Preparatory Commission for the BBNJ Agreement, Third Session (New York, 23 March - 2 April 2026) 
+1. Executive Overview
+The BBNJ Agreement establishes a Clearing-House Mechanism (CHM) as its central information infrastructure to serve all four treaty pillars: marine genetic resources (MGR), area-based management tools (ABMTs), environmental impact assessments (EIAs), and capacity-building and transfer of marine technology (CB/TMT). Under Article 51, the Secretariat is mandated to manage the CHM, but may cooperate with relevant international organizations, including the IOC, ISA, IMO and FAO. The Agreement entered into force on 17 January 2026, making rapid CHM development urgent. The Intergovernmental Oceanographic Commission (IOC) of UNESCO is well-positioned to serve as a technical partner, building on six decades of operational ocean data infrastructure, global ocean science networks of national and regional bodies, and a focus on building technical and scientific capacities of nations. 
+2. Defining the CHM: Information, Not Just Data
+A critical distinction for BBNJ Parties is that the CHM can be understood as an information management system, not a data management system.
+	•	What it is NOT: A central repository replicating the function of existing global ocean data repositories, which would be redundant and costly.
+	•	What it IS: A “system-of-systems” that manages regulatory workflows, notifications, roles and privileges, and access to information held in existing, high-quality global repositories and served through existing platforms. Specifically, it manages:
+	•	regulatory workflows (notifications, reviews and audit logs, version controls, approvals, and deadlines); 
+	•	identifiers (issuing and resolving Standardized Batch Identifiers that trace MGR from collection to benefit-sharing); 
+	•	access to information (a single entry point to discover and interlink information in federated systems); and 
+	•	metadata and provenance (ensuring all information is findable, attributable and traceable).
+It does not need to build a global ocean database but could connect to existing systems through standardised, interoperable access services.
+3. Designing the BBNJ CHM 
+Based on IOC’s technical experience, a modular and phased approach would ensure the CHM is operational as soon as possible :
+	•	Component 1: Central Platform for Governance and Control. This is a purpose-built "regulatory core" that could be built by IOC (or a subcontractor) managed by the BBNJ Secretariat (see following text on how the IOC suggests this working in practice). It would handle functions unique to the BBNJ Agreement, such as:
+	•	MGR Notifications: Processing pre-, post-collection and utilization notifications and issuing Standardized Batch Identifiers (SBIs) to report on the MGR lifecycle.
+	•	Workflow Management: Facilitating submissions of ABMT proposals, EIA screening, and CB/TT "matchmaking" between needs and offers.
+	•	Component 2: Federated Interoperable Access Service This layer connects the central platform to existing data systems, which would provide data required for e.g. ABMT proposals, or EIA reports. Such an approach would avoid duplication and deliver efficiency for users through linkage to already adopted platforms and mechanisms. It leverages access to a multitude of existing databases including:
+	•	OBIS (Ocean Biodiversity Information System): 170 million+ marine biodiversity records and global standard protocols for handling marine biodiversity data, managed and operated by IOC.
+	•	ODIS (Ocean Data and Information System): IOC’s existing federated data discovery architecture currently used across Europe, Australia, USA, Africa, Latin America, and the Pacific.
+	•	Scientific Databases: Direct links to genetic sequence repositories (INSDC - International Nucleotide Sequence Database Collaboration) and expert rosters (e.g. ORCID – Open Research and Contributor ID – linked to IOC’s OceanExpert).
+4. Implementing the BBNJ CHM 
+	•	Operational Readiness: The CHM needs immediate operational readiness to fulfill its basic functions and the potential to be fine-tuned over time. In a phased approach, a first component would ensure meeting immediate needs, while the connections to a comprehensive network of existing databases can be developed over time. This requires linkages to existing data infrastructures and continuous access to scientific and technical know-how. The IOC can support this with experience in managing data and information products (such as IODE/OBIS), ocean observations (e.g. GOOS) and training platforms (e.g. OTGA) and with long-term scientific and technical advice through its networks across 152 Member States as well as through the IOC BBNJ Working Group. 
+	•	SBI Development: A standardized BBNJ Batch Identifier will need to be developed within a short timeframe to capture notifications in regards to activities related to MGRs of ABNJ and enable the operationalisation of equitable benefit-sharing. Input by the scientific community is crucial in the development of the SBI to put the treaty’s objectives into practice. IOC can support with dedicated expertise needed to set up a Standardized Batch Identifier system, e.g. through a Digital Object Identifier (DOI)-based approach, where each batch of collected marine genetic resources receives a DOI assigning each MGR batch a globally unique DOI, the standard already used across scientific publishing and data repositories, ensuring each collection is permanently findable and traceable, which would provide persistence, machine-resolvability, and interoperability with research data infrastructure (DataCite, INSDC, GBIF – Global Biodiversity Information Facility, OBIS). Such an approach would be compatible with the CBD’s IRCC system under the Nagoya Protocol, ensuring coherence across jurisdictional boundaries. 
+	•	Global Network Reach: The BBNJ CHM is global in nature: It serves States and stakeholders from across the world and is the entry point for BBNJ information, including MGR notifications, ABMT proposals, EIA reports, or CBTMT initiatives. At the same time it is regionally grounded through the need to connect to different regions and stakeholders for ABMT and EIA alerts, and CB/TMT matchmaking. IOC has valuable experience in connecting national and regional bodies with global initiatives such as through operating 115 centres across 67 countries, of which 62 National Oceanographic Data Centres, 36 OBIS nodes and 17 Regional Training Centres (annex C), and through its network of national focal points for Ocean Observing (part of the Global Ocean Observing System and Oceanographic Data Management (through the International Oceanographic Data and Information Exchange Committee in nearly 90 countries. Nations could build upon and strengthen these national and regional centres to support the BBNJ implementation.
+5. Cooperating for a BBNJ CHM 
+Article 51(4) of the BBNJ Agreement refers to the IOC as a potential cooperation partner in the development of the BBNJ CHM. In the case IOC would be solicited to act as technical developer of the CHM, a cooperation mechanism would need to be designed to reflect the BBNJ Secretariat responsibilities in terms of management of the CHM and the role of IOC in terms of development and implementation of the CHM. Potential responsibilities could be defined as follows:
+	•	BBNJ Secretariat: Enacts policy, oversees coordination of operations, and maintains authority over standards and procedures.
+	•	IOC: Acts as a technical partner, developing, hosting and maintaining the infrastructure under a formal cooperation arrangement.
+	•	Parties: Maintain data sovereignty through their national data infrastructures and/or regional nodes (for eg regional data  that would be linked to the CHM, remaining the authoritative sources of truth for their data in the region).
+	•	COP: Determines operational modalities (Art. 51(2)), provides strategic direction, and approves cooperation arrangements.
+This model would follow a proven precedent: OBIS operates under IOC governance, with a centrally managed platform (data harvesting, quality control, unified API) while 36 nodes maintain data sovereignty within countries. “Manage” in a treaty context refers to governance, coordination and standard-setting, and not necessarily to centralised hosting of all technical infrastructure.
+6. Possible considerations for PrepCom-3
+Early development of the CHM is essential. We suggest that delegations consider:
+	•	Formally recognizing IOC-UNESCO as technical partner for CHM development.
+	•	Mandating a CHM Prototype during the preparatory period (pre-COP) to deliver a "Minimum Viable Product" focusing on the regulatory core (Component 1).
+	•	Inviting a Technical Roadmap from IOC, including cost estimates for a fully operational system, to be presented to the COP-1.
+	•	Supporting Development through specific allocated financial resources (e.g. through the Special Fund or voluntary contributions - or other mechanisms upon PrepCom or COP decision - to ensure the CHM is ready to facilitate treaty implementation within a short time frame, no longer than 24 months after COP-1.
+	•	Requesting the interim Secretariat, in cooperation with IOC, to begin technical design consultations on CHM architecture, standards, interoperability and budget requirements.
+
+Annex A: CHM Core Functions
+Function
+Description
+Treaty Basis
+Notification workflows
+Process pre- and post-collection MGR notifications with deadlines, review cycles, status tracking, and automatic SBI generation
+Arts. 12, 16
+SBI management
+Issue and resolve globally unique identifiers for MGR collections, linking to sequence databases and benefit-sharing obligations
+Arts. 12(3), 14, 16
+Information repository
+Host EIA reports, ABMT proposals, information on MGRs, and CB-TMT resources
+Art. 51(3), Art. 44
+Pillar-specific workflows
+ABMT proposal submission and review; EIA screening, scoping and public consultation; CB/TT needs-offers matchmaking
+Parts III, IV, V
+Biodiversity data services
+Links to relevant data systems (e.g. OBIS, INSDC) for scientific data underpinning all pillars
+Art. 51(3c)
+Expert database
+Searchable roster of experts for EIA reviews
+Art. 31(3)
+Role-based access control
+Multi-role authentication for State Parties, researchers, Secretariat, STB, and the public
+Art. 51(6)
+FAIR data compliance
+Findable, Accessible, Interoperable and Reusable data and metadata throughout the system
+Art. 14
+Annex B: IOC Operational Infrastructure for the CHM
+IOC Asset
+What It Delivers for the CHM
+Scale
+OBIS
+Marine biodiversity data foundation; MGR sampling context; ABNJ baselines for ABMTs and EIAs; SBI-linked occurrence records in development
+170M+ records, 36 nodes, data from 99 countries
+ODIS
+Federated discovery architecture; linked data standards (JSON-LD, schema.org); blueprint for Component 2
+Demonstrated in Africa, LAC, Pacific SIDS
+GOOS
+Sustained ocean observations; Essential Ocean Variables; EIA baselines
+13 Regional Alliances, NFPs in 80 countries
+OTGA
+Training platform and regional training centres; direct capacity for CB/TT pillar
+17 RTCs across Global South
+OceanExpert
+Expert and institutional database; STB support; CB/TT matchmaking
+40,000+ professionals, 10,000+ institutions
+IODE / NODCs
+Ocean data management standards, quality control, long-term archival
+NFPs in 86 countries, NODCs in 57 countries, since 1961
+MSPglobal
+Marine spatial planning methodology; directly applicable to ABMTs
+Global guidance, biodiversity-inclusive MSP
+
+
+Annex C: IOC National and Regional Centres and Institutions
+Country
+Institution Name
+Type
+OceanExpert URL
+Argentina
+Naval Hydrography Service
+NODC
+https://oceanexpert.org/institution/9868
+
+Centro para el Estudio de Sistemas Marinos, Centro Nacional Patagónico
+OBIS node
+https://oceanexpert.org/institution/18212
+
+Naval Hydrography Service
+OTGA RTC
+https://oceanexpert.org/institution/9868
+Australia
+Australian Ocean Data Network
+NODC
+https://oceanexpert.org/institution/5042
+
+CSIRO National Collections and Marine Infrastructure
+OBIS node
+https://oceanexpert.org/institution/20942
+Belgium
+Royal Belgian Institute of Natural Sciences, Operational Directorate Natural Environment, Belgian Marine Data Centre
+NODC
+https://oceanexpert.org/institution/7138
+
+Flanders Marine Institute
+NODC
+https://oceanexpert.org/institution/6223
+
+Royal Belgian Institute for Natural Sciences, Museum of Natural Sciences
+OBIS node
+https://oceanexpert.org/institution/7026
+
+Flanders Marine Institute
+OBIS node
+https://oceanexpert.org/institution/6223
+
+UNESCO / IOC Project Office for IODE
+OTGA RTC
+https://oceanexpert.org/institution/10171
+Benin
+Benin Oceanographic and Fisheries Research Centre
+NODC
+https://oceanexpert.org/institution/5591
+Brazil
+Brazilian Navy Hydrographic Center, Directorate of Hydrography and Navigation
+NODC
+https://oceanexpert.org/institution/10730
+
+Rede Nacional de Ensino e Pesquisa
+OBIS node
+https://oceanexpert.org/institution/24946
+
+Universidade Federal de Santa Catarina
+OTGA RTC
+https://oceanexpert.org/institution/7785
+Bulgaria
+Bulgarian Academy of Sciences, Institute of Oceanology
+NODC
+https://oceanexpert.org/institution/6748
+Cameroon
+Ministry of Scientific Research and Innovation, Institute of Agricultural Research for Development. Specialized Research Centre on Marine Ecosystem (CERECOMA)
+NODC
+https://oceanexpert.org/institution/7341
+Canada
+Marine Environmental Data Section, Oceans Science Branch, Fisheries and Oceans Canada
+NODC
+https://oceanexpert.org/institution/7269
+
+Ocean Tracking Network
+OBIS node
+https://oceanexpert.org/institution/18704
+
+Pacific Biological Station, Fisheries and Oceans Canada
+OBIS node
+https://oceanexpert.org/institution/14254
+Chile
+Servicio Hidrográfico y Oceanográfico de la Armada
+NODC
+https://oceanexpert.org/institution/8297
+
+Universidad de Concepción, campus Concepción
+OBIS node
+https://oceanexpert.org/institution/14163
+China
+National Marine Data and Information Service
+NODC
+https://oceanexpert.org/institution/7527
+
+Institute of Oceanology Chinese Academy of Sciences, Qingdao
+OBIS node
+https://oceanexpert.org/institution/6749
+
+National Center of Ocean Standard and Metrology
+OTGA RTC
+https://oceanexpert.org/institution/12819
+Colombia
+Dirección General Marítima Colombia
+NODC
+https://oceanexpert.org/institution/5942
+
+Instituto de Investigaciones Marinas y Costeras José Benito Vives de Andreis
+OBIS node
+https://oceanexpert.org/institution/6795
+
+Instituto de Investigaciones Marinas y Costeras José Benito Vives de Andreis
+OTGA RTC
+https://oceanexpert.org/institution/6795
+Croatia
+Institute of Oceanography and Fisheries Croatia
+NODC
+https://oceanexpert.org/institution/9824
+Cyprus
+Oceanography Centre, University of Cyprus
+NODC
+https://oceanexpert.org/institution/12067
+Côte d’Ivoire
+National Center for Oceanic Research Abidjan
+NODC
+https://oceanexpert.org/institution/10357
+Democratic Republic of the Congo
+Marine Pollution Control and Monitoring Center
+NODC
+https://oceanexpert.org/institution/14198
+Denmark
+IOC Science and Communication Centre on Harmful Algae
+OBIS node
+https://oceanexpert.org/institution/20763
+
+University of Copenhagen, Department of Biology
+OTGA RTC
+https://oceanexpert.org/institution/5153
+Ecuador
+Oceanographic and Antarctic Institute of the Ecuadorian Navy
+NODC
+https://oceanexpert.org/institution/21608
+
+Comisión Permanente para el Pacífico Sur
+OBIS node
+https://oceanexpert.org/institution/11723
+
+Ministerio del Ambiente, Agua y Transición Ecológica
+OBIS node
+https://oceanexpert.org/institution/23521
+
+Higher Polytechnic School of the Litoral
+OTGA RTC
+https://oceanexpert.org/institution/9774
+Egypt
+National Institute of Oceanography and Fisheries, Alexandria
+NODC
+https://oceanexpert.org/institution/10429
+France
+French Institute for the Exploitation of the Sea, Ifremer, Centre de Bretagne
+NODC
+https://oceanexpert.org/institution/6509
+Germany
+Bundesamt fuer Seeschifffahrt und Hydrographie (Federal Maritime and Hydrographic Agency)
+NODC
+https://oceanexpert.org/institution/5177
+
+Senckenberg Gesellschaft für Naturforschung
+OBIS node
+https://oceanexpert.org/institution/6271
+Ghana
+Fisheries Scientific Survey Division , Ghana Oceanographic Data Centre
+NODC
+https://oceanexpert.org/institution/16487
+
+University of Ghana
+OTGA RTC
+https://oceanexpert.org/institution/15490
+Greece
+Hellenic Centre for Marine Research (HCMR), Hellenic National Oceanographic Data Centre (HNODC)
+NODC
+https://oceanexpert.org/institution/10324
+
+Hellenic Centre for Marine Research - Institute of Marine Biology, Biotechnology and Aquaculture
+OBIS node
+https://oceanexpert.org/institution/6715
+Guinea
+Scientific Research Center of Conakry Rogbane
+NODC
+https://oceanexpert.org/institution/17811
+Iceland
+Conservation of Arctic Flora and Fauna.
+OBIS node
+https://oceanexpert.org/institution/17768
+India
+Indian National Centre for Ocean Information Services
+NODC
+https://oceanexpert.org/institution/10189
+
+Centre for Marine Living Resources & Ecology, Ministry of Earth Sciences, Government of India
+OBIS node
+https://oceanexpert.org/institution/11420
+
+Indian National Centre for Ocean Information Services
+OTGA RTC
+https://oceanexpert.org/institution/10189
+Indonesia
+Badan Pengkajian dan Penerapan Teknologi, Agency for the Assessment & Application of Technology
+NODC
+https://oceanexpert.org/institution/10981
+
+Pusat Riset Oseanografi-Badan Riset dan Inovasi Nasional (BRIN)
+OBIS node
+https://oceanexpert.org/institution/22926
+
+Indonesia Meteorological Climatological and Geophysical Agency
+OTGA RTC
+https://oceanexpert.org/institution/13582
+Iran (Islamic Republic of)
+Iranian National Center for Ocean Data
+NODC
+https://oceanexpert.org/institution/18086
+
+Iranian National Institute for Oceanography and Atmospheric Science
+OBIS node
+https://oceanexpert.org/institution/6909
+Ireland
+Marine Institute Headquarters, Galway
+NODC
+https://oceanexpert.org/institution/7201
+
+Trinity College Dublin, Centre for Environmental Humanities
+OBIS node
+https://oceanexpert.org/institution/18799
+Israel
+Israel Oceanographic & Limnological Research
+NODC
+https://oceanexpert.org/institution/4889
+Italy
+National Institute of Oceanography and Experimental Geophysics
+NODC
+https://oceanexpert.org/institution/6941
+Jamaica
+International Seabed Authority
+OBIS node
+https://oceanexpert.org/institution/13169
+Japan
+Japan Oceanographic Data Center
+NODC
+https://oceanexpert.org/institution/11036
+
+Japan Agency for Marine-Earth Science and Technology (JAMSTEC), Global Oceanographic Data Center (GODAC)
+OBIS node
+https://oceanexpert.org/institution/19829
+Kazakhstan
+Ministry of Energy, Republic State Enterprise "Kazhydromet"
+NODC
+https://oceanexpert.org/institution/18000
+Kenya
+Kenya Marine and Fisheries Research Institute
+NODC
+https://oceanexpert.org/institution/11578
+
+Kenya Marine and Fisheries Research Institute, Headquarter & Mombasa Station
+OBIS node
+https://oceanexpert.org/institution/6998
+
+Kenya Marine and Fisheries Research Institute, Headquarter & Mombasa Station
+OTGA RTC
+https://oceanexpert.org/institution/6998
+Madagascar
+Fisheries and Marine Sciences Institute
+NODC
+https://oceanexpert.org/institution/6622
+Malaysia
+Ministry of Science, Technology and Innovation, National Oceanography Directorate
+NODC
+https://oceanexpert.org/institution/11345
+
+Institute of Oceanography and Environment
+OBIS node
+https://oceanexpert.org/institution/11252
+
+Institute of Oceanography and Environment
+OTGA RTC
+https://oceanexpert.org/institution/11252
+Mauritania
+Mauritanian Institute of Oceanographic Research and Fisheries. (IMROP)
+NODC
+https://oceanexpert.org/institution/10049
+Mauritius
+Department for Continental Shelf, Maritime Zones Administration and Exploration
+NODC
+https://oceanexpert.org/institution/19208
+Mexico
+Universidad Autonoma de Baja California, Instituto de Investigaciones Oceanologicas (UABC)
+NODC
+https://oceanexpert.org/institution/12837
+Mozambique
+National Institute for Hydrography and Navigation
+NODC
+https://oceanexpert.org/institution/14776
+
+Center of Research and Marine Technology - Eduardo Mondlane University
+OTGA RTC
+https://oceanexpert.org/institution/18992
+Netherlands (Kingdom of the)
+Royal Netherlands Institute for Sea Research
+NODC
+https://oceanexpert.org/institution/7656
+New Zealand
+National Institute of Water and Atmosphere
+OBIS node
+https://oceanexpert.org/institution/19880
+Nigeria
+Nigerian Institute for Oceanography and Marine Research
+NODC
+https://oceanexpert.org/institution/7679
+Norway
+Institute of Marine Research
+NODC
+https://oceanexpert.org/institution/6717
+
+University of Oslo
+OBIS node
+https://oceanexpert.org/institution/15476
+
+University of Bergen
+OTGA RTC
+https://oceanexpert.org/institution/19398
+Pakistan
+National Institute of Oceanography, Karachi
+NODC
+https://oceanexpert.org/institution/10739
+Panama
+Panama Canal
+NODC
+https://oceanexpert.org/institution/23708
+
+Centro Nacional de Datos e Información Oceanografico y Marino de Panamá
+OBIS node
+https://oceanexpert.org/institution/25275
+Peru
+Navy of Peru, Directorate of Hydrography and Navigation
+NODC
+https://oceanexpert.org/institution/5934
+Philippines
+ASEAN Centre for Biodiversity
+OBIS node
+https://oceanexpert.org/institution/15961
+Poland
+Institute of Oceanology Polish Academy of Sciences
+NODC
+https://oceanexpert.org/institution/7171
+Portugal
+Instituto Hidrográfico Lisboa
+NODC
+https://oceanexpert.org/institution/12501
+
+Instituto Português do Mar e da Atmosfera, I. P.
+NODC
+https://oceanexpert.org/institution/14932
+
+University of Aveiro, Department of Environment and Planning, Governance, Competitiveness and Public Policies
+OTGA RTC
+https://oceanexpert.org/institution/20444
+Republic of Korea
+Korea Oceanographic Data Center
+NODC
+https://oceanexpert.org/institution/7028
+
+National Marine Biodiversity Institute of Korea
+OBIS node
+https://oceanexpert.org/institution/23686
+Romania
+National Institute for Marine Research and Development "Grigore Antipa"
+NODC
+https://oceanexpert.org/institution/8113
+Russian Federation
+All-Russian Research Institute Hydrometeorological Information - World Data Center, Obninsk
+NODC
+https://oceanexpert.org/institution/4958
+Senegal
+Oceanographic Research Center of Dakar Thiaroye
+NODC
+https://oceanexpert.org/institution/13565
+Seychelles
+Seychelles Fishing Authority
+NODC
+https://oceanexpert.org/institution/8300
+Slovenia
+National Institute of Biology, Marine Biology Station, Piran
+NODC
+https://oceanexpert.org/institution/7492
+South Africa
+Department of Forestry, Fisheries and the Environment
+OBIS node
+https://oceanexpert.org/institution/13810
+Spain
+Instituto Español de Oceanografía
+NODC
+https://oceanexpert.org/institution/6811
+Sweden
+Swedish Meteorological and Hydrological Institute, Norrköping
+NODC
+https://oceanexpert.org/institution/8493
+Tunisia
+National Institute of Science and Technology of the Sea, Salambo
+NODC
+https://oceanexpert.org/institution/6631
+Türkiye
+Turkish Naval Forces, Office of Navigation, Hydrography and Oceanography
+NODC
+https://oceanexpert.org/institution/8303
+Ukraine
+Ukrainian Scientific Centre of Ecology of the Sea
+NODC
+https://oceanexpert.org/institution/11858
+
+Ukrainian Scientific Centre of Ecology of the Sea
+OBIS node
+https://oceanexpert.org/institution/11858
+United Kingdom of Great Britain and Northern Ireland
+National Oceanography Centre Liverpool, Proudman Oceanographic Laboratory Research
+NODC
+https://oceanexpert.org/institution/5242
+
+The Marine Biological Association of the United Kingdom
+OBIS node
+https://oceanexpert.org/institution/7168
+United Republic of Tanzania
+University of Dar es Salaam, Institute of Marine Sciences
+NODC
+https://oceanexpert.org/institution/6731
+United States of America
+NOAA NESDIS National Centers for Environmental Information (NCEI)
+NODC
+https://oceanexpert.org/institution/17596
+
+Duke University, Nicholas School of the Environment
+OBIS node
+https://oceanexpert.org/institution/5976
+
+Tulane University
+OBIS node
+https://oceanexpert.org/institution/11800
+
+United States Geological Survey
+OBIS node
+https://oceanexpert.org/institution/8770
+
+UNESCO IOC NOAA International Tsunami Information Centre
+OTGA RTC
+https://oceanexpert.org/institution/10315
+Uruguay
+Universidad de la República
+OTGA RTC
+https://oceanexpert.org/institution/19444
+Venezuela (Bolivarian Republic of)
+Direction of Hydrography and Navigation
+NODC
+https://oceanexpert.org/institution/10850
+
+Universidad Simon Bolivar
+OBIS node
+https://oceanexpert.org/institution/8887
+
