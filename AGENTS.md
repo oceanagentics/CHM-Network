@@ -84,12 +84,13 @@
 - The VM's external IP is currently ephemeral. If the instance is stopped and started, the IP may change until a static IP is attached.
 
 ## Public Publishing
+- Use the dedicated Compute Engine key at `~/.ssh/CHM-Network` for CHM Network VM access.
 - Build the public static bundle with `npm run build:public`.
 - The public build uses `client/.env.public` and reads from `/bootstrap.public.json` instead of the live API.
 - The export step writes the sanitized bootstrap file to `client/public/bootstrap.public.json`.
-- Upload the built site to the VM with `gcloud compute scp --recurse client/dist chm-network-vm:~/ --project chm-network --zone us-west1-b`.
+- Upload the built site to the VM with `gcloud compute scp --recurse client/dist chm-network-vm:~/ --project chm-network --zone us-west1-b --ssh-key-file ~/.ssh/CHM-Network`.
 - Publish it on the VM with:
-  - `gcloud compute ssh chm-network-vm --project chm-network --zone us-west1-b`
+  - `gcloud compute ssh chm-network-vm --project chm-network --zone us-west1-b --ssh-key-file ~/.ssh/CHM-Network`
   - `sudo mkdir -p /var/www/chm-network`
   - `sudo cp -r ~/dist/. /var/www/chm-network/`
   - `sudo chown -R www-data:www-data /var/www/chm-network`
