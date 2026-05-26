@@ -284,7 +284,11 @@ function confidenceRule(label: string) {
   };
 }
 
-export function EditorPanel() {
+interface EditorPanelProps {
+  readOnly?: boolean;
+}
+
+export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   const graph = useGraphStore((state) => state.graph);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const selectedRelationshipId = useGraphStore((state) => state.selectedRelationshipId);
@@ -426,7 +430,7 @@ export function EditorPanel() {
   function openSourceEditor(sourceId: string) {
     setSourceEditorId(sourceId);
     setMode("source");
-    setIsEditing(true);
+    setIsEditing(!readOnly);
     setMessage(null);
   }
 
@@ -635,7 +639,13 @@ export function EditorPanel() {
             : mode === "source"
               ? "Editing a source record."
               : "Creating a new node."
-          : "Click a node or edge in the graph to inspect it here.";
+          : readOnly
+            ? "Click a node or edge in the graph to inspect it here."
+            : "Click a node or edge in the graph to inspect it here.";
+
+  const emptyStateMessage = readOnly
+    ? "Select a node or edge to inspect it here."
+    : "Select a node or edge, or create a new record.";
 
   const canDelete =
     (mode === "entity" && Boolean(selectedEntityId)) ||
@@ -648,17 +658,21 @@ export function EditorPanel() {
       title="Editor"
       extra={
         <Space size={6}>
-          {!isEditing && hasSelection ? (
+          {!readOnly && !isEditing && hasSelection ? (
             <Button size="small" type="primary" icon={<EditOutlined />} onClick={beginEdit}>
               Edit
             </Button>
           ) : null}
-          <Button size="small" icon={<PlusOutlined />} onClick={startNewEntity}>
-            New entity
-          </Button>
-          <Button size="small" onClick={startNewRelationship}>
-            New edge
-          </Button>
+          {!readOnly ? (
+            <>
+              <Button size="small" icon={<PlusOutlined />} onClick={startNewEntity}>
+                New entity
+              </Button>
+              <Button size="small" onClick={startNewRelationship}>
+                New edge
+              </Button>
+            </>
+          ) : null}
         </Space>
       }
     >
@@ -675,7 +689,7 @@ export function EditorPanel() {
 
         {!isEditing && !hasSelection ? (
           <Typography.Text type="secondary">
-            Select a node or edge, or create a new record.
+            {emptyStateMessage}
           </Typography.Text>
         ) : null}
 
@@ -761,7 +775,7 @@ export function EditorPanel() {
                                 type="link"
                                 onClick={() => openSourceEditor(source.sourceId)}
                               >
-                                Edit source
+                                {readOnly ? "View source" : "Edit source"}
                               </Button>,
                             ]}
                           >
@@ -872,7 +886,7 @@ export function EditorPanel() {
                                 type="link"
                                 onClick={() => openSourceEditor(source.sourceId)}
                               >
-                                Edit source
+                                {readOnly ? "View source" : "Edit source"}
                               </Button>,
                             ]}
                           >
@@ -930,7 +944,7 @@ export function EditorPanel() {
           />
         ) : null}
 
-        {isEditing && mode === "entity" ? (
+        {!readOnly && isEditing && mode === "entity" ? (
           <Form form={entityForm} layout="vertical">
             <Form.Item label="Kind" name="kind" rules={[{ required: true }]}>
               <Select
@@ -1080,7 +1094,7 @@ export function EditorPanel() {
           </Form>
         ) : null}
 
-        {isEditing && mode === "relationship" ? (
+        {!readOnly && isEditing && mode === "relationship" ? (
           <Form form={relationshipForm} layout="vertical">
             <Form.Item
               label="Source entity"
@@ -1220,7 +1234,7 @@ export function EditorPanel() {
           </Form>
         ) : null}
 
-        {isEditing && mode === "source" ? (
+        {!readOnly && isEditing && mode === "source" ? (
           <Form form={sourceForm} layout="vertical">
             <Form.Item label="Edit source">
               <Select
@@ -1274,7 +1288,7 @@ export function EditorPanel() {
           </Form>
         ) : null}
 
-        {isEditing ? (
+        {!readOnly && isEditing ? (
           <Flex justify="space-between" align="center" gap={12} wrap>
             <Space>
               <Button icon={<SaveOutlined />} loading={saving} type="primary" onClick={() => void handleSave()}>

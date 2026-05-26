@@ -9,6 +9,7 @@ import type {
   Source,
   SourceInput,
 } from "../../../shared/domain";
+import { bootstrapPath } from "./config";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -34,7 +35,7 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 }
 
 export function fetchBootstrap(): Promise<GraphBootstrapPayload> {
-  return request<GraphBootstrapPayload>("/api/graph/bootstrap");
+  return request<GraphBootstrapPayload>(bootstrapPath);
 }
 
 export function fetchSavedViews(): Promise<SavedView[]> {

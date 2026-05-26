@@ -8,10 +8,10 @@
   "scripts": {
     "dev": "concurrently -n server,client -c blue,green \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
     "build": "npm --workspace server run build && npm --workspace client run build",
+    "build:public": "npm --workspace server run export:public && npm --workspace client run build -- --mode public",
     "start": "concurrently -n server,client -c blue,green \"npm --workspace server run start\" \"npm --workspace client run preview -- --host 0.0.0.0\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
   }
 }
-

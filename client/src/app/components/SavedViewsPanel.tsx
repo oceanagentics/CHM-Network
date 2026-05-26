@@ -36,7 +36,11 @@ function buildSavedViewPayload(state: ReturnType<typeof useGraphStore.getState>)
   };
 }
 
-export function SavedViewsPanel() {
+interface SavedViewsPanelProps {
+  readOnly?: boolean;
+}
+
+export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
   const savedViews = useGraphStore((state) => state.savedViews);
   const setSavedViews = useGraphStore((state) => state.setSavedViews);
   const setViewMode = useGraphStore((state) => state.setViewMode);
@@ -137,9 +141,11 @@ export function SavedViewsPanel() {
         size="small"
         title="Saved Views"
         extra={
-          <Button type="primary" size="small" onClick={() => setCreateOpen(true)}>
-            Save current
-          </Button>
+          !readOnly ? (
+            <Button type="primary" size="small" onClick={() => setCreateOpen(true)}>
+              Save current
+            </Button>
+          ) : null
         }
       >
         <List
@@ -147,25 +153,29 @@ export function SavedViewsPanel() {
           locale={{ emptyText: "No saved views yet." }}
           renderItem={(savedView) => (
             <List.Item
-              actions={[
-                <Button
-                  key="rename"
-                  size="small"
-                  type="text"
-                  onClick={() => setRenameTarget(savedView)}
-                >
-                  Rename
-                </Button>,
-                <Popconfirm
-                  key="delete"
-                  title="Delete saved view?"
-                  onConfirm={() => handleDelete(savedView)}
-                >
-                  <Button danger size="small" type="text">
-                    Delete
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                readOnly
+                  ? []
+                  : [
+                      <Button
+                        key="rename"
+                        size="small"
+                        type="text"
+                        onClick={() => setRenameTarget(savedView)}
+                      >
+                        Rename
+                      </Button>,
+                      <Popconfirm
+                        key="delete"
+                        title="Delete saved view?"
+                        onConfirm={() => handleDelete(savedView)}
+                      >
+                        <Button danger size="small" type="text">
+                          Delete
+                        </Button>
+                      </Popconfirm>,
+                    ]
+              }
             >
               <Flex vertical gap={2}>
                 <Button
@@ -184,49 +194,53 @@ export function SavedViewsPanel() {
         />
       </Card>
 
-      <Modal
-        open={createOpen}
-        title="Save current view"
-        okText="Save"
-        confirmLoading={saving}
-        onOk={() => void handleCreate()}
-        onCancel={() => {
-          setCreateOpen(false);
-          form.resetFields();
-        }}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Name"
-            name="name"
-            rules={[{ required: true, whitespace: true, message: "Enter a saved view name." }]}
-          >
-            <Input autoFocus />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {!readOnly ? (
+        <Modal
+          open={createOpen}
+          title="Save current view"
+          okText="Save"
+          confirmLoading={saving}
+          onOk={() => void handleCreate()}
+          onCancel={() => {
+            setCreateOpen(false);
+            form.resetFields();
+          }}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, whitespace: true, message: "Enter a saved view name." }]}
+            >
+              <Input autoFocus />
+            </Form.Item>
+          </Form>
+        </Modal>
+      ) : null}
 
-      <Modal
-        open={Boolean(renameTarget)}
-        title="Rename saved view"
-        okText="Rename"
-        confirmLoading={saving}
-        onOk={() => void handleRename()}
-        onCancel={() => {
-          setRenameTarget(null);
-          form.resetFields();
-        }}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Name"
-            name="name"
-            rules={[{ required: true, whitespace: true, message: "Enter a saved view name." }]}
-          >
-            <Input autoFocus />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {!readOnly ? (
+        <Modal
+          open={Boolean(renameTarget)}
+          title="Rename saved view"
+          okText="Rename"
+          confirmLoading={saving}
+          onOk={() => void handleRename()}
+          onCancel={() => {
+            setRenameTarget(null);
+            form.resetFields();
+          }}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, whitespace: true, message: "Enter a saved view name." }]}
+            >
+              <Input autoFocus />
+            </Form.Item>
+          </Form>
+        </Modal>
+      ) : null}
     </>
   );
 }

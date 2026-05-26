@@ -16,6 +16,7 @@ import { EditorPanel } from "./components/EditorPanel";
 import { GraphCanvas } from "./components/GraphCanvas";
 import { LegendPanel } from "./components/LegendPanel";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
+import { isPublicApp } from "./config";
 import { graphLayouts, useGraphStore } from "./state/graphStore";
 
 const { Content, Sider } = Layout;
@@ -163,9 +164,9 @@ export function App() {
               </div>
             </Flex>
           </Card>
-          <EditorPanel />
+          <EditorPanel readOnly={isPublicApp} />
           <LegendPanel />
-          <SavedViewsPanel />
+          <SavedViewsPanel readOnly={isPublicApp} />
         </Flex>
       </Sider>
       <Content className="graph-panel">

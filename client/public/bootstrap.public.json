@@ -1,0 +1,5310 @@
+{
+  "entities": [
+    {
+      "id": "org-awi-and-marum",
+      "kind": "organization",
+      "name": "AWI and MARUM",
+      "slug": "org-awi-and-marum",
+      "parentEntityId": "country-deu",
+      "countryCode": "DEU",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.96,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Germany"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-aquamaps",
+      "kind": "system",
+      "name": "AquaMaps",
+      "slug": "aquamaps",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "derived_analysis_platform",
+      "status": "active",
+      "confidence": 0.9,
+      "description": "Global species range mapping system",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "derived_analysis_platform",
+        "aliases": null,
+        "canonicalUrl": "https://aquamaps.org/main/AboutAquaMaps.php",
+        "operatorName": "AquaMaps collaboration",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "biodiversity",
+        "scopeTier": "global",
+        "geographicScope": "global aquatic species",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "predicted species distributions",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads",
+        "formatsOrStandards": "environmental envelope modelling",
+        "persistentIdentifierSupport": "species map outputs",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-aquamaps-collaboration",
+      "kind": "organization",
+      "name": "AquaMaps collaboration",
+      "slug": "org-aquamaps-collaboration",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.9,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-argo-data-management-team",
+      "kind": "organization",
+      "name": "Argo Data Management Team",
+      "slug": "org-argo-data-management-team",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.96,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-argo-gdac",
+      "kind": "system",
+      "name": "Argo Global Data Assembly Centers",
+      "slug": "argo-global-data-assembly-centers",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.96,
+      "description": "Canonical access point for official Argo profile data",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": "Argo GDAC",
+        "canonicalUrl": "https://argo.ucsd.edu/data/",
+        "operatorName": "Argo Data Management Team",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "global",
+        "geographicScope": "global ocean",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "profile; trajectory; meta; technical float data",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "ftp; http; rsync; ERDDAP; THREDDS; JSON",
+        "formatsOrStandards": "NetCDF; BUFR; DOI snapshots",
+        "persistentIdentifierSupport": "DOI and profile identifiers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "platform-bbnj-chm",
+      "kind": "system",
+      "name": "BBNJ Clearing-House Mechanism (CHM)",
+      "slug": "bbnj-chm",
+      "parentEntityId": null,
+      "countryCode": null,
+      "subtype": "platform",
+      "status": "planned",
+      "confidence": 0.98,
+      "description": "Planned downstream treaty system that may receive synchronized information from OBIS.",
+      "properties": {
+        "subtype": "platform"
+      },
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "system-bco-dmo",
+      "kind": "system",
+      "name": "BCO-DMO",
+      "slug": "bco-dmo",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": "primary_repository",
+      "status": "active",
+      "confidence": 0.96,
+      "description": "Primary repository for NSF-supported oceanographic communities",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "primary_repository",
+        "aliases": null,
+        "canonicalUrl": "https://www.bco-dmo.org/about",
+        "operatorName": "WHOI and partner institutions",
+        "operatorCountryRaw": "USA",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "national",
+        "geographicScope": "marine; coastal; Great Lakes",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "biological; chemical; biogeochemical oceanography data",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; ERDDAP",
+        "formatsOrStandards": "repository-specific metadata; RDF; ERDDAP",
+        "persistentIdentifierSupport": "DOI",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-bismal",
+      "kind": "system",
+      "name": "BISMaL",
+      "slug": "bismal",
+      "parentEntityId": null,
+      "countryCode": "JPN",
+      "subtype": "database",
+      "status": "active",
+      "confidence": 0.8,
+      "description": "Japanese biodiversity system that receives publication from JAMSTEC and syncs onward to OBIS.",
+      "properties": {
+        "subtype": "database"
+      },
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "org-bold-systems",
+      "kind": "organization",
+      "name": "BOLD Systems",
+      "slug": "org-bold-systems",
+      "parentEntityId": "country-can",
+      "countryCode": "CAN",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Canada"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-bold",
+      "kind": "system",
+      "name": "Barcode of Life Data System",
+      "slug": "barcode-of-life-data-system",
+      "parentEntityId": null,
+      "countryCode": "CAN",
+      "subtype": "reference_backbone",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Global DNA barcode platform with strong biodiversity use",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "reference_backbone",
+        "aliases": "BOLD",
+        "canonicalUrl": "https://boldsystems.org/about/mission/",
+        "operatorName": "BOLD Systems",
+        "operatorCountryRaw": "Canada",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "DNA barcodes; specimen links; taxonomic and distribution data",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; portal API",
+        "formatsOrStandards": "Barcode Core Data Model; barcode standards",
+        "persistentIdentifierSupport": "BIN; specimen and record identifiers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "org-bioinformation-and-ddbj-center-nig",
+      "kind": "organization",
+      "name": "Bioinformation and DDBJ Center NIG",
+      "slug": "org-bioinformation-and-ddbj-center-nig",
+      "parentEntityId": "country-jpn",
+      "countryCode": "JPN",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.97,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Japan"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "country-can",
+      "kind": "country",
+      "name": "Canada",
+      "slug": "canada",
+      "parentEntityId": null,
+      "countryCode": "CAN",
+      "subtype": null,
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Canada",
+        "pseudoCountry": false
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-cmems-datastore",
+      "kind": "system",
+      "name": "Copernicus Marine Data Store",
+      "slug": "copernicus-marine-data-store",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Primary download and catalogue entry point for Copernicus Marine",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": "CMDS",
+        "canonicalUrl": "https://data.marine.copernicus.eu/",
+        "operatorName": "Copernicus Marine Service",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "regional",
+        "geographicScope": "global ocean and European seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "product catalogue; downloads; visualisation",
+        "submissionSupported": "indirect",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads; toolbox",
+        "formatsOrStandards": "NetCDF; Zarr; shapefiles",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": "system-copernicus-marine"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-copernicus-marine",
+      "kind": "system",
+      "name": "Copernicus Marine Service",
+      "slug": "copernicus-marine-service",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "EU marine service for delivery of model and observation products",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": "CMEMS",
+        "canonicalUrl": "https://marine.copernicus.eu/about",
+        "operatorName": "Mercator Ocean International and EU",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "regional",
+        "geographicScope": "global ocean and European seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "model outputs; observations; forecasts; reanalyses",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; toolbox; APIs",
+        "formatsOrStandards": "NetCDF; Zarr; WMTS",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "org-copernicus-marine-service",
+      "kind": "organization",
+      "name": "Copernicus Marine Service",
+      "slug": "org-copernicus-marine-service",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-ddbj",
+      "kind": "system",
+      "name": "DNA Data Bank of Japan",
+      "slug": "dna-data-bank-of-japan",
+      "parentEntityId": null,
+      "countryCode": "JPN",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.97,
+      "description": "Japanese INSDC member archive",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": "DDBJ",
+        "canonicalUrl": "https://www.ddbj.nig.ac.jp/about/index-e.html",
+        "operatorName": "Bioinformation and DDBJ Center NIG",
+        "operatorCountryRaw": "Japan",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "nucleotide sequences; reads; assemblies; metadata",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; downloads",
+        "formatsOrStandards": "INSDC standards; flat files",
+        "persistentIdentifierSupport": "accession numbers",
+        "parentSystemId": "system-insdc"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "org-embl-ebi",
+      "kind": "organization",
+      "name": "EMBL-EBI",
+      "slug": "org-embl-ebi",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-emodnet-biology",
+      "kind": "system",
+      "name": "EMODnet Biology",
+      "slug": "emodnet-biology",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "aggregator",
+      "status": "active",
+      "confidence": 0.96,
+      "description": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "aggregator",
+        "aliases": null,
+        "canonicalUrl": "https://emodnet.ec.europa.eu/en/biology-0",
+        "operatorName": "EMODnet Biology consortium",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "biodiversity",
+        "scopeTier": "regional",
+        "geographicScope": "European regional seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "occurrences; abundance; traits; products",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; WFS; downloads",
+        "formatsOrStandards": "Darwin Core; SeaDataNet vocabularies; NetCDF",
+        "persistentIdentifierSupport": "scientificNameID",
+        "parentSystemId": "system-emodnet"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "org-emodnet-biology-consortium",
+      "kind": "organization",
+      "name": "EMODnet Biology consortium",
+      "slug": "org-emodnet-biology-consortium",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.96,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "org-european-commission-and-thematic-consortia",
+      "kind": "organization",
+      "name": "European Commission and thematic consortia",
+      "slug": "org-european-commission-and-thematic-consortia",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.94,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "system-emodnet",
+      "kind": "system",
+      "name": "European Marine Observation and Data Network",
+      "slug": "european-marine-observation-and-data-network",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.94,
+      "description": "European umbrella marine data network",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": "EMODnet",
+        "canonicalUrl": "https://emodnet.ec.europa.eu/en/about_emodnet",
+        "operatorName": "European Commission and thematic consortia",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "cross-domain",
+        "scopeTier": "regional",
+        "geographicScope": "European seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "marine observations; products; thematic services",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; viewer; APIs vary",
+        "formatsOrStandards": "theme-specific standards",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "system-ena",
+      "kind": "system",
+      "name": "European Nucleotide Archive",
+      "slug": "european-nucleotide-archive",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.98,
+      "description": "Major open sequence archive and INSDC member",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": "ENA",
+        "canonicalUrl": "https://www.ebi.ac.uk/training/online/course/nucleotide-sequence-data-resources-ebi/what-ena",
+        "operatorName": "EMBL-EBI",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "nucleotide sequences; reads; assemblies; metadata",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; FTP",
+        "formatsOrStandards": "INSDC standards; ENA schemas",
+        "persistentIdentifierSupport": "accession numbers",
+        "parentSystemId": "system-insdc"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "country-eur",
+      "kind": "country",
+      "name": "European Union",
+      "slug": "european-union",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": null,
+      "status": "active",
+      "confidence": 0.94,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU",
+        "pseudoCountry": true
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "org-fao",
+      "kind": "organization",
+      "name": "FAO",
+      "slug": "org-fao",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "system-fao-fishstat",
+      "kind": "system",
+      "name": "FAO FishStat and Fishery Statistics",
+      "slug": "fao-fishstat-and-fishery-statistics",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Global fisheries statistics dissemination layer",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": null,
+        "canonicalUrl": "https://www.fao.org/statistics/data-dissemination/fishery-and-aquaculture/en",
+        "operatorName": "FAO",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "fisheries",
+        "scopeTier": "global",
+        "geographicScope": "global fisheries and aquaculture",
+        "marineRelevance": "adjacent_support",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "production statistics; aquaculture statistics; yearbooks",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; query panels; downloads",
+        "formatsOrStandards": "FAO statistical collections",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "system-fishbase",
+      "kind": "system",
+      "name": "FishBase",
+      "slug": "fishbase",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "reference_backbone",
+      "status": "active",
+      "confidence": 0.94,
+      "description": "Global fish species information system",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "reference_backbone",
+        "aliases": null,
+        "canonicalUrl": "https://fishbase.se/fishonline/english/FOL_Introduction.htm",
+        "operatorName": "FishBase Consortium",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "fisheries",
+        "scopeTier": "global",
+        "geographicScope": "global fishes",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "species accounts; ecology; fisheries traits",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads vary",
+        "formatsOrStandards": "relational database; linked species data",
+        "persistentIdentifierSupport": "species records",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-fishbase-consortium",
+      "kind": "organization",
+      "name": "FishBase Consortium",
+      "slug": "org-fishbase-consortium",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.94,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-flanders-marine-institute",
+      "kind": "organization",
+      "name": "Flanders Marine Institute",
+      "slug": "org-flanders-marine-institute",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "org-gbif-secretariat",
+      "kind": "organization",
+      "name": "GBIF Secretariat",
+      "slug": "org-gbif-secretariat",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.97,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "org-ggbn-consortium",
+      "kind": "organization",
+      "name": "GGBN consortium",
+      "slug": "org-ggbn-consortium",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.9,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "system-genbank",
+      "kind": "system",
+      "name": "GenBank",
+      "slug": "genbank",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.98,
+      "description": "Major open sequence archive and INSDC member",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": null,
+        "canonicalUrl": "https://www.ncbi.nlm.nih.gov/genbank/",
+        "operatorName": "NCBI United States",
+        "operatorCountryRaw": "USA",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "nucleotide sequences; reads; assemblies; metadata",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; FTP",
+        "formatsOrStandards": "INSDC standards; FASTA; GenBank flat file",
+        "persistentIdentifierSupport": "accession numbers",
+        "parentSystemId": "system-insdc"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "country-deu",
+      "kind": "country",
+      "name": "Germany",
+      "slug": "germany",
+      "parentEntityId": null,
+      "countryCode": "DEU",
+      "subtype": null,
+      "status": "active",
+      "confidence": 0.96,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Germany",
+        "pseudoCountry": false
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-gbif",
+      "kind": "system",
+      "name": "Global Biodiversity Information Facility",
+      "slug": "global-biodiversity-information-facility",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "aggregator",
+      "status": "active",
+      "confidence": 0.97,
+      "description": "Global biodiversity infrastructure heavily used in marine workflows",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "aggregator",
+        "aliases": "GBIF",
+        "canonicalUrl": "https://www.gbif.org/what-is-gbif",
+        "operatorName": "GBIF Secretariat",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "biodiversity",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "adjacent_support",
+        "researcherInteraction": "both",
+        "dataTypes": "occurrences; specimens; observations; DNA barcodes",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; downloads; IPT",
+        "formatsOrStandards": "Darwin Core; DwC-A",
+        "persistentIdentifierSupport": "occurrence IDs; taxon IDs",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "system-ggbn",
+      "kind": "system",
+      "name": "Global Genome Biodiversity Network",
+      "slug": "global-genome-biodiversity-network",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.9,
+      "description": "Biodiversity genomics sample network relevant to marine collections",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": "GGBN",
+        "canonicalUrl": "https://www.ggbn.org/ggbn_portal/site/wf?p=What_is_GGBN",
+        "operatorName": "GGBN consortium",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "sample collections; DNA and tissue metadata",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; portal; API varies",
+        "formatsOrStandards": "Darwin Core extensions; sample metadata",
+        "persistentIdentifierSupport": "collection and sample identifiers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-ices",
+      "kind": "organization",
+      "name": "ICES",
+      "slug": "org-ices",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-ices-data",
+      "kind": "system",
+      "name": "ICES Marine Data",
+      "slug": "ices-marine-data",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Major regional marine data centre spanning fisheries and oceanography",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": null,
+        "canonicalUrl": "https://www.ices.dk/data/Pages/default.aspx?ID=1",
+        "operatorName": "ICES",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "fisheries",
+        "scopeTier": "regional",
+        "geographicScope": "North Atlantic and adjacent seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "oceanography; fisheries; biodiversity; contaminants; surveys",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; APIs; themed portals",
+        "formatsOrStandards": "ICES data formats; theme-specific packages",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "org-insdc-members",
+      "kind": "organization",
+      "name": "INSDC members",
+      "slug": "org-insdc-members",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.99,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-ioc-unesco-iode",
+      "kind": "organization",
+      "name": "IOC-UNESCO IODE",
+      "slug": "org-ioc-unesco-iode",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.458Z",
+      "updatedAt": "2026-05-26T16:46:26.458Z"
+    },
+    {
+      "id": "country-int",
+      "kind": "country",
+      "name": "International",
+      "slug": "international",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": null,
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international",
+        "pseudoCountry": true
+      },
+      "createdAt": "2026-05-26T16:46:26.458Z",
+      "updatedAt": "2026-05-26T16:46:26.458Z"
+    },
+    {
+      "id": "system-insdc",
+      "kind": "system",
+      "name": "International Nucleotide Sequence Database Collaboration",
+      "slug": "international-nucleotide-sequence-database-collaboration",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.99,
+      "description": "Global umbrella for open nucleotide sequence archives",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": "INSDC",
+        "canonicalUrl": "https://www.insdc.org/about-insdc/",
+        "operatorName": "INSDC members",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "indirect",
+        "dataTypes": "reads; sequences; assemblies; samples; projects",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "member portals; APIs; downloads",
+        "formatsOrStandards": "INSDC standards; flat files; SRA metadata",
+        "persistentIdentifierSupport": "accession numbers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "country-jpn",
+      "kind": "country",
+      "name": "Japan",
+      "slug": "japan",
+      "parentEntityId": null,
+      "countryCode": "JPN",
+      "subtype": null,
+      "status": "active",
+      "confidence": 1,
+      "description": "Country anchor for the Japan publication pathway.",
+      "properties": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "org-jamstec",
+      "kind": "organization",
+      "name": "Japan Agency for Marine-Earth Science and Technology (JAMSTEC)",
+      "slug": "jamstec",
+      "parentEntityId": "country-jpn",
+      "countryCode": "JPN",
+      "subtype": "research_institute",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Top-level organization representing the Japanese publishing actor in the seed path.",
+      "properties": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "system-mgnify",
+      "kind": "system",
+      "name": "MGnify",
+      "slug": "mgnify",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "derived_analysis_platform",
+      "status": "active",
+      "confidence": 0.93,
+      "description": "Analysis hub layered on ENA archived sequence data",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "derived_analysis_platform",
+        "aliases": null,
+        "canonicalUrl": "https://docs.mgnify.org/src/docs/about.html",
+        "operatorName": "EMBL-EBI",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "genetics",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "metagenomic; metatranscriptomic; amplicon; assembly analyses",
+        "submissionSupported": "indirect",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; REST API; submission workflow",
+        "formatsOrStandards": "ENA data schemes; GSC metadata",
+        "persistentIdentifierSupport": "accessions via ENA",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-marine-regions",
+      "kind": "system",
+      "name": "Marine Regions",
+      "slug": "marine-regions",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "reference_backbone",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Marine geography and boundary backbone",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "reference_backbone",
+        "aliases": null,
+        "canonicalUrl": "https://www.marineregions.org/about.php",
+        "operatorName": "Flanders Marine Institute",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "reference",
+        "scopeTier": "global",
+        "geographicScope": "global marine geographies",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "marine place names; boundaries; gazetteer",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads; gazetteer services",
+        "formatsOrStandards": "gazetteer and GIS layers",
+        "persistentIdentifierSupport": "MRGID",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "org-mercator-ocean-international-and-eu",
+      "kind": "organization",
+      "name": "Mercator Ocean International and EU",
+      "slug": "org-mercator-ocean-international-and-eu",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "org-ncbi-united-states",
+      "kind": "organization",
+      "name": "NCBI United States",
+      "slug": "org-ncbi-united-states",
+      "parentEntityId": "country-usa",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "org-noaa-ioos",
+      "kind": "organization",
+      "name": "NOAA IOOS",
+      "slug": "org-noaa-ioos",
+      "parentEntityId": "country-usa",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.92,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "org-noaa-ncei",
+      "kind": "organization",
+      "name": "NOAA NCEI",
+      "slug": "org-noaa-ncei",
+      "parentEntityId": "country-usa",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.95,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-noaa-ncei-marine",
+      "kind": "system",
+      "name": "NOAA NCEI Marine Data",
+      "slug": "noaa-ncei-marine-data",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Large marine archive and delivery hub",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": null,
+        "canonicalUrl": "https://www.ncei.noaa.gov/products/marine",
+        "operatorName": "NOAA NCEI",
+        "operatorCountryRaw": "USA",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "national",
+        "geographicScope": "global and US marine holdings",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "oceanographic; fisheries; bathymetry; marine geology; imagery",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads; APIs vary",
+        "formatsOrStandards": "multiple NOAA and community formats",
+        "persistentIdentifierSupport": "DOI and archive identifiers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "platform-obis",
+      "kind": "system",
+      "name": "Ocean Biodiversity Information System (OBIS)",
+      "slug": "obis",
+      "parentEntityId": null,
+      "countryCode": null,
+      "subtype": "platform",
+      "status": "active",
+      "confidence": 0.98,
+      "description": "Global marine biodiversity system receiving synchronized data from BISMaL.",
+      "properties": {
+        "subtype": "platform"
+      },
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "system-odis",
+      "kind": "system",
+      "name": "Ocean Data and Information System",
+      "slug": "ocean-data-and-information-system",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.94,
+      "description": "Interoperability layer and federation of distributed ocean systems",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": "ODIS",
+        "canonicalUrl": "https://oceaninfohub.org/odis/",
+        "operatorName": "IOC UNESCO IODE",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "cross-domain",
+        "scopeTier": "global",
+        "geographicScope": "global ocean systems",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "indirect",
+        "dataTypes": "metadata federation; knowledge graph; node catalogue",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; architecture; dashboard; harvesting",
+        "formatsOrStandards": "ODIS architecture conventions",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "system-oceaninfohub",
+      "kind": "system",
+      "name": "Ocean InfoHub",
+      "slug": "ocean-infohub",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.91,
+      "description": "Discovery layer built through ODIS development",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": "Ocean InfoHub Project",
+        "canonicalUrl": "https://oceaninfohub.org/project-overview/",
+        "operatorName": "IOC UNESCO IODE",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "cross-domain",
+        "scopeTier": "global",
+        "geographicScope": "global with regional pilots",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "discovery portal; linked ocean information",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; knowledge graph views",
+        "formatsOrStandards": "ODIS architecture",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "org-ocean-observatories-initiative",
+      "kind": "organization",
+      "name": "Ocean Observatories Initiative",
+      "slug": "org-ocean-observatories-initiative",
+      "parentEntityId": "country-usa",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.91,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-ooi-data",
+      "kind": "system",
+      "name": "Ocean Observatories Initiative Data Portal",
+      "slug": "ocean-observatories-initiative-data-portal",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.91,
+      "description": "Access point for OOI array data products",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": "OOI Data Portal",
+        "canonicalUrl": "https://oceanobservatories.org/data-portal/",
+        "operatorName": "Ocean Observatories Initiative",
+        "operatorCountryRaw": "USA",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "national",
+        "geographicScope": "global arrays and US-led observatories",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "real-time and historical instrument data",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; downloads",
+        "formatsOrStandards": "OOI data products and instrument outputs",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-pangaea",
+      "kind": "system",
+      "name": "PANGAEA",
+      "slug": "pangaea",
+      "parentEntityId": null,
+      "countryCode": "DEU",
+      "subtype": "archive",
+      "status": "active",
+      "confidence": 0.96,
+      "description": "Major archive for marine and environmental datasets",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "archive",
+        "aliases": null,
+        "canonicalUrl": "https://pangaea.de/about/",
+        "operatorName": "AWI and MARUM",
+        "operatorCountryRaw": "Germany",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "global",
+        "geographicScope": "global earth and ocean science",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "both",
+        "dataTypes": "georeferenced environmental and earth system data",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; search; API services",
+        "formatsOrStandards": "DOI-centered data publishing",
+        "persistentIdentifierSupport": "DOI",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "org-sea-around-us",
+      "kind": "organization",
+      "name": "Sea Around Us",
+      "slug": "org-sea-around-us",
+      "parentEntityId": "country-can",
+      "countryCode": "CAN",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.92,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Canada"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "system-sea-around-us",
+      "kind": "system",
+      "name": "Sea Around Us",
+      "slug": "sea-around-us",
+      "parentEntityId": null,
+      "countryCode": "CAN",
+      "subtype": "derived_analysis_platform",
+      "status": "active",
+      "confidence": 0.92,
+      "description": "Global fisheries reconstruction and analysis platform",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "derived_analysis_platform",
+        "aliases": null,
+        "canonicalUrl": "https://www.seaaroundus.org/about-2/",
+        "operatorName": "Sea Around Us",
+        "operatorCountryRaw": "Canada",
+        "disciplineFamily": "fisheries",
+        "scopeTier": "global",
+        "geographicScope": "global EEZs and high seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "catch reconstructions; fisheries indicators; mapped products",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; tools; downloads",
+        "formatsOrStandards": "project-specific analytical products",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "org-sea-around-us-and-q-quatics",
+      "kind": "organization",
+      "name": "Sea Around Us and Q-quatics",
+      "slug": "org-sea-around-us-and-q-quatics",
+      "parentEntityId": "country-int",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.92,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "international"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "system-seadatanet",
+      "kind": "system",
+      "name": "SeaDataNet",
+      "slug": "seadatanet",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.93,
+      "description": "Pan-European distributed marine data infrastructure",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": null,
+        "canonicalUrl": "https://www.seadatanet.org/",
+        "operatorName": "SeaDataNet consortium",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "regional",
+        "geographicScope": "European seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "ocean and marine environmental data; metadata",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; machine interfaces; distributed services",
+        "formatsOrStandards": "SeaDataNet vocabularies and formats",
+        "persistentIdentifierSupport": "Marine-ID and dataset identifiers",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-seadatanet-cdi",
+      "kind": "system",
+      "name": "SeaDataNet Common Data Index",
+      "slug": "seadatanet-common-data-index",
+      "parentEntityId": null,
+      "countryCode": "EUR",
+      "subtype": "delivery_portal",
+      "status": "active",
+      "confidence": 0.95,
+      "description": "Key discovery and access service within SeaDataNet",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "delivery_portal",
+        "aliases": "CDI",
+        "canonicalUrl": "https://cdi.seadatanet.org/",
+        "operatorName": "SeaDataNet consortium",
+        "operatorCountryRaw": "EU",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "regional",
+        "geographicScope": "European seas",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "both",
+        "dataTypes": "metadata and dataset access across marine data centres",
+        "submissionSupported": "yes",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; API; SPARQL; WMS; WFS",
+        "formatsOrStandards": "SeaDataNet standard formats; controlled vocabularies",
+        "persistentIdentifierSupport": "Marine-ID; CDI metadata records",
+        "parentSystemId": "system-seadatanet"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "org-seadatanet-consortium",
+      "kind": "organization",
+      "name": "SeaDataNet consortium",
+      "slug": "org-seadatanet-consortium",
+      "parentEntityId": "country-eur",
+      "countryCode": "EUR",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.93,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "EU"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "system-sealifebase",
+      "kind": "system",
+      "name": "SeaLifeBase",
+      "slug": "sealifebase",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "reference_backbone",
+      "status": "active",
+      "confidence": 0.92,
+      "description": "Marine non-fish counterpart to FishBase",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "reference_backbone",
+        "aliases": null,
+        "canonicalUrl": "https://www.sealifebase.se/home/who_we_are.php",
+        "operatorName": "Sea Around Us and Q-quatics",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "biodiversity",
+        "scopeTier": "global",
+        "geographicScope": "global marine non-fish taxa",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "species accounts; ecology; distributions",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web",
+        "formatsOrStandards": "linked biodiversity sources",
+        "persistentIdentifierSupport": "species records",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "system-ioos",
+      "kind": "system",
+      "name": "U.S. Integrated Ocean Observing System",
+      "slug": "u-s-integrated-ocean-observing-system",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.92,
+      "description": "National observing network with many regional data portals",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": "IOOS",
+        "canonicalUrl": "https://ioos.noaa.gov/about/about-us/",
+        "operatorName": "NOAA IOOS",
+        "operatorCountryRaw": "USA",
+        "disciplineFamily": "oceanography",
+        "scopeTier": "national",
+        "geographicScope": "US coasts; ocean; Great Lakes",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "observations; models; regional portals",
+        "submissionSupported": "indirect",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "regional portals; standards-based services",
+        "formatsOrStandards": "varied national standards",
+        "persistentIdentifierSupport": "varies",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "country-usa",
+      "kind": "country",
+      "name": "United States",
+      "slug": "united-states",
+      "parentEntityId": null,
+      "countryCode": "USA",
+      "subtype": null,
+      "status": "active",
+      "confidence": 0.98,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA",
+        "pseudoCountry": false
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "org-whoi-and-partner-institutions",
+      "kind": "organization",
+      "name": "WHOI and partner institutions",
+      "slug": "org-whoi-and-partner-institutions",
+      "parentEntityId": "country-usa",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.96,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "USA"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "system-worms",
+      "kind": "system",
+      "name": "World Register of Marine Species",
+      "slug": "world-register-of-marine-species",
+      "parentEntityId": null,
+      "countryCode": "INT",
+      "subtype": "reference_backbone",
+      "status": "active",
+      "confidence": 0.98,
+      "description": "Authoritative marine taxonomic backbone",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "reference_backbone",
+        "aliases": "WoRMS",
+        "canonicalUrl": "https://www.marinespecies.org/about.php",
+        "operatorName": "Flanders Marine Institute",
+        "operatorCountryRaw": "international",
+        "disciplineFamily": "reference",
+        "scopeTier": "global",
+        "geographicScope": "global marine taxa",
+        "marineRelevance": "core_marine",
+        "researcherInteraction": "pull_from",
+        "dataTypes": "taxonomy; nomenclature; traits; distributions",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; REST API",
+        "formatsOrStandards": "Aphia; LSID; taxonomic vocabularies",
+        "persistentIdentifierSupport": "AphiaID; LSID",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "system-re3data",
+      "kind": "system",
+      "name": "re3data",
+      "slug": "re3data",
+      "parentEntityId": null,
+      "countryCode": "DEU",
+      "subtype": "registry_federation",
+      "status": "active",
+      "confidence": 0.9,
+      "description": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "subtype": "registry_federation",
+        "aliases": null,
+        "canonicalUrl": "https://www.re3data.org/about",
+        "operatorName": "re3data consortium",
+        "operatorCountryRaw": "Germany",
+        "disciplineFamily": "cross-domain",
+        "scopeTier": "global",
+        "geographicScope": "global",
+        "marineRelevance": "mixed_domain",
+        "researcherInteraction": "indirect",
+        "dataTypes": "repository registry metadata",
+        "submissionSupported": "no",
+        "accessSupported": "yes",
+        "apiOrDownloadModes": "web; search; metadata catalogue",
+        "formatsOrStandards": "re3data metadata schema",
+        "persistentIdentifierSupport": "re3data DOI",
+        "parentSystemId": null
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "org-re3data-consortium",
+      "kind": "organization",
+      "name": "re3data consortium",
+      "slug": "org-re3data-consortium",
+      "parentEntityId": "country-deu",
+      "countryCode": "DEU",
+      "subtype": "system_operator",
+      "status": "active",
+      "confidence": 0.9,
+      "description": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "operatorCountryRaw": "Germany"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "link-aquamaps-gbif",
+      "sourceEntityId": "system-aquamaps",
+      "targetEntityId": "system-gbif",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.9,
+      "note": "AquaMaps uses occurrence records from GBIF as part of its modelling inputs",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "AquaMaps uses occurrence records from GBIF as part of its modelling inputs",
+        "mechanism": "occurrence records for species distribution models",
+        "evidenceNote": "AquaMaps describes species occurrence records from GBIF among its online data sources",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-aquamaps-obis",
+      "sourceEntityId": "system-aquamaps",
+      "targetEntityId": "platform-obis",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.9,
+      "note": "AquaMaps uses occurrence records from OBIS as part of its modelling inputs",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "AquaMaps uses occurrence records from OBIS as part of its modelling inputs",
+        "mechanism": "occurrence records for species distribution models",
+        "evidenceNote": "AquaMaps describes species occurrence records from OBIS among its online data sources",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-bcodmo-ncei",
+      "sourceEntityId": "system-bco-dmo",
+      "targetEntityId": "system-noaa-ncei-marine",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.96,
+      "note": "BCO-DMO sends finalized published data packages for long-term curation to NCEI",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "syncs_to",
+        "directionNote": "BCO-DMO sends finalized published data packages for long-term curation to NCEI",
+        "mechanism": "preservation copies for long-term curation",
+        "evidenceNote": "BCO-DMO states that NCEI receives copies of finalized published data packages",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-cmems-argo",
+      "sourceEntityId": "system-cmems-datastore",
+      "targetEntityId": "system-argo-gdac",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.9,
+      "note": "Copernicus Marine distributes Argo data products through the Data Store",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "Copernicus Marine distributes Argo data products through the Data Store",
+        "mechanism": "Argo data products available in Copernicus Marine catalogues",
+        "evidenceNote": "Copernicus Marine states that all Argo data are available on the Data Store",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-ddbj-ena",
+      "sourceEntityId": "system-ddbj",
+      "targetEntityId": "system-ena",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.98,
+      "note": "DDBJ exchanges data with other INSDC members",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "federates_with",
+        "directionNote": "DDBJ exchanges data with other INSDC members",
+        "mechanism": "INSDC member data exchange",
+        "evidenceNote": "INSDC states that members exchange data and make exchanged data freely accessible",
+        "semanticDirection": "bidirectional"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-ddbj-genbank",
+      "sourceEntityId": "system-ddbj",
+      "targetEntityId": "system-genbank",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.98,
+      "note": "DDBJ exchanges data with other INSDC members",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "federates_with",
+        "directionNote": "DDBJ exchanges data with other INSDC members",
+        "mechanism": "INSDC member data exchange",
+        "evidenceNote": "INSDC states that members exchange data and make exchanged data freely accessible",
+        "semanticDirection": "bidirectional"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-emodnet-biology-marine-regions",
+      "sourceEntityId": "system-emodnet-biology",
+      "targetEntityId": "system-marine-regions",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.88,
+      "note": "EMODnet Biology lists Marine Regions among the standards and vocabularies it implements",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "uses_reference_from",
+        "directionNote": "EMODnet Biology lists Marine Regions among the standards and vocabularies it implements",
+        "mechanism": "shared geographic vocabularies and interoperability",
+        "evidenceNote": "EMODnet Biology lists Marine Regions as one of the infrastructures and vocabularies it uses",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-emodnet-biology-seadatanet-cdi",
+      "sourceEntityId": "system-emodnet-biology",
+      "targetEntityId": "system-seadatanet-cdi",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.96,
+      "note": "EMODnet Biology periodically harvests biodiversity datasets from CDI",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "EMODnet Biology periodically harvests biodiversity datasets from CDI",
+        "mechanism": "CDI API periodic harvesting",
+        "evidenceNote": "SeaDataNet CDI states that the API is currently used by EMODnet Biology for periodic harvesting",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-emodnet-biology-worms",
+      "sourceEntityId": "system-emodnet-biology",
+      "targetEntityId": "system-worms",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.95,
+      "note": "EMODnet Biology references scientificNameID against WoRMS for accepted taxonomy",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "uses_reference_from",
+        "directionNote": "EMODnet Biology references scientificNameID against WoRMS for accepted taxonomy",
+        "mechanism": "scientificNameID lookup and taxonomy enrichment",
+        "evidenceNote": "EMODnet Biology states that accepted names are generated by referencing scientificNameID in WoRMS",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-ena-genbank",
+      "sourceEntityId": "system-ena",
+      "targetEntityId": "system-genbank",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.98,
+      "note": "ENA exchanges data with other INSDC members",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "federates_with",
+        "directionNote": "ENA exchanges data with other INSDC members",
+        "mechanism": "INSDC member data exchange",
+        "evidenceNote": "INSDC states that members exchange data and make exchanged data freely accessible",
+        "semanticDirection": "bidirectional"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-mgnify-ena",
+      "sourceEntityId": "system-mgnify",
+      "targetEntityId": "system-ena",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.96,
+      "note": "MGnify analyses user-submitted and public datasets archived at ENA",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "MGnify analyses user-submitted and public datasets archived at ENA",
+        "mechanism": "ENA archival submission followed by MGnify analysis",
+        "evidenceNote": "MGnify states that user-submitted data are archived through ENA and public ENA data are analysed in MGnify",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "link-obis-worms",
+      "sourceEntityId": "platform-obis",
+      "targetEntityId": "system-worms",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.95,
+      "note": "OBIS attaches taxonomic information from WoRMS into datasets",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "uses_reference_from",
+        "directionNote": "OBIS attaches taxonomic information from WoRMS into datasets",
+        "mechanism": "scientificNameID and WoRMS LSID lookup",
+        "evidenceNote": "OBIS states that scientificNameID is used to pull taxonomic information from WoRMS",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "link-sealifebase-aquamaps",
+      "sourceEntityId": "system-sealifebase",
+      "targetEntityId": "system-aquamaps",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.93,
+      "note": "SeaLifeBase maps are provided using AquaMaps",
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z",
+        "originalRelationType": "pulls_from",
+        "directionNote": "SeaLifeBase maps are provided using AquaMaps",
+        "mechanism": "AquaMaps embedded maps",
+        "evidenceNote": "SeaLifeBase states that maps are provided using AquaMaps",
+        "semanticDirection": "outbound"
+      },
+      "createdAt": "2026-05-26T16:46:26.465Z",
+      "updatedAt": "2026-05-26T16:46:26.465Z"
+    },
+    {
+      "id": "rel-aquamaps-collaboration-operates-aquamaps",
+      "sourceEntityId": "org-aquamaps-collaboration",
+      "targetEntityId": "system-aquamaps",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-aquamaps-collaboration-part-of-int",
+      "sourceEntityId": "org-aquamaps-collaboration",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-argo-data-management-team-operates-argo-global-data-assembly-centers",
+      "sourceEntityId": "org-argo-data-management-team",
+      "targetEntityId": "system-argo-gdac",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-argo-data-management-team-part-of-int",
+      "sourceEntityId": "org-argo-data-management-team",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-awi-and-marum-operates-pangaea",
+      "sourceEntityId": "org-awi-and-marum",
+      "targetEntityId": "system-pangaea",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-awi-and-marum-part-of-deu",
+      "sourceEntityId": "org-awi-and-marum",
+      "targetEntityId": "country-deu",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-bioinformation-and-ddbj-center-nig-operates-dna-data-bank-of-japan",
+      "sourceEntityId": "org-bioinformation-and-ddbj-center-nig",
+      "targetEntityId": "system-ddbj",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.97,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-bioinformation-and-ddbj-center-nig-part-of-jpn",
+      "sourceEntityId": "org-bioinformation-and-ddbj-center-nig",
+      "targetEntityId": "country-jpn",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.97,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-bismal-syncs-to-obis",
+      "sourceEntityId": "system-bismal",
+      "targetEntityId": "platform-obis",
+      "type": "syncs_to",
+      "status": "active",
+      "confidence": 0.85,
+      "note": "BISMaL synchronizes biodiversity data to OBIS.",
+      "properties": {
+        "transferMethod": "IPT",
+        "format": "Darwin Core Archive",
+        "standard": "Darwin Core"
+      },
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "rel-bold-systems-operates-barcode-of-life-data-system",
+      "sourceEntityId": "org-bold-systems",
+      "targetEntityId": "system-bold",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-bold-systems-part-of-can",
+      "sourceEntityId": "org-bold-systems",
+      "targetEntityId": "country-can",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-copernicus-marine-service-operates-copernicus-marine-data-store",
+      "sourceEntityId": "org-copernicus-marine-service",
+      "targetEntityId": "system-cmems-datastore",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-copernicus-marine-service-part-of-eur",
+      "sourceEntityId": "org-copernicus-marine-service",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-embl-ebi-operates-european-nucleotide-archive",
+      "sourceEntityId": "org-embl-ebi",
+      "targetEntityId": "system-ena",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-embl-ebi-operates-mgnify",
+      "sourceEntityId": "org-embl-ebi",
+      "targetEntityId": "system-mgnify",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.93,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-embl-ebi-part-of-eur",
+      "sourceEntityId": "org-embl-ebi",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-emodnet-biology-consortium-operates-emodnet-biology",
+      "sourceEntityId": "org-emodnet-biology-consortium",
+      "targetEntityId": "system-emodnet-biology",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-emodnet-biology-consortium-part-of-eur",
+      "sourceEntityId": "org-emodnet-biology-consortium",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-european-commission-and-thematic-consortia-operates-european-marine-observation-and-data-network",
+      "sourceEntityId": "org-european-commission-and-thematic-consortia",
+      "targetEntityId": "system-emodnet",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.94,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-european-commission-and-thematic-consortia-part-of-eur",
+      "sourceEntityId": "org-european-commission-and-thematic-consortia",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.94,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-fao-operates-fao-fishstat-and-fishery-statistics",
+      "sourceEntityId": "org-fao",
+      "targetEntityId": "system-fao-fishstat",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "rel-fao-part-of-int",
+      "sourceEntityId": "org-fao",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "rel-fishbase-consortium-operates-fishbase",
+      "sourceEntityId": "org-fishbase-consortium",
+      "targetEntityId": "system-fishbase",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.94,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-fishbase-consortium-part-of-int",
+      "sourceEntityId": "org-fishbase-consortium",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.94,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-flanders-marine-institute-operates-marine-regions",
+      "sourceEntityId": "org-flanders-marine-institute",
+      "targetEntityId": "system-marine-regions",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-flanders-marine-institute-operates-world-register-of-marine-species",
+      "sourceEntityId": "org-flanders-marine-institute",
+      "targetEntityId": "system-worms",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-flanders-marine-institute-part-of-int",
+      "sourceEntityId": "org-flanders-marine-institute",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-gbif-secretariat-operates-global-biodiversity-information-facility",
+      "sourceEntityId": "org-gbif-secretariat",
+      "targetEntityId": "system-gbif",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.97,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-gbif-secretariat-part-of-int",
+      "sourceEntityId": "org-gbif-secretariat",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.97,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.459Z",
+      "updatedAt": "2026-05-26T16:46:26.459Z"
+    },
+    {
+      "id": "rel-ggbn-consortium-operates-global-genome-biodiversity-network",
+      "sourceEntityId": "org-ggbn-consortium",
+      "targetEntityId": "system-ggbn",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-ggbn-consortium-part-of-int",
+      "sourceEntityId": "org-ggbn-consortium",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-ices-operates-ices-marine-data",
+      "sourceEntityId": "org-ices",
+      "targetEntityId": "system-ices-data",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-ices-part-of-int",
+      "sourceEntityId": "org-ices",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-insdc-members-operates-international-nucleotide-sequence-database-collaboration",
+      "sourceEntityId": "org-insdc-members",
+      "targetEntityId": "system-insdc",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.99,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-insdc-members-part-of-int",
+      "sourceEntityId": "org-insdc-members",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.99,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-ioc-unesco-iode-operates-ocean-biodiversity-information-system",
+      "sourceEntityId": "org-ioc-unesco-iode",
+      "targetEntityId": "platform-obis",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.458Z",
+      "updatedAt": "2026-05-26T16:46:26.458Z"
+    },
+    {
+      "id": "rel-ioc-unesco-iode-operates-ocean-data-and-information-system",
+      "sourceEntityId": "org-ioc-unesco-iode",
+      "targetEntityId": "system-odis",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.94,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-ioc-unesco-iode-operates-ocean-infohub",
+      "sourceEntityId": "org-ioc-unesco-iode",
+      "targetEntityId": "system-oceaninfohub",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.91,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-ioc-unesco-iode-part-of-int",
+      "sourceEntityId": "org-ioc-unesco-iode",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.458Z",
+      "updatedAt": "2026-05-26T16:46:26.458Z"
+    },
+    {
+      "id": "rel-jamstec-operates-bismal",
+      "sourceEntityId": "org-jamstec",
+      "targetEntityId": "system-bismal",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.9,
+      "note": "JAMSTEC operates BISMaL.",
+      "properties": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "rel-jamstec-part-of-japan",
+      "sourceEntityId": "org-jamstec",
+      "targetEntityId": "country-jpn",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": "JAMSTEC is part of the Japan country context for this view.",
+      "properties": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "rel-jamstec-publishes-to-bismal",
+      "sourceEntityId": "org-jamstec",
+      "targetEntityId": "system-bismal",
+      "type": "publishes_to",
+      "status": "active",
+      "confidence": 0.8,
+      "note": "JAMSTEC researchers publish biodiversity data into BISMaL.",
+      "properties": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "rel-mercator-ocean-international-and-eu-operates-copernicus-marine-service",
+      "sourceEntityId": "org-mercator-ocean-international-and-eu",
+      "targetEntityId": "system-copernicus-marine",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-mercator-ocean-international-and-eu-part-of-eur",
+      "sourceEntityId": "org-mercator-ocean-international-and-eu",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-ncbi-united-states-operates-genbank",
+      "sourceEntityId": "org-ncbi-united-states",
+      "targetEntityId": "system-genbank",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-ncbi-united-states-part-of-usa",
+      "sourceEntityId": "org-ncbi-united-states",
+      "targetEntityId": "country-usa",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.98,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-noaa-ioos-operates-u-s-integrated-ocean-observing-system",
+      "sourceEntityId": "org-noaa-ioos",
+      "targetEntityId": "system-ioos",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-noaa-ioos-part-of-usa",
+      "sourceEntityId": "org-noaa-ioos",
+      "targetEntityId": "country-usa",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-noaa-ncei-operates-noaa-ncei-marine-data",
+      "sourceEntityId": "org-noaa-ncei",
+      "targetEntityId": "system-noaa-ncei-marine",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-noaa-ncei-part-of-usa",
+      "sourceEntityId": "org-noaa-ncei",
+      "targetEntityId": "country-usa",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-obis-syncs-to-chm",
+      "sourceEntityId": "platform-obis",
+      "targetEntityId": "platform-bbnj-chm",
+      "type": "syncs_to",
+      "status": "planned",
+      "confidence": 0.9,
+      "note": "OBIS is a likely downstream synchronization source for the planned CHM.",
+      "properties": {
+        "connectionType": "planned_federation"
+      },
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "rel-ocean-observatories-initiative-operates-ocean-observatories-initiative-data-portal",
+      "sourceEntityId": "org-ocean-observatories-initiative",
+      "targetEntityId": "system-ooi-data",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.91,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "rel-ocean-observatories-initiative-part-of-usa",
+      "sourceEntityId": "org-ocean-observatories-initiative",
+      "targetEntityId": "country-usa",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.91,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.463Z",
+      "updatedAt": "2026-05-26T16:46:26.463Z"
+    },
+    {
+      "id": "rel-re3data-consortium-operates-re3data",
+      "sourceEntityId": "org-re3data-consortium",
+      "targetEntityId": "system-re3data",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-re3data-consortium-part-of-deu",
+      "sourceEntityId": "org-re3data-consortium",
+      "targetEntityId": "country-deu",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.9,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-sea-around-us-and-q-quatics-operates-sealifebase",
+      "sourceEntityId": "org-sea-around-us-and-q-quatics",
+      "targetEntityId": "system-sealifebase",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-sea-around-us-and-q-quatics-part-of-int",
+      "sourceEntityId": "org-sea-around-us-and-q-quatics",
+      "targetEntityId": "country-int",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.460Z",
+      "updatedAt": "2026-05-26T16:46:26.460Z"
+    },
+    {
+      "id": "rel-sea-around-us-operates-sea-around-us",
+      "sourceEntityId": "org-sea-around-us",
+      "targetEntityId": "system-sea-around-us",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-sea-around-us-part-of-can",
+      "sourceEntityId": "org-sea-around-us",
+      "targetEntityId": "country-can",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.92,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.464Z",
+      "updatedAt": "2026-05-26T16:46:26.464Z"
+    },
+    {
+      "id": "rel-seadatanet-consortium-operates-seadatanet",
+      "sourceEntityId": "org-seadatanet-consortium",
+      "targetEntityId": "system-seadatanet",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.93,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-seadatanet-consortium-operates-seadatanet-common-data-index",
+      "sourceEntityId": "org-seadatanet-consortium",
+      "targetEntityId": "system-seadatanet-cdi",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.95,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-seadatanet-consortium-part-of-eur",
+      "sourceEntityId": "org-seadatanet-consortium",
+      "targetEntityId": "country-eur",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.93,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.462Z",
+      "updatedAt": "2026-05-26T16:46:26.462Z"
+    },
+    {
+      "id": "rel-whoi-and-partner-institutions-operates-bco-dmo",
+      "sourceEntityId": "org-whoi-and-partner-institutions",
+      "targetEntityId": "system-bco-dmo",
+      "type": "operates",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    },
+    {
+      "id": "rel-whoi-and-partner-institutions-part-of-usa",
+      "sourceEntityId": "org-whoi-and-partner-institutions",
+      "targetEntityId": "country-usa",
+      "type": "part_of",
+      "status": "active",
+      "confidence": 0.96,
+      "note": null,
+      "properties": {
+        "importDataset": "2026-05-26-global-system-inventory",
+        "importSource": "csv_inventory",
+        "importedAt": "2026-05-26T16:46:26.436Z"
+      },
+      "createdAt": "2026-05-26T16:46:26.461Z",
+      "updatedAt": "2026-05-26T16:46:26.461Z"
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-obis-support",
+      "title": "A Digital Foundation for the BBNJ Agreement - Potential contributions of OBIS to the implementation of the High Seas Treaty",
+      "sourceType": "web_article",
+      "url": "https://obis.org/2025/11/13/obis-support-to-bbnj/",
+      "localPath": null,
+      "publisher": "OBIS",
+      "publishedAt": "2025-11-13",
+      "accessedAt": "2026-04-24",
+      "note": "OBIS article positioning the platform as a likely CHM sync destination."
+    },
+    {
+      "id": "src-aquamaps-about",
+      "title": "About AquaMaps",
+      "sourceType": "official_about",
+      "url": "https://aquamaps.org/main/AboutAquaMaps.php",
+      "localPath": null,
+      "publisher": "AquaMaps",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "AquaMaps scope and source dependencies"
+    },
+    {
+      "id": "src-ddbj-about",
+      "title": "About DDBJ Center",
+      "sourceType": "official_about",
+      "url": "https://www.ddbj.nig.ac.jp/about/index-e.html",
+      "localPath": null,
+      "publisher": "DDBJ",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "DDBJ scope and history"
+    },
+    {
+      "id": "src-emodnet-about",
+      "title": "About EMODnet",
+      "sourceType": "official_about",
+      "url": "https://emodnet.ec.europa.eu/en/about_emodnet",
+      "localPath": null,
+      "publisher": "EMODnet",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "EMODnet umbrella network"
+    },
+    {
+      "id": "src-insdc-about",
+      "title": "About INSDC",
+      "sourceType": "official_about",
+      "url": "https://www.insdc.org/about-insdc/",
+      "localPath": null,
+      "publisher": "INSDC",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "INSDC members and exchange model"
+    },
+    {
+      "id": "src-mgnify-about",
+      "title": "About MGnify",
+      "sourceType": "official_about",
+      "url": "https://docs.mgnify.org/src/docs/about.html",
+      "localPath": null,
+      "publisher": "MGnify",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "MGnify scope and ENA archiving partnership"
+    },
+    {
+      "id": "src-argo-data",
+      "title": "Argo Data",
+      "sourceType": "official_about",
+      "url": "https://argo.ucsd.edu/data/",
+      "localPath": null,
+      "publisher": "Argo",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Argo data access overview"
+    },
+    {
+      "id": "src-argo-system",
+      "title": "Argo Data System",
+      "sourceType": "official_docs",
+      "url": "https://argo.ucsd.edu/organization/argo-data-system/",
+      "localPath": null,
+      "publisher": "Argo",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "GDAC flow and synchronization"
+    },
+    {
+      "id": "src-bcodmo-about",
+      "title": "BCO-DMO About",
+      "sourceType": "official_about",
+      "url": "https://www.bco-dmo.org/about",
+      "localPath": null,
+      "publisher": "BCO-DMO",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "BCO-DMO scope and NCEI preservation copies"
+    },
+    {
+      "id": "src-bold-api",
+      "title": "BOLD API",
+      "sourceType": "official_docs",
+      "url": "https://www.boldsystems.org/data/api/",
+      "localPath": null,
+      "publisher": "BOLD",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "BOLD programmatic access"
+    },
+    {
+      "id": "src-bold-mission",
+      "title": "BOLD Mission",
+      "sourceType": "official_about",
+      "url": "https://boldsystems.org/about/mission/",
+      "localPath": null,
+      "publisher": "BOLD",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "BOLD role in DNA barcode publication and identification"
+    },
+    {
+      "id": "src-emodnet-biology",
+      "title": "Biology",
+      "sourceType": "official_about",
+      "url": "https://emodnet.ec.europa.eu/en/biology-0",
+      "localPath": null,
+      "publisher": "EMODnet",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "EMODnet Biology scope and infrastructure"
+    },
+    {
+      "id": "src-implementation-plan",
+      "title": "CHM Network Plan",
+      "sourceType": "working_note",
+      "url": null,
+      "localPath": null,
+      "publisher": "Ocean Agentics",
+      "publishedAt": "2026-04-24",
+      "accessedAt": "2026-04-24",
+      "note": "Path-first graph plan focused on researcher publication and downstream system sync."
+    },
+    {
+      "id": "src-cmems-about",
+      "title": "Copernicus Marine About",
+      "sourceType": "official_about",
+      "url": "https://marine.copernicus.eu/about",
+      "localPath": null,
+      "publisher": "Copernicus Marine",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Copernicus Marine service scope"
+    },
+    {
+      "id": "src-cmems-datastore",
+      "title": "Copernicus Marine Data Store",
+      "sourceType": "official_about",
+      "url": "https://data.marine.copernicus.eu/",
+      "localPath": null,
+      "publisher": "Copernicus Marine",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Copernicus Marine data delivery portal"
+    },
+    {
+      "id": "src-cmems-argo",
+      "title": "Copernicus Marine use of Argo",
+      "sourceType": "official_docs",
+      "url": "https://help.marine.copernicus.eu/en/articles/5046710-does-copernicus-marine-use-argo-data",
+      "localPath": null,
+      "publisher": "Copernicus Marine",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Argo data availability in Copernicus Marine"
+    },
+    {
+      "id": "src-ioc-pitch",
+      "title": "Designing and implementing the BBNJ Clearing-House Mechanism (CHM): Contribution from the Intergovernmental Oceanographic Commission",
+      "sourceType": "docx",
+      "url": "https://oceanagentics.slack.com/files/U0AQY6J9SG7/F0ARNA2MC5C/ioc_unesco_pitch_for_bbnj_chm_strategic_briefing_final__2_.docx",
+      "localPath": null,
+      "publisher": "IOC-UNESCO",
+      "publishedAt": "2026-03-23",
+      "accessedAt": "2026-04-24",
+      "note": "IOC pitch used as a source for the OBIS-to-CHM pathway."
+    },
+    {
+      "id": "src-fao-fishstat",
+      "title": "FAO Fishery and Aquaculture Data Dissemination",
+      "sourceType": "official_about",
+      "url": "https://www.fao.org/statistics/data-dissemination/fishery-and-aquaculture/en",
+      "localPath": null,
+      "publisher": "FAO",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "FAO FishStat dissemination page"
+    },
+    {
+      "id": "src-fishbase-intro",
+      "title": "FishBase Introduction",
+      "sourceType": "official_docs",
+      "url": "https://fishbase.se/fishonline/english/FOL_Introduction.htm",
+      "localPath": null,
+      "publisher": "FishBase",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "FishBase scope and user community"
+    },
+    {
+      "id": "src-genbank-overview",
+      "title": "GenBank Overview",
+      "sourceType": "official_about",
+      "url": "https://www.ncbi.nlm.nih.gov/genbank/",
+      "localPath": null,
+      "publisher": "NCBI",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "GenBank archive scope"
+    },
+    {
+      "id": "src-ices-data",
+      "title": "ICES Marine Data",
+      "sourceType": "official_about",
+      "url": "https://www.ices.dk/data/Pages/default.aspx?ID=1",
+      "localPath": null,
+      "publisher": "ICES",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "ICES marine data portal"
+    },
+    {
+      "id": "src-ioos-about",
+      "title": "IOOS About Us",
+      "sourceType": "official_about",
+      "url": "https://ioos.noaa.gov/about/about-us/",
+      "localPath": null,
+      "publisher": "IOOS",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "IOOS mission and system model"
+    },
+    {
+      "id": "src-marine-regions-about",
+      "title": "Marine Regions About",
+      "sourceType": "official_about",
+      "url": "https://www.marineregions.org/about.php",
+      "localPath": null,
+      "publisher": "Marine Regions",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Marine geographic gazetteer and boundaries"
+    },
+    {
+      "id": "src-ncei-marine",
+      "title": "NOAA NCEI Marine Products",
+      "sourceType": "official_about",
+      "url": "https://www.ncei.noaa.gov/products/marine",
+      "localPath": null,
+      "publisher": "NOAA NCEI",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "NCEI marine archive scope"
+    },
+    {
+      "id": "src-obis-about",
+      "title": "OBIS About",
+      "sourceType": "official_about",
+      "url": "https://obis.org/about/",
+      "localPath": null,
+      "publisher": "OBIS",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "OBIS scope and role"
+    },
+    {
+      "id": "src-obis-darwin-core",
+      "title": "OBIS Manual Darwin Core",
+      "sourceType": "official_docs",
+      "url": "https://manual.obis.org/darwin_core.html",
+      "localPath": null,
+      "publisher": "OBIS",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "OBIS scientificNameID handling and WoRMS pull"
+    },
+    {
+      "id": "src-obis-ipt",
+      "title": "OBIS Manual IPT",
+      "sourceType": "official_docs",
+      "url": "https://manual.obis.org/ipt",
+      "localPath": null,
+      "publisher": "OBIS",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "OBIS publication workflow via IPT and Darwin Core Archive"
+    },
+    {
+      "id": "src-odis",
+      "title": "ODIS",
+      "sourceType": "official_about",
+      "url": "https://oceaninfohub.org/odis/",
+      "localPath": null,
+      "publisher": "Ocean InfoHub",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "ODIS federation scope"
+    },
+    {
+      "id": "src-ooi-data",
+      "title": "OOI Data Portal",
+      "sourceType": "official_about",
+      "url": "https://oceanobservatories.org/data-portal/",
+      "localPath": null,
+      "publisher": "OOI",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "OOI data portal scope"
+    },
+    {
+      "id": "src-oceaninfohub-about",
+      "title": "Ocean InfoHub Project Overview",
+      "sourceType": "official_about",
+      "url": "https://oceaninfohub.org/project-overview/",
+      "localPath": null,
+      "publisher": "Ocean InfoHub",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Ocean InfoHub scope and ODIS relationship"
+    },
+    {
+      "id": "src-pangaea-about",
+      "title": "PANGAEA About",
+      "sourceType": "official_about",
+      "url": "https://pangaea.de/about/",
+      "localPath": null,
+      "publisher": "PANGAEA",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "PANGAEA data publisher scope"
+    },
+    {
+      "id": "src-seaaroundus-about",
+      "title": "Sea Around Us About",
+      "sourceType": "official_about",
+      "url": "https://www.seaaroundus.org/about-2/",
+      "localPath": null,
+      "publisher": "Sea Around Us",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Sea Around Us scope and outputs"
+    },
+    {
+      "id": "src-seadatanet-cdi",
+      "title": "SeaDataNet Common Data Index",
+      "sourceType": "official_docs",
+      "url": "https://cdi.seadatanet.org/",
+      "localPath": null,
+      "publisher": "SeaDataNet",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "CDI API and EMODnet Biology harvesting"
+    },
+    {
+      "id": "src-seadatanet-home",
+      "title": "SeaDataNet Home",
+      "sourceType": "official_about",
+      "url": "https://www.seadatanet.org/",
+      "localPath": null,
+      "publisher": "SeaDataNet",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Pan-European marine data infrastructure"
+    },
+    {
+      "id": "src-sealifebase-what",
+      "title": "SeaLifeBase What We Do",
+      "sourceType": "official_docs",
+      "url": "https://www.sealifebase.se/Home/what_we_do.php",
+      "localPath": null,
+      "publisher": "SeaLifeBase",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "SeaLifeBase linked resources and dependencies"
+    },
+    {
+      "id": "src-sealifebase-who",
+      "title": "SeaLifeBase Who We Are",
+      "sourceType": "official_about",
+      "url": "https://www.sealifebase.se/home/who_we_are.php",
+      "localPath": null,
+      "publisher": "SeaLifeBase",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "SeaLifeBase scope and stewardship"
+    },
+    {
+      "id": "src-ena-what",
+      "title": "What is ENA",
+      "sourceType": "official_about",
+      "url": "https://www.ebi.ac.uk/training/online/course/nucleotide-sequence-data-resources-ebi/what-ena",
+      "localPath": null,
+      "publisher": "EMBL-EBI",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "ENA repository scope"
+    },
+    {
+      "id": "src-gbif-what-is",
+      "title": "What is GBIF",
+      "sourceType": "official_about",
+      "url": "https://www.gbif.org/what-is-gbif",
+      "localPath": null,
+      "publisher": "GBIF",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "GBIF network and data infrastructure"
+    },
+    {
+      "id": "src-ggbn-about",
+      "title": "What is GGBN",
+      "sourceType": "official_about",
+      "url": "https://www.ggbn.org/ggbn_portal/site/wf?p=What_is_GGBN",
+      "localPath": null,
+      "publisher": "GGBN",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Genome biodiversity network portal"
+    },
+    {
+      "id": "src-worms-about",
+      "title": "WoRMS About",
+      "sourceType": "official_about",
+      "url": "https://www.marinespecies.org/about.php",
+      "localPath": null,
+      "publisher": "WoRMS",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Global marine species register"
+    },
+    {
+      "id": "src-re3data-about",
+      "title": "re3data About",
+      "sourceType": "official_about",
+      "url": "https://www.re3data.org/about",
+      "localPath": null,
+      "publisher": "re3data",
+      "publishedAt": null,
+      "accessedAt": "2026-05-26",
+      "note": "Registry of research data repositories"
+    }
+  ],
+  "entitySources": [
+    {
+      "entityId": "country-can",
+      "sourceId": "src-bold-api",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-can",
+      "sourceId": "src-bold-mission",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-can",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-deu",
+      "sourceId": "src-pangaea-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-deu",
+      "sourceId": "src-re3data-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-cmems-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-cmems-argo",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-cmems-datastore",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-emodnet-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-ena-what",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-mgnify-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-eur",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-argo-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-argo-system",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-ggbn-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-ices-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-obis-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-obis-ipt",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-odis",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-sealifebase-who",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-int",
+      "sourceId": "src-worms-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-jpn",
+      "sourceId": "src-ddbj-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-jpn",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-genbank-overview",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-ioos-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-ncei-marine",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "country-usa",
+      "sourceId": "src-ooi-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-aquamaps-collaboration",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-argo-data-management-team",
+      "sourceId": "src-argo-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-argo-data-management-team",
+      "sourceId": "src-argo-system",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-awi-and-marum",
+      "sourceId": "src-pangaea-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-bioinformation-and-ddbj-center-nig",
+      "sourceId": "src-ddbj-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-bioinformation-and-ddbj-center-nig",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-bold-systems",
+      "sourceId": "src-bold-api",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-bold-systems",
+      "sourceId": "src-bold-mission",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-copernicus-marine-service",
+      "sourceId": "src-cmems-argo",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-copernicus-marine-service",
+      "sourceId": "src-cmems-datastore",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-embl-ebi",
+      "sourceId": "src-ena-what",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-embl-ebi",
+      "sourceId": "src-mgnify-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-emodnet-biology-consortium",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-emodnet-biology-consortium",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-european-commission-and-thematic-consortia",
+      "sourceId": "src-emodnet-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-fao",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-fishbase-consortium",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-flanders-marine-institute",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-flanders-marine-institute",
+      "sourceId": "src-worms-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-gbif-secretariat",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ggbn-consortium",
+      "sourceId": "src-ggbn-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ices",
+      "sourceId": "src-ices-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-insdc-members",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ioc-unesco-iode",
+      "sourceId": "src-obis-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ioc-unesco-iode",
+      "sourceId": "src-obis-ipt",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ioc-unesco-iode",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ioc-unesco-iode",
+      "sourceId": "src-odis",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-mercator-ocean-international-and-eu",
+      "sourceId": "src-cmems-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ncbi-united-states",
+      "sourceId": "src-genbank-overview",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ncbi-united-states",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-noaa-ioos",
+      "sourceId": "src-ioos-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-noaa-ncei",
+      "sourceId": "src-ncei-marine",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-ocean-observatories-initiative",
+      "sourceId": "src-ooi-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-re3data-consortium",
+      "sourceId": "src-re3data-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-sea-around-us",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-sea-around-us-and-q-quatics",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-sea-around-us-and-q-quatics",
+      "sourceId": "src-sealifebase-who",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-seadatanet-consortium",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Key discovery and access service within SeaDataNet",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-seadatanet-consortium",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "org-whoi-and-partner-institutions",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "platform-bbnj-chm",
+      "sourceId": "src-ioc-pitch",
+      "claimType": "planned_destination",
+      "excerpt": "The IOC pitch describes the planned CHM as the downstream treaty mechanism.",
+      "confidenceOverride": 0.95
+    },
+    {
+      "entityId": "platform-obis",
+      "sourceId": "src-obis-about",
+      "claimType": "official_definition",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "platform-obis",
+      "sourceId": "src-obis-ipt",
+      "claimType": "workflow_context",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "platform-obis",
+      "sourceId": "src-obis-support",
+      "claimType": "downstream_system",
+      "excerpt": "OBIS presents itself as a mature platform that can support CHM implementation.",
+      "confidenceOverride": 0.95
+    },
+    {
+      "entityId": "system-aquamaps",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "official_definition",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-aquamaps",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "workflow_context",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-argo-gdac",
+      "sourceId": "src-argo-data",
+      "claimType": "official_definition",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-argo-gdac",
+      "sourceId": "src-argo-system",
+      "claimType": "workflow_context",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-bco-dmo",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "official_definition",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-bco-dmo",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "workflow_context",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-bismal",
+      "sourceId": "src-implementation-plan",
+      "claimType": "seed_system",
+      "excerpt": "The working note uses BISMaL as the concrete Japanese publication system.",
+      "confidenceOverride": 0.8
+    },
+    {
+      "entityId": "system-bold",
+      "sourceId": "src-bold-api",
+      "claimType": "workflow_context",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-bold",
+      "sourceId": "src-bold-mission",
+      "claimType": "official_definition",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-cmems-datastore",
+      "sourceId": "src-cmems-argo",
+      "claimType": "workflow_context",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-cmems-datastore",
+      "sourceId": "src-cmems-datastore",
+      "claimType": "official_definition",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-copernicus-marine",
+      "sourceId": "src-cmems-about",
+      "claimType": "official_definition",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-copernicus-marine",
+      "sourceId": "src-cmems-about",
+      "claimType": "workflow_context",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ddbj",
+      "sourceId": "src-ddbj-about",
+      "claimType": "official_definition",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ddbj",
+      "sourceId": "src-insdc-about",
+      "claimType": "workflow_context",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-emodnet",
+      "sourceId": "src-emodnet-about",
+      "claimType": "official_definition",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-emodnet",
+      "sourceId": "src-emodnet-about",
+      "claimType": "workflow_context",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-emodnet-biology",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "official_definition",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-emodnet-biology",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "workflow_context",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ena",
+      "sourceId": "src-ena-what",
+      "claimType": "official_definition",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ena",
+      "sourceId": "src-ena-what",
+      "claimType": "workflow_context",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-fao-fishstat",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "official_definition",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-fao-fishstat",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "workflow_context",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-fishbase",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "official_definition",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-fishbase",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "workflow_context",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-gbif",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "official_definition",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-gbif",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "workflow_context",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-genbank",
+      "sourceId": "src-genbank-overview",
+      "claimType": "official_definition",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-genbank",
+      "sourceId": "src-insdc-about",
+      "claimType": "workflow_context",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ggbn",
+      "sourceId": "src-ggbn-about",
+      "claimType": "official_definition",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ggbn",
+      "sourceId": "src-ggbn-about",
+      "claimType": "workflow_context",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ices-data",
+      "sourceId": "src-ices-data",
+      "claimType": "official_definition",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ices-data",
+      "sourceId": "src-ices-data",
+      "claimType": "workflow_context",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-insdc",
+      "sourceId": "src-insdc-about",
+      "claimType": "official_definition",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-insdc",
+      "sourceId": "src-insdc-about",
+      "claimType": "workflow_context",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ioos",
+      "sourceId": "src-ioos-about",
+      "claimType": "official_definition",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ioos",
+      "sourceId": "src-ioos-about",
+      "claimType": "workflow_context",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-marine-regions",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "official_definition",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-marine-regions",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "workflow_context",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-mgnify",
+      "sourceId": "src-mgnify-about",
+      "claimType": "official_definition",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-mgnify",
+      "sourceId": "src-mgnify-about",
+      "claimType": "workflow_context",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-noaa-ncei-marine",
+      "sourceId": "src-ncei-marine",
+      "claimType": "official_definition",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-noaa-ncei-marine",
+      "sourceId": "src-ncei-marine",
+      "claimType": "workflow_context",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-oceaninfohub",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "official_definition",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-oceaninfohub",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "workflow_context",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-odis",
+      "sourceId": "src-odis",
+      "claimType": "official_definition",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-odis",
+      "sourceId": "src-odis",
+      "claimType": "workflow_context",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ooi-data",
+      "sourceId": "src-ooi-data",
+      "claimType": "official_definition",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-ooi-data",
+      "sourceId": "src-ooi-data",
+      "claimType": "workflow_context",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-pangaea",
+      "sourceId": "src-pangaea-about",
+      "claimType": "official_definition",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-pangaea",
+      "sourceId": "src-pangaea-about",
+      "claimType": "workflow_context",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-re3data",
+      "sourceId": "src-re3data-about",
+      "claimType": "official_definition",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-re3data",
+      "sourceId": "src-re3data-about",
+      "claimType": "workflow_context",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-sea-around-us",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "official_definition",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-sea-around-us",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "workflow_context",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-seadatanet",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "official_definition",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-seadatanet",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "workflow_context",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-seadatanet-cdi",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "official_definition",
+      "excerpt": "Key discovery and access service within SeaDataNet",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-seadatanet-cdi",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "workflow_context",
+      "excerpt": "Key discovery and access service within SeaDataNet",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-sealifebase",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "workflow_context",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-sealifebase",
+      "sourceId": "src-sealifebase-who",
+      "claimType": "official_definition",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-worms",
+      "sourceId": "src-worms-about",
+      "claimType": "official_definition",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    },
+    {
+      "entityId": "system-worms",
+      "sourceId": "src-worms-about",
+      "claimType": "workflow_context",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    }
+  ],
+  "relationshipSources": [
+    {
+      "relationshipId": "link-aquamaps-gbif",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "AquaMaps describes species occurrence records from GBIF among its online data sources",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-aquamaps-obis",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "AquaMaps describes species occurrence records from OBIS among its online data sources",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-bcodmo-ncei",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "BCO-DMO states that NCEI receives copies of finalized published data packages",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-cmems-argo",
+      "sourceId": "src-cmems-argo",
+      "claimType": "relationship_evidence",
+      "excerpt": "Copernicus Marine states that all Argo data are available on the Data Store",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-ddbj-ena",
+      "sourceId": "src-insdc-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "INSDC states that members exchange data and make exchanged data freely accessible",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-ddbj-genbank",
+      "sourceId": "src-insdc-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "INSDC states that members exchange data and make exchanged data freely accessible",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-emodnet-biology-marine-regions",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "relationship_evidence",
+      "excerpt": "EMODnet Biology lists Marine Regions as one of the infrastructures and vocabularies it uses",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-emodnet-biology-seadatanet-cdi",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "relationship_evidence",
+      "excerpt": "SeaDataNet CDI states that the API is currently used by EMODnet Biology for periodic harvesting",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-emodnet-biology-worms",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "relationship_evidence",
+      "excerpt": "EMODnet Biology states that accepted names are generated by referencing scientificNameID in WoRMS",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-ena-genbank",
+      "sourceId": "src-insdc-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "INSDC states that members exchange data and make exchanged data freely accessible",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-mgnify-ena",
+      "sourceId": "src-mgnify-about",
+      "claimType": "relationship_evidence",
+      "excerpt": "MGnify states that user-submitted data are archived through ENA and public ENA data are analysed in MGnify",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-obis-worms",
+      "sourceId": "src-obis-darwin-core",
+      "claimType": "relationship_evidence",
+      "excerpt": "OBIS states that scientificNameID is used to pull taxonomic information from WoRMS",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "link-sealifebase-aquamaps",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "relationship_evidence",
+      "excerpt": "SeaLifeBase states that maps are provided using AquaMaps",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-aquamaps-collaboration-operates-aquamaps",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-aquamaps-collaboration-part-of-int",
+      "sourceId": "src-aquamaps-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global species range mapping system",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-argo-data-management-team-operates-argo-global-data-assembly-centers",
+      "sourceId": "src-argo-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-argo-data-management-team-operates-argo-global-data-assembly-centers",
+      "sourceId": "src-argo-system",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-argo-data-management-team-part-of-int",
+      "sourceId": "src-argo-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-argo-data-management-team-part-of-int",
+      "sourceId": "src-argo-system",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Canonical access point for official Argo profile data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-awi-and-marum-operates-pangaea",
+      "sourceId": "src-pangaea-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-awi-and-marum-part-of-deu",
+      "sourceId": "src-pangaea-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major archive for marine and environmental datasets",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bioinformation-and-ddbj-center-nig-operates-dna-data-bank-of-japan",
+      "sourceId": "src-ddbj-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bioinformation-and-ddbj-center-nig-operates-dna-data-bank-of-japan",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bioinformation-and-ddbj-center-nig-part-of-jpn",
+      "sourceId": "src-ddbj-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bioinformation-and-ddbj-center-nig-part-of-jpn",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Japanese INSDC member archive",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bismal-syncs-to-obis",
+      "sourceId": "src-implementation-plan",
+      "claimType": "seed_sync_path",
+      "excerpt": "The note uses BISMaL -> OBIS via IPT and Darwin Core Archive as the seed sync path.",
+      "confidenceOverride": 0.85
+    },
+    {
+      "relationshipId": "rel-bold-systems-operates-barcode-of-life-data-system",
+      "sourceId": "src-bold-api",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bold-systems-operates-barcode-of-life-data-system",
+      "sourceId": "src-bold-mission",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bold-systems-part-of-can",
+      "sourceId": "src-bold-api",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-bold-systems-part-of-can",
+      "sourceId": "src-bold-mission",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global DNA barcode platform with strong biodiversity use",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-copernicus-marine-service-operates-copernicus-marine-data-store",
+      "sourceId": "src-cmems-argo",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-copernicus-marine-service-operates-copernicus-marine-data-store",
+      "sourceId": "src-cmems-datastore",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-copernicus-marine-service-part-of-eur",
+      "sourceId": "src-cmems-argo",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-copernicus-marine-service-part-of-eur",
+      "sourceId": "src-cmems-datastore",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary download and catalogue entry point for Copernicus Marine",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-embl-ebi-operates-european-nucleotide-archive",
+      "sourceId": "src-ena-what",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-embl-ebi-operates-mgnify",
+      "sourceId": "src-mgnify-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-embl-ebi-part-of-eur",
+      "sourceId": "src-ena-what",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-embl-ebi-part-of-eur",
+      "sourceId": "src-mgnify-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Analysis hub layered on ENA archived sequence data",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-emodnet-biology-consortium-operates-emodnet-biology",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-emodnet-biology-consortium-operates-emodnet-biology",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-emodnet-biology-consortium-part-of-eur",
+      "sourceId": "src-emodnet-biology",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-emodnet-biology-consortium-part-of-eur",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European marine biodiversity access point built on EurOBIS-style infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-european-commission-and-thematic-consortia-operates-european-marine-observation-and-data-network",
+      "sourceId": "src-emodnet-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-european-commission-and-thematic-consortia-part-of-eur",
+      "sourceId": "src-emodnet-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "European umbrella marine data network",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-fao-operates-fao-fishstat-and-fishery-statistics",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-fao-part-of-int",
+      "sourceId": "src-fao-fishstat",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fisheries statistics dissemination layer",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-fishbase-consortium-operates-fishbase",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-fishbase-consortium-part-of-int",
+      "sourceId": "src-fishbase-intro",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fish species information system",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-flanders-marine-institute-operates-marine-regions",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-flanders-marine-institute-operates-world-register-of-marine-species",
+      "sourceId": "src-worms-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-flanders-marine-institute-part-of-int",
+      "sourceId": "src-marine-regions-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine geography and boundary backbone",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-flanders-marine-institute-part-of-int",
+      "sourceId": "src-worms-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Authoritative marine taxonomic backbone",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-gbif-secretariat-operates-global-biodiversity-information-facility",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-gbif-secretariat-part-of-int",
+      "sourceId": "src-gbif-what-is",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global biodiversity infrastructure heavily used in marine workflows",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ggbn-consortium-operates-global-genome-biodiversity-network",
+      "sourceId": "src-ggbn-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ggbn-consortium-part-of-int",
+      "sourceId": "src-ggbn-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Biodiversity genomics sample network relevant to marine collections",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ices-operates-ices-marine-data",
+      "sourceId": "src-ices-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ices-part-of-int",
+      "sourceId": "src-ices-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major regional marine data centre spanning fisheries and oceanography",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-insdc-members-operates-international-nucleotide-sequence-database-collaboration",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-insdc-members-part-of-int",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global umbrella for open nucleotide sequence archives",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-operates-ocean-biodiversity-information-system",
+      "sourceId": "src-obis-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-operates-ocean-biodiversity-information-system",
+      "sourceId": "src-obis-ipt",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-operates-ocean-data-and-information-system",
+      "sourceId": "src-odis",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-operates-ocean-infohub",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-part-of-int",
+      "sourceId": "src-obis-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-part-of-int",
+      "sourceId": "src-obis-ipt",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global marine biodiversity platform with node-based publishing",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-part-of-int",
+      "sourceId": "src-oceaninfohub-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Discovery layer built through ODIS development",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ioc-unesco-iode-part-of-int",
+      "sourceId": "src-odis",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Interoperability layer and federation of distributed ocean systems",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-mercator-ocean-international-and-eu-operates-copernicus-marine-service",
+      "sourceId": "src-cmems-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-mercator-ocean-international-and-eu-part-of-eur",
+      "sourceId": "src-cmems-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "EU marine service for delivery of model and observation products",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ncbi-united-states-operates-genbank",
+      "sourceId": "src-genbank-overview",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ncbi-united-states-operates-genbank",
+      "sourceId": "src-insdc-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ncbi-united-states-part-of-usa",
+      "sourceId": "src-genbank-overview",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ncbi-united-states-part-of-usa",
+      "sourceId": "src-insdc-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Major open sequence archive and INSDC member",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-noaa-ioos-operates-u-s-integrated-ocean-observing-system",
+      "sourceId": "src-ioos-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-noaa-ioos-part-of-usa",
+      "sourceId": "src-ioos-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "National observing network with many regional data portals",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-noaa-ncei-operates-noaa-ncei-marine-data",
+      "sourceId": "src-ncei-marine",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-noaa-ncei-part-of-usa",
+      "sourceId": "src-ncei-marine",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Large marine archive and delivery hub",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-obis-syncs-to-chm",
+      "sourceId": "src-obis-support",
+      "claimType": "obis_to_chm_path",
+      "excerpt": "OBIS frames itself as positioned to support CHM operationalization.",
+      "confidenceOverride": 0.9
+    },
+    {
+      "relationshipId": "rel-ocean-observatories-initiative-operates-ocean-observatories-initiative-data-portal",
+      "sourceId": "src-ooi-data",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-ocean-observatories-initiative-part-of-usa",
+      "sourceId": "src-ooi-data",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Access point for OOI array data products",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-re3data-consortium-operates-re3data",
+      "sourceId": "src-re3data-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-re3data-consortium-part-of-deu",
+      "sourceId": "src-re3data-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Cross-domain repository registry useful for finding marine-adjacent repositories",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-and-q-quatics-operates-sealifebase",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-and-q-quatics-operates-sealifebase",
+      "sourceId": "src-sealifebase-who",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-and-q-quatics-part-of-int",
+      "sourceId": "src-sealifebase-what",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-and-q-quatics-part-of-int",
+      "sourceId": "src-sealifebase-who",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Marine non-fish counterpart to FishBase",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-operates-sea-around-us",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-sea-around-us-part-of-can",
+      "sourceId": "src-seaaroundus-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Global fisheries reconstruction and analysis platform",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-seadatanet-consortium-operates-seadatanet",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-seadatanet-consortium-operates-seadatanet-common-data-index",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Key discovery and access service within SeaDataNet",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-seadatanet-consortium-part-of-eur",
+      "sourceId": "src-seadatanet-cdi",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Key discovery and access service within SeaDataNet",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-seadatanet-consortium-part-of-eur",
+      "sourceId": "src-seadatanet-home",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Pan-European distributed marine data infrastructure",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-whoi-and-partner-institutions-operates-bco-dmo",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "operator_inferred_from_system",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    },
+    {
+      "relationshipId": "rel-whoi-and-partner-institutions-part-of-usa",
+      "sourceId": "src-bcodmo-about",
+      "claimType": "country_scope_inferred_from_system",
+      "excerpt": "Primary repository for NSF-supported oceanographic communities",
+      "confidenceOverride": null
+    }
+  ],
+  "tags": [],
+  "entityTags": [],
+  "relationshipTags": [],
+  "savedViews": [
+    {
+      "id": "view-japan-country-path",
+      "name": "Japan publication path",
+      "scope": "country-jpn",
+      "filter": {
+        "viewMode": "country",
+        "focusEntityId": "country-jpn"
+      },
+      "layout": {
+        "algorithm": "breadthfirst"
+      },
+      "style": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    },
+    {
+      "id": "view-bismal-technical-path",
+      "name": "BISMaL technical path",
+      "scope": "system-bismal",
+      "filter": {
+        "viewMode": "technical",
+        "focusEntityId": "system-bismal"
+      },
+      "layout": {
+        "algorithm": "breadthfirst"
+      },
+      "style": {},
+      "createdAt": "2026-04-24T00:00:00Z",
+      "updatedAt": "2026-04-24T00:00:00Z"
+    }
+  ]
+}

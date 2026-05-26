@@ -63,3 +63,28 @@
 - On startup, the server checks the local DB for stale legacy graph rows.
 - If legacy kinds or relationships are found, the server resets the local DB from the minimal schema and seed before serving requests.
 - After that reset, the live DB is the source of truth.
+
+## GCP Environment
+- Organization: `oceanagentics.com`
+- Project: `chm-network` (`288836337031`)
+- VM: `chm-network-vm`
+- Zone: `us-west1-b`
+- Machine type: `e2-micro`
+- Public URL: `http://34.169.201.150`
+- The VM currently serves the public read-only build with `nginx` from `/var/www/chm-network`.
+- Port `80` and `443` are open via firewall rule `chm-network-allow-web`.
+- The VM's external IP is currently ephemeral. If the instance is stopped and started, the IP may change until a static IP is attached.
+
+## Public Publishing
+- Build the public static bundle with `npm run build:public`.
+- The public build uses `client/.env.public` and reads from `/bootstrap.public.json` instead of the live API.
+- The export step writes the sanitized bootstrap file to `client/public/bootstrap.public.json`.
+- Upload the built site to the VM with `gcloud compute scp --recurse client/dist chm-network-vm:~/ --project chm-network --zone us-west1-b`.
+- Publish it on the VM with:
+  - `gcloud compute ssh chm-network-vm --project chm-network --zone us-west1-b`
+  - `sudo mkdir -p /var/www/chm-network`
+  - `sudo cp -r ~/dist/. /var/www/chm-network/`
+  - `sudo chown -R www-data:www-data /var/www/chm-network`
+  - `sudo nginx -t && sudo systemctl restart nginx`
+- Verify with `curl -I http://34.169.201.150` and `curl http://34.169.201.150/bootstrap.public.json`.
+- GCS static hosting is not the active publish path. Public bucket access was blocked by the org's domain-restricted sharing policy.

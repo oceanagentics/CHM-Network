@@ -51,13 +51,13 @@ body {
 
 .graph-panel {
   min-width: 0;
-  padding: 16px 16px 16px 4px;
+  padding: 0 0 0 4px;
 }
 
 .graph-surface {
-  height: calc(100vh - 32px);
+  height: 100vh;
   min-height: 680px;
-  border-radius: 18px;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid rgba(19, 32, 51, 0.08);
   background:
