@@ -2,8 +2,16 @@
 
 ## Canonical Graph Data
 - Treat `data/chm-network.sqlite` as the canonical graph during active editing.
+- Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
 - Do not hand-edit `sql/chm_seed_japan.sql` for routine graph changes.
 - `sql/chm_schema.sql` and `sql/chm_seed_japan.sql` are bootstrap/reset inputs only.
+
+## Research Import Workflow
+- Each research job may live in its own dated folder under `research/`.
+- A research job should include `systems.csv`, `system_links.csv`, `sources.csv`, and optional notes.
+- Import research jobs directly into `data/chm-network.sqlite` with `npm --workspace server run import:inventory -- <research-folder>`.
+- Research jobs may reference parent systems or workflow targets that were already imported by earlier jobs.
+- Do not create or maintain a separate merged central CSV registry.
 
 ## Write Surfaces
 ### In-app editor
@@ -45,8 +53,8 @@
 ## Validation Rules
 ### Entities
 - `country` has no parent.
-- `system` has no parent.
 - `organization.parentEntityId` may target only `country` or `organization`.
+- `system.parentEntityId` may target only `system`.
 
 ### Relationships
 - `part_of`: `organization -> organization|country`

@@ -21,8 +21,16 @@ export const graphLayouts = [
   "elk-force",
 ] as const;
 
+export const reactFlowGraphLayouts = [
+  "elk-layered",
+  "elk-mrtree",
+  "elk-stress",
+  "elk-force",
+] as const;
+
 export type GraphLayout = (typeof graphLayouts)[number];
 export type CountryDisplayMode = "node" | "engulf";
+export type RendererMode = "cytoscape" | "react-flow";
 
 interface ViewportSnapshot {
   zoom: number;
@@ -36,6 +44,7 @@ interface GraphState {
   error: string | null;
   viewMode: ViewMode;
   layoutMode: GraphLayout;
+  rendererMode: RendererMode;
   countryDisplayMode: CountryDisplayMode;
   focusEntityId: string | null;
   selectedEntityId: string | null;
@@ -48,6 +57,7 @@ interface GraphState {
   setError: (error: string | null) => void;
   setViewMode: (viewMode: ViewMode) => void;
   setLayoutMode: (layoutMode: GraphLayout) => void;
+  setRendererMode: (rendererMode: RendererMode) => void;
   setCountryDisplayMode: (countryDisplayMode: CountryDisplayMode) => void;
   setFocusEntityId: (focusEntityId: string | null) => void;
   setSelectedEntityId: (selectedEntityId: string | null) => void;
@@ -56,12 +66,28 @@ interface GraphState {
   resetSelection: () => void;
 }
 
+function isReactFlowLayout(layoutMode: GraphLayout): boolean {
+  return (reactFlowGraphLayouts as readonly GraphLayout[]).includes(layoutMode);
+}
+
+function coerceLayoutMode(
+  rendererMode: RendererMode,
+  layoutMode: GraphLayout,
+): GraphLayout {
+  if (rendererMode === "react-flow" && !isReactFlowLayout(layoutMode)) {
+    return "elk-layered";
+  }
+
+  return layoutMode;
+}
+
 export const useGraphStore = create<GraphState>((set) => ({
   graph: null,
   loading: true,
   error: null,
   viewMode: "governance",
   layoutMode: "dagre",
+  rendererMode: "cytoscape",
   countryDisplayMode: "engulf",
   focusEntityId: null,
   selectedEntityId: null,
@@ -88,8 +114,19 @@ export const useGraphStore = create<GraphState>((set) => ({
       selectedEntityId: null,
       selectedRelationshipId: null,
     })),
-  setLayoutMode: (layoutMode) => set({ layoutMode }),
-  setCountryDisplayMode: (countryDisplayMode) => set({ countryDisplayMode }),
+  setLayoutMode: (layoutMode) =>
+    set((state) => ({
+      layoutMode: coerceLayoutMode(state.rendererMode, layoutMode),
+    })),
+  setRendererMode: (rendererMode) =>
+    set((state) => {
+      return {
+        rendererMode,
+        layoutMode: coerceLayoutMode(rendererMode, state.layoutMode),
+      };
+    }),
+  setCountryDisplayMode: (countryDisplayMode) =>
+    set({ countryDisplayMode }),
   setFocusEntityId: (focusEntityId) => set({ focusEntityId }),
   setSelectedEntityId: (selectedEntityId) =>
     set({ selectedEntityId, selectedRelationshipId: null }),

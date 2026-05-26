@@ -26,6 +26,7 @@ function buildSavedViewPayload(state: ReturnType<typeof useGraphStore.getState>)
     filter: {
       viewMode: state.viewMode,
       focusEntityId: state.focusEntityId,
+      rendererMode: state.rendererMode,
       countryDisplayMode: state.countryDisplayMode,
     },
     layout: {
@@ -45,6 +46,7 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
   const setSavedViews = useGraphStore((state) => state.setSavedViews);
   const setViewMode = useGraphStore((state) => state.setViewMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
+  const setRendererMode = useGraphStore((state) => state.setRendererMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
   const [form] = Form.useForm<{ name: string }>();
@@ -115,6 +117,7 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
     const filter = savedView.filter as {
       viewMode?: "governance" | "country" | "technical";
       focusEntityId?: string | null;
+      rendererMode?: ReturnType<typeof useGraphStore.getState>["rendererMode"];
       countryDisplayMode?: ReturnType<typeof useGraphStore.getState>["countryDisplayMode"];
     };
     const layout = savedView.layout as {
@@ -133,6 +136,7 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
     if (layout.algorithm) {
       setLayoutMode(layout.algorithm);
     }
+    setRendererMode(filter.rendererMode ?? "cytoscape");
   }
 
   return (

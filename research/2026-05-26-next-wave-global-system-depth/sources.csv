@@ -1,0 +1,22 @@
+source_id,title,source_type,publisher,url,accessed_at,evidence_scope,notes
+src-eurobis-home,Home EurOBIS,official_about,EurOBIS,https://www.eurobis.org/,2026-05-26,official,EurOBIS scope and OBIS node role
+src-eurobis-emodnet20,EMODnet Biology congratulates EurOBIS for its 20th anniversary,official_news,EMODnet Biology,https://emodnet.ec.europa.eu/en/emodnet-biology-congratulates-eurobis-its-20th-anniversary-0,2026-05-26,workflow,EurOBIS relation to OBIS and EMODnet Biology
+src-datras,DATRAS,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/DATRAS.aspx,2026-05-26,official,DATRAS scope and access model
+src-intercatch,InterCatch,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/InterCatch.aspx,2026-05-26,official,InterCatch fisheries workflow and access model
+src-rdbes,Regional DataBase and Estimation System,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/rdbes.aspx,2026-05-26,official,RDBES scope governance and data facilities
+src-oceansites-format,OceanSITES Data Format Reference Manual,official_docs,OceanSITES,https://www.ocean-ops.org/oceansites/docs/oceansites_data_format_reference_manual.pdf,2026-05-26,official,OceanSITES programme overview and open data framing
+src-us-goship-about,U.S. GO-SHIP,official_about,U.S. GO-SHIP,https://usgoship.ucsd.edu/,2026-05-26,official,GO-SHIP scope and sustained hydrographic network role
+src-socat-about,About SOCAT,official_about,SOCAT,https://socat.info/index.php/about/,2026-05-26,official,SOCAT products and community quality control
+src-glodap-about,Welcome to GLODAP,official_about,GLODAP,https://glodap.info/,2026-05-26,official,GLODAP synthesis scope and data products
+src-oceanops-ioc,OceanOPS at IOC UNESCO,official_about,IOC UNESCO,https://www.ioc.unesco.org/en/joint-centre-oceanographic-marine-meteorological-observing-programme,2026-05-26,official,OceanOPS coordination role across observing programmes
+src-cioos-about,About the Canadian Integrated Ocean Observing System Catalogue,official_about,CIOOS,https://catalogue.cioos.ca/about,2026-05-26,official,CIOOS catalogue federation and API model
+src-euroargo-leaflet,Euro-Argo leaflet,official_docs,Euro-Argo ERIC,https://www.euro-argo.eu/content/download/124660/file/leafletEuro-Argo_EN-201902.pdf,2026-05-26,official,Euro-Argo scope and European contribution to Argo
+src-biooracle-home,Bio-ORACLE,official_about,Bio-ORACLE,https://www.bio-oracle.org/,2026-05-26,official,Global marine environmental layers for biodiversity modelling
+src-algaebase-content,AlgaeBase Content,official_about,AlgaeBase,https://admin.algaebase.org/content/,2026-05-26,official,AlgaeBase inclusion policy and domain coverage
+src-molluscabase-about,MolluscaBase,official_about,MolluscaBase,https://molluscabase.org/about.php,2026-05-26,official,MolluscaBase scope and downstream backbone use
+src-geome-home,GEOME homepage,official_about,GEOME,https://geome-db.org/,2026-05-26,official,GEOME field metadata platform overview
+src-geome-gsc,Genomic Observatories Metadatabase,official_docs,Genomic Standards Consortium,https://www.gensc.org/news/2017/08/14/genomic-observatories-metadatabase.html,2026-05-26,workflow,GEOME linkage of biosample metadata to NCBI SRA
+src-dryad-about,Dryad Who we are,official_about,Dryad,https://datadryad.org/about,2026-05-26,official,Dryad open data publishing model
+src-zenodo-about,About Zenodo,official_about,Zenodo,https://about.zenodo.org/,2026-05-26,official,Zenodo catch-all repository model
+src-argovis-about,Argovis platform slide deck,official_docs,Argovis,https://argovis.colorado.edu/Argovis_hackathon_S2024_Giglio.pdf,2026-05-26,official,Argovis platform scope and data interfaces
+src-emodnet-biology-nextwave,EMODnet Biology,official_about,EMODnet,https://emodnet.ec.europa.eu/en/biology-0,2026-05-26,workflow,EMODnet Biology contributors and EurOBIS-backed infrastructure

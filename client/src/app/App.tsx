@@ -17,7 +17,11 @@ import { GraphCanvas } from "./components/GraphCanvas";
 import { LegendPanel } from "./components/LegendPanel";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
 import { isPublicApp } from "./config";
-import { graphLayouts, useGraphStore } from "./state/graphStore";
+import {
+  graphLayouts,
+  reactFlowGraphLayouts,
+  useGraphStore,
+} from "./state/graphStore";
 
 const { Content, Sider } = Layout;
 const { Text } = Typography;
@@ -40,6 +44,7 @@ export function App() {
   const error = useGraphStore((state) => state.error);
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
+  const rendererMode = useGraphStore((state) => state.rendererMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const setBootstrap = useGraphStore((state) => state.setBootstrap);
@@ -47,6 +52,7 @@ export function App() {
   const setLoading = useGraphStore((state) => state.setLoading);
   const setViewMode = useGraphStore((state) => state.setViewMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
+  const setRendererMode = useGraphStore((state) => state.setRendererMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
 
@@ -84,6 +90,9 @@ export function App() {
         value: entity.id,
       }));
   }, [graph, viewMode]);
+
+  const layoutOptions =
+    rendererMode === "react-flow" ? reactFlowGraphLayouts : graphLayouts;
 
   if (loading) {
     return (
@@ -137,11 +146,23 @@ export function App() {
                 />
               </div>
               <div>
+                <Text type="secondary">Renderer</Text>
+                <Segmented
+                  block
+                  value={rendererMode}
+                  options={[
+                    { label: "Cytoscape", value: "cytoscape" },
+                    { label: "React Flow", value: "react-flow" },
+                  ]}
+                  onChange={(value) => setRendererMode(value as typeof rendererMode)}
+                />
+              </div>
+              <div>
                 <Text type="secondary">Layout</Text>
                 <Select
                   className="full-width"
                   value={layoutMode}
-                  options={graphLayouts.map((layout) => ({
+                  options={layoutOptions.map((layout) => ({
                     label: layout,
                     value: layout,
                   }))}

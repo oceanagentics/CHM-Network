@@ -9,11 +9,13 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.3",
+    "@xyflow/react": "^12.10.2",
     "antd": "^6.4.3",
     "cytoscape": "^3.33.1",
     "cytoscape-dagre": "^3.0.0",
     "cytoscape-elk": "^2.3.0",
     "cytoscape-fcose": "^2.2.0",
+    "elkjs": "^0.9.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zustand": "^5.0.8"

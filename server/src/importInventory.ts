@@ -226,11 +226,42 @@ function main() {
     : defaultInventoryDir;
   const { sources, systems, links } = readInventory(inventoryDir);
   const db = getDatabase();
+  const findImportedEntityById = db.prepare(
+    "SELECT id, kind FROM entities WHERE id = ? LIMIT 1",
+  );
 
   const sourceIds = new Set(sources.map((row) => row.source_id));
   const systemIds = new Set(systems.map((row) => row.system_id));
   const operatorCountryByOrgId = new Map<string, string>();
   const resolvedSystemIds = new Map<string, string>();
+
+  function resolveExistingSystemId(preferredId: string): string | null {
+    const exact = findImportedEntityById.get(preferredId) as
+      | { id: string; kind: string }
+      | undefined;
+    if (exact) {
+      if (exact.kind !== "system") {
+        throw new Error(`entity ${preferredId} exists with unexpected kind ${exact.kind}`);
+      }
+      return exact.id;
+    }
+
+    const aliasId = entityAliases.get(preferredId);
+    if (!aliasId) {
+      return null;
+    }
+
+    const aliased = findImportedEntityById.get(aliasId) as
+      | { id: string; kind: string }
+      | undefined;
+    if (!aliased) {
+      return null;
+    }
+    if (aliased.kind !== "system") {
+      throw new Error(`entity alias ${aliasId} exists with unexpected kind ${aliased.kind}`);
+    }
+    return aliased.id;
+  }
 
   for (const system of systems) {
     if (!sourceIds.has(system.official_source_id)) {
@@ -238,6 +269,17 @@ function main() {
     }
     if (!sourceIds.has(system.workflow_source_id)) {
       throw new Error(`system ${system.system_id} references missing source ${system.workflow_source_id}`);
+    }
+    const parentSystemId = normalizeString(system.parent_system_id);
+    if (parentSystemId) {
+      if (parentSystemId === system.system_id) {
+        throw new Error(`system ${system.system_id} cannot parent itself`);
+      }
+      if (!systemIds.has(parentSystemId) && !resolveExistingSystemId(parentSystemId)) {
+        throw new Error(
+          `system ${system.system_id} references missing parent system ${parentSystemId}`,
+        );
+      }
     }
     resolveCountry(system.operator_country);
     const orgId = `org-${slugify(system.operator_name)}`;
@@ -249,10 +291,10 @@ function main() {
   }
 
   for (const link of links) {
-    if (!systemIds.has(link.source_system_id)) {
+    if (!systemIds.has(link.source_system_id) && !resolveExistingSystemId(link.source_system_id)) {
       throw new Error(`link ${link.link_id} references missing source system ${link.source_system_id}`);
     }
-    if (!systemIds.has(link.target_system_id)) {
+    if (!systemIds.has(link.target_system_id) && !resolveExistingSystemId(link.target_system_id)) {
       throw new Error(`link ${link.link_id} references missing target system ${link.target_system_id}`);
     }
     if (!sourceIds.has(link.evidence_source_id)) {
@@ -312,8 +354,11 @@ function main() {
       LIMIT 1
     `,
   );
-  const updateEntityParent = db.prepare(
+  const updateEntityParentIfMissing = db.prepare(
     "UPDATE entities SET parent_entity_id = ? WHERE id = ? AND parent_entity_id IS NULL",
+  );
+  const syncEntityParent = db.prepare(
+    "UPDATE entities SET parent_entity_id = ? WHERE id = ?",
   );
   const insertRelationshipSource = db.prepare(`
     INSERT OR IGNORE INTO relationship_sources (
@@ -393,7 +438,7 @@ function main() {
     }
 
     if (params.kind === "organization" && params.parentEntityId && !existing.parent_entity_id) {
-      updateEntityParent.run(params.parentEntityId, actualId);
+      updateEntityParentIfMissing.run(params.parentEntityId, actualId);
     }
 
     return actualId;
@@ -621,11 +666,31 @@ function main() {
       }
     }
 
+    for (const system of systems) {
+      const systemId = resolvedSystemIds.get(system.system_id) ?? system.system_id;
+      const parentSystemId = normalizeString(system.parent_system_id);
+      const parentEntityId = parentSystemId
+        ? (resolvedSystemIds.get(parentSystemId) ?? resolveExistingSystemId(parentSystemId))
+        : null;
+
+      if (parentEntityId === systemId) {
+        throw new Error(`system ${system.system_id} cannot parent itself`);
+      }
+
+      syncEntityParent.run(parentEntityId, systemId);
+    }
+
     for (const link of links) {
       const relationshipId = ensureRelationship({
         preferredId: link.link_id,
-        sourceEntityId: resolvedSystemIds.get(link.source_system_id) ?? link.source_system_id,
-        targetEntityId: resolvedSystemIds.get(link.target_system_id) ?? link.target_system_id,
+        sourceEntityId:
+          resolvedSystemIds.get(link.source_system_id) ??
+          resolveExistingSystemId(link.source_system_id) ??
+          link.source_system_id,
+        targetEntityId:
+          resolvedSystemIds.get(link.target_system_id) ??
+          resolveExistingSystemId(link.target_system_id) ??
+          link.target_system_id,
         type: "syncs_to",
         status: link.status,
         confidence: parseConfidence(link.confidence, `${link.link_id} confidence`),

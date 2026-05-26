@@ -24,10 +24,16 @@ It includes global, regional, and cross-domain systems that materially recur in 
 
 ## How To Read The Files
 
-- `systems.csv` is the canonical inventory of candidate systems.
+- `systems.csv` records the systems in this research batch.
 - `system_links.csv` contains only evidence-backed relationships.
 - `sources.csv` is the provenance table for both systems and links.
 - `exclusions_and_notes.md` records deferred systems and normalization decisions.
+
+## Import Model
+
+The live SQLite database in `data/chm-network.sqlite` is the source of truth.
+
+This folder is the first research import batch, not a permanent central CSV registry. Later research jobs can import separately into the same database.
 
 ## Current Limits
 

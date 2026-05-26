@@ -20,17 +20,48 @@ type GraphEdgeData = {
   type: Relationship["type"];
   status: Relationship["status"];
   label: string;
+  isDerivedHierarchy?: boolean;
+};
+
+type NodeDimensions = {
+  width: number;
+  height: number;
 };
 
 export interface ProjectionInput {
   graph: IndexedGraph;
   viewMode: ViewMode;
-  layoutMode: GraphLayout;
   countryDisplayMode: CountryDisplayMode;
   focusEntityId: string | null;
 }
 
-export interface ProjectionOutput {
+export interface GraphProjectionNode extends NodeDimensions {
+  id: string;
+  label: string;
+  kind: Entity["kind"];
+  status: Entity["status"];
+  subtype: string | null;
+  parentId?: string;
+  isFocus: boolean;
+}
+
+export interface GraphProjectionEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: Relationship["type"];
+  status: Relationship["status"];
+  label: string;
+  isDerivedHierarchy: boolean;
+}
+
+export interface GraphProjection {
+  nodes: GraphProjectionNode[];
+  edges: GraphProjectionEdge[];
+  effectiveFocusEntityId: string | null;
+}
+
+export interface CytoscapeProjectionOutput {
   elements: cytoscape.ElementDefinition[];
   layout: cytoscape.LayoutOptions;
 }
@@ -92,6 +123,17 @@ function getTechnicalIds(graph: IndexedGraph, focusEntityId: string): Set<string
   return expandNeighborhood(graph, seedIds, 3);
 }
 
+function includeAncestorChains(graph: IndexedGraph, seedIds: Set<string>): Set<string> {
+  const ids = new Set(seedIds);
+  for (const entityId of seedIds) {
+    for (const ancestorId of collectAncestors(graph, entityId)) {
+      ids.add(ancestorId);
+    }
+  }
+
+  return ids;
+}
+
 function stylizeCharacters(
   value: string,
   offsets: { upper: number; lower: number; digit?: number },
@@ -140,6 +182,22 @@ function buildLabel(entity: Entity): string {
   return `${boldSansDisplayText(entity.name)}\n${italicSansDisplayText(typeLabel)}`;
 }
 
+function getNodeDimensions(kind: Entity["kind"]): NodeDimensions {
+  if (kind === "country") {
+    return { width: 156, height: 96 };
+  }
+
+  if (kind === "organization") {
+    return { width: 148, height: 92 };
+  }
+
+  if (kind === "system") {
+    return { width: 148, height: 92 };
+  }
+
+  return { width: 128, height: 84 };
+}
+
 function getCountryContainerByCode(
   graph: IndexedGraph,
   viewMode: ViewMode,
@@ -154,6 +212,65 @@ function getCountryContainerByCode(
       .filter((entity) => entity.kind === "country" && entity.countryCode)
       .map((entity) => [entity.countryCode as string, entity.id]),
   );
+}
+
+function canUseHierarchyParentAsVisualContainer(
+  entity: Entity,
+  parent: Entity,
+  viewMode: ViewMode,
+  countryDisplayMode: CountryDisplayMode,
+): boolean {
+  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
+    return true;
+  }
+
+  if (!entity.countryCode || !parent.countryCode) {
+    return true;
+  }
+
+  return entity.countryCode === parent.countryCode;
+}
+
+function getNodeParentId(
+  graph: IndexedGraph,
+  entity: Entity,
+  visibleIds: Set<string>,
+  countryContainerByCode: Record<string, string>,
+  viewMode: ViewMode,
+  countryDisplayMode: CountryDisplayMode,
+): string | undefined {
+  if (entity.parentEntityId && visibleIds.has(entity.parentEntityId)) {
+    const parent = graph.entityById[entity.parentEntityId];
+    if (
+      parent &&
+      canUseHierarchyParentAsVisualContainer(entity, parent, viewMode, countryDisplayMode)
+    ) {
+      return entity.parentEntityId;
+    }
+  }
+
+  if (
+    entity.countryCode &&
+    entity.kind !== "country" &&
+    countryContainerByCode[entity.countryCode] &&
+    entity.id !== countryContainerByCode[entity.countryCode]
+  ) {
+    return countryContainerByCode[entity.countryCode];
+  }
+
+  return undefined;
+}
+
+function hasStoredPartOfRelationship(
+  graph: IndexedGraph,
+  sourceEntityId: string,
+  targetEntityId: string,
+): boolean {
+  const relationshipIds = graph.outgoingByEntityId[sourceEntityId] ?? [];
+  return relationshipIds.some((relationshipId) => {
+    const relationship = graph.relationshipById[relationshipId];
+    return relationship.type === "part_of" && relationship.targetEntityId === targetEntityId;
+  });
 }
 
 function edgeLabel(type: Relationship["type"]): string {
@@ -230,7 +347,7 @@ function dagreMinLen(
   }
 }
 
-function getLayout(
+function getCytoscapeLayout(
   layoutMode: GraphLayout,
   viewMode: ViewMode,
   focusEntityId: string | null,
@@ -360,8 +477,52 @@ function getLayout(
   } as cytoscape.LayoutOptions;
 }
 
-export function projectGraph(input: ProjectionInput): ProjectionOutput {
-  const { graph, viewMode, layoutMode, countryDisplayMode, focusEntityId } = input;
+export function getElkLayoutOptions(
+  layoutMode: GraphLayout,
+  viewMode: ViewMode,
+): Record<string, string> {
+  const direction = viewMode === "technical" ? "RIGHT" : "DOWN";
+
+  if (layoutMode === "elk-layered") {
+    return {
+      "elk.algorithm": "layered",
+      "elk.direction": direction,
+      "elk.layered.spacing.nodeNodeBetweenLayers": "80",
+      "elk.spacing.nodeNode": "32",
+      "elk.padding": "[top=48,left=48,bottom=48,right=48]",
+    };
+  }
+
+  if (layoutMode === "elk-mrtree") {
+    return {
+      "elk.algorithm": "mrtree",
+      "elk.direction": direction,
+      "elk.spacing.nodeNode": "32",
+      "elk.padding": "[top=48,left=48,bottom=48,right=48]",
+    };
+  }
+
+  if (layoutMode === "elk-stress") {
+    return {
+      "elk.algorithm": "stress",
+      "elk.spacing.nodeNode": "32",
+      "elk.padding": "[top=48,left=48,bottom=48,right=48]",
+    };
+  }
+
+  return {
+    "elk.algorithm": "force",
+    "elk.spacing.nodeNode": "32",
+    "elk.padding": "[top=48,left=48,bottom=48,right=48]",
+  };
+}
+
+export function getReactFlowDirection(viewMode: ViewMode): "LEFT" | "TOP" {
+  return viewMode === "technical" ? "LEFT" : "TOP";
+}
+
+export function projectGraph(input: ProjectionInput): GraphProjection {
+  const { graph, viewMode, countryDisplayMode, focusEntityId } = input;
 
   const defaultCountry = graph.entities.find((entity) => entity.kind === "country")?.id ?? null;
   const defaultSystem = graph.entities.find((entity) => entity.kind === "system")?.id ?? null;
@@ -382,28 +543,38 @@ export function projectGraph(input: ProjectionInput): ProjectionOutput {
     includedIds = getTechnicalIds(graph, effectiveFocusEntityId);
   }
 
+  includedIds = includeAncestorChains(graph, includedIds);
+
   const includedEntities = graph.entities.filter((entity) => includedIds.has(entity.id));
   const visibleIds = new Set(includedEntities.map((entity) => entity.id));
 
-  const nodeElements: cytoscape.ElementDefinition[] = includedEntities.map((entity) => ({
-    data: {
+  const nodes = includedEntities.map((entity) => {
+    const parentId = getNodeParentId(
+      graph,
+      entity,
+      visibleIds,
+      countryContainerByCode,
+      viewMode,
+      countryDisplayMode,
+    );
+
+    return {
       id: entity.id,
       label: buildLabel(entity),
       kind: entity.kind,
       status: entity.status,
       subtype: entity.subtype,
-      parent:
-        entity.countryCode &&
-        entity.kind !== "country" &&
-        countryContainerByCode[entity.countryCode] &&
-        entity.id !== countryContainerByCode[entity.countryCode]
-          ? countryContainerByCode[entity.countryCode]
-          : undefined,
-    } satisfies GraphNodeData,
-    classes: entity.id === effectiveFocusEntityId ? "is-focus" : "",
-  }));
+      parentId,
+      isFocus: entity.id === effectiveFocusEntityId,
+      ...getNodeDimensions(entity.kind),
+    };
+  });
 
-  const edgeElements: cytoscape.ElementDefinition[] = graph.relationships
+  const nodeParentIdById = Object.fromEntries(
+    nodes.map((node) => [node.id, node.parentId]),
+  ) as Record<string, string | undefined>;
+
+  const edges = graph.relationships
     .filter(
       (relationship) =>
         !shouldHideEdgeInEngulfMode(graph, relationship, viewMode, countryDisplayMode) &&
@@ -411,18 +582,75 @@ export function projectGraph(input: ProjectionInput): ProjectionOutput {
         visibleIds.has(relationship.targetEntityId),
     )
     .map((relationship) => ({
-      data: {
-        id: relationship.id,
-        source: relationship.sourceEntityId,
-        target: relationship.targetEntityId,
-        type: relationship.type,
-        status: relationship.status,
-        label: edgeLabel(relationship.type),
-      } satisfies GraphEdgeData,
+      id: relationship.id,
+      source: relationship.sourceEntityId,
+      target: relationship.targetEntityId,
+      type: relationship.type,
+      status: relationship.status,
+      label: edgeLabel(relationship.type),
+      isDerivedHierarchy: false,
     }));
+
+  if (viewMode !== "technical" && countryDisplayMode === "engulf") {
+    edges.push(
+      ...includedEntities
+        .filter(
+          (entity) =>
+            entity.parentEntityId != null &&
+            visibleIds.has(entity.parentEntityId) &&
+            nodeParentIdById[entity.id] !== entity.parentEntityId &&
+            !hasStoredPartOfRelationship(graph, entity.id, entity.parentEntityId),
+        )
+        .map((entity) => ({
+          id: `derived-hierarchy-${entity.id}-${entity.parentEntityId as string}`,
+          source: entity.id,
+          target: entity.parentEntityId as string,
+          type: "part_of" as const,
+          status: entity.status,
+          label: edgeLabel("part_of"),
+          isDerivedHierarchy: true,
+        })),
+    );
+  }
+
+  return {
+    nodes,
+    edges,
+    effectiveFocusEntityId,
+  };
+}
+
+export function projectCytoscapeGraph(
+  projection: GraphProjection,
+  layoutMode: GraphLayout,
+  viewMode: ViewMode,
+): CytoscapeProjectionOutput {
+  const nodeElements: cytoscape.ElementDefinition[] = projection.nodes.map((node) => ({
+    data: {
+      id: node.id,
+      label: node.label,
+      kind: node.kind,
+      status: node.status,
+      subtype: node.subtype,
+      parent: node.parentId,
+    } satisfies GraphNodeData,
+    classes: node.isFocus ? "is-focus" : "",
+  }));
+
+  const edgeElements: cytoscape.ElementDefinition[] = projection.edges.map((edge) => ({
+    data: {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type,
+      status: edge.status,
+      label: edge.label,
+      isDerivedHierarchy: edge.isDerivedHierarchy,
+    } satisfies GraphEdgeData,
+  }));
 
   return {
     elements: [...nodeElements, ...edgeElements],
-    layout: getLayout(layoutMode, viewMode, effectiveFocusEntityId),
+    layout: getCytoscapeLayout(layoutMode, viewMode, projection.effectiveFocusEntityId),
   };
 }

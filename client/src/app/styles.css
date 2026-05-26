@@ -148,3 +148,101 @@ body {
 .legend-column {
   min-width: 140px;
 }
+
+.react-flow__node-entity {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.react-flow__controls {
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(55, 79, 112, 0.12);
+}
+
+.rf-node-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 2px solid #42658f;
+  background: #d6e4f7;
+  color: #132033;
+  text-align: center;
+  user-select: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 120ms ease;
+}
+
+.rf-node-card.country {
+  background: #f7d470;
+  border-color: #b28a23;
+}
+
+.rf-node-card.organization {
+  background: #dcefdc;
+  border-color: #5d8b5d;
+}
+
+.rf-node-card.system {
+  background: #d9ebff;
+  border-color: #467ab3;
+}
+
+.rf-node-card.planned {
+  border-style: dashed;
+}
+
+.rf-node-card.speculative {
+  border-style: dotted;
+  opacity: 0.7;
+}
+
+.rf-node-card.deprecated {
+  opacity: 0.55;
+}
+
+.rf-node-card.is-selected {
+  box-shadow: 0 0 0 2px #ff7f50;
+}
+
+.rf-node-card.is-neighbor {
+  box-shadow: 0 0 0 3px #ff7f50;
+}
+
+.rf-node-card.is-focus {
+  border-width: 4px;
+  border-color: #ff7f50;
+  box-shadow: 0 0 0 4px rgba(255, 127, 80, 0.14);
+}
+
+.rf-node-label {
+  white-space: pre-line;
+  line-height: 1.35;
+  font-size: 14px;
+}
+
+.rf-node-handle {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+}
+
+.react-flow__edge.is-selected path {
+  filter: drop-shadow(0 0 2px rgba(36, 88, 166, 0.22));
+}
+
+.react-flow__edge.is-connected path {
+  filter: drop-shadow(0 0 2px rgba(255, 127, 80, 0.2));
+}

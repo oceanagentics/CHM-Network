@@ -16,6 +16,9 @@ interface UseCytoscapeControllerOptions {
   elements: ElementDefinition[];
   layout: LayoutOptions;
   structuralKey: string;
+  selectedEntityId: string | null;
+  connectedNodeIds: string[];
+  connectedEdgeIds: string[];
 }
 
 export function useCytoscapeController({
@@ -23,6 +26,9 @@ export function useCytoscapeController({
   elements,
   layout,
   structuralKey,
+  selectedEntityId,
+  connectedNodeIds,
+  connectedEdgeIds,
 }: UseCytoscapeControllerOptions): Core | null {
   const cyRef = useRef<Core | null>(null);
   const lastStructuralKeyRef = useRef<string | null>(null);
@@ -55,6 +61,9 @@ export function useCytoscapeController({
     });
 
     cy.on("tap", "edge", (event) => {
+      if (event.target.data("isDerivedHierarchy")) {
+        return;
+      }
       useGraphStore.getState().setSelectedRelationshipId(event.target.id());
     });
 
@@ -150,6 +159,30 @@ export function useCytoscapeController({
       layoutRunner.run();
     });
   }, [container, layout, stableElements, structuralKey]);
+
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) {
+      return;
+    }
+
+    cy.batch(() => {
+      cy.nodes().removeClass("is-selected is-neighbor");
+      cy.edges().removeClass("is-connected");
+
+      if (!selectedEntityId) {
+        return;
+      }
+
+      cy.$id(selectedEntityId).addClass("is-selected");
+      for (const nodeId of connectedNodeIds) {
+        cy.$id(nodeId).addClass("is-neighbor");
+      }
+      for (const edgeId of connectedEdgeIds) {
+        cy.$id(edgeId).addClass("is-connected");
+      }
+    });
+  }, [connectedEdgeIds, connectedNodeIds, selectedEntityId]);
 
   return cyRef.current;
 }

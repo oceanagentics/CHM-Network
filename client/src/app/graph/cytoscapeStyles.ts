@@ -38,6 +38,18 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
   { selector: 'node[kind = "organization"]', style: { shape: "round-rectangle", "background-color": "#dcefdc", "border-color": "#5d8b5d", width: 148, height: 92 } },
   { selector: 'node[kind = "system"]', style: { shape: "round-rectangle", "background-color": "#d9ebff", "border-color": "#467ab3", width: 148, height: 92 } },
   {
+    selector: 'node[kind = "system"]:parent',
+    style: {
+      "background-opacity": 0.16,
+      "text-valign": "top",
+      "text-halign": "center",
+      "padding-top": "28px",
+      "padding-left": "20px",
+      "padding-right": "20px",
+      "padding-bottom": "20px",
+    },
+  },
+  {
     selector: "edge",
     style: {
       width: 2.2,
@@ -67,6 +79,34 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       "border-color": "#ff7f50",
       "z-index-compare": "manual",
       "z-index": 999,
+    },
+  },
+  {
+    selector: ".is-selected",
+    style: {
+      "underlay-color": "#ff7f50",
+      "underlay-opacity": 1,
+      "underlay-padding": 8,
+    },
+  },
+  {
+    selector: ".is-neighbor",
+    style: {
+      "underlay-color": "#ff7f50",
+      "underlay-opacity": 1,
+      "underlay-padding": 6,
+      "z-index-compare": "manual",
+      "z-index": 998,
+    },
+  },
+  {
+    selector: ".is-connected",
+    style: {
+      "line-color": "#ff7f50",
+      "target-arrow-color": "#ff7f50",
+      width: 4.4,
+      "z-index-compare": "manual",
+      "z-index": 997,
     },
   },
 ];
