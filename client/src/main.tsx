@@ -1,7 +1,6 @@
 import ReactDOM from "react-dom/client";
 import { ConfigProvider, theme } from "antd";
 import "antd/dist/reset.css";
-import "@xyflow/react/dist/style.css";
 
 import { App } from "./app/App";
 import "./app/styles.css";

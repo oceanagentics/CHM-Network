@@ -2,9 +2,8 @@
 
 ## Canonical Graph Data
 - Treat `data/chm-network.sqlite` as the canonical graph during active editing.
+- Treat the live app DB as the only graph source of truth; do not keep alternate bootstrap or seed graph sources in the repo.
 - Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
-- Do not hand-edit `sql/chm_seed_japan.sql` for routine graph changes.
-- `sql/chm_schema.sql` and `sql/chm_seed_japan.sql` are bootstrap/reset inputs only.
 
 ## Research Import Workflow
 - Each research job may live in its own dated folder under `research/`.
@@ -45,7 +44,7 @@
 - `system`
 
 ### Relationship types
-- `part_of`
+- `governs`
 - `operates`
 - `publishes_to`
 - `syncs_to`
@@ -53,11 +52,11 @@
 ## Validation Rules
 ### Entities
 - `country` has no parent.
-- `organization.parentEntityId` may target only `country` or `organization`.
-- `system.parentEntityId` may target only `system`.
+- `organization.parentEntityId` may target only `organization`.
+- `system.parentEntityId` is importer-driven; the normal write API does not edit it.
 
 ### Relationships
-- `part_of`: `organization -> organization|country`
+- `governs`: `country -> organization`
 - `operates`: `organization -> system`
 - `publishes_to`: `organization -> system`
 - `syncs_to`: `system -> system`
@@ -67,10 +66,9 @@
 - Relationship metadata such as `transferMethod`, `format`, `standard`, and `artifact` belongs in `relationships.properties_json`.
 - The editor sends provenance links inline with entity and relationship saves and replaces those links transactionally.
 
-## Reset Behavior
-- On startup, the server checks the local DB for stale legacy graph rows.
-- If legacy kinds or relationships are found, the server resets the local DB from the minimal schema and seed before serving requests.
-- After that reset, the live DB is the source of truth.
+## Startup Behavior
+- On startup, the server opens `data/chm-network.sqlite` and validates that the required app tables exist.
+- If the DB file is missing or invalid, the server fails fast instead of creating or reseeding an alternate graph.
 
 ## GCP Environment
 - Organization: `oceanagentics.com`

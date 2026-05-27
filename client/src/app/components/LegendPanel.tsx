@@ -7,7 +7,8 @@ const nodeItems = [
 ];
 
 const edgeItems = [
-  { className: "part-of", label: "part of" },
+  { className: "hierarchy", label: "part of (derived)" },
+  { className: "governs", label: "governs" },
   { className: "operates", label: "operates" },
   { className: "publishes", label: "publishes to" },
   { className: "syncs", label: "syncs to" },

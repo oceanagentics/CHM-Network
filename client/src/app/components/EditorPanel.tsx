@@ -104,7 +104,7 @@ type SourceDraft = {
 
 const statusOptions = ["active", "planned", "speculative", "deprecated"] as const;
 const entityKindOptions = ["country", "organization", "system"] as const;
-const relationshipTypeOptions = ["part_of", "operates", "publishes_to", "syncs_to"] as const;
+const relationshipTypeOptions = ["governs", "operates", "publishes_to", "syncs_to"] as const;
 
 const defaultLink = (sourceId = ""): SourceLinkDraft => ({
   sourceId,
@@ -965,10 +965,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
               <Form.Item label="Parent" name="parentEntityId">
                 <Select
                   allowClear
-                  options={entityOptions.filter(
-                    (entity) =>
-                      entity.kind === "country" || entity.kind === "organization",
-                  )}
+                  options={entityOptions.filter((entity) => entity.kind === "organization")}
                 />
               </Form.Item>
             ) : null}

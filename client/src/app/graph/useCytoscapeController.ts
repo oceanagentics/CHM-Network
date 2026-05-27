@@ -1,3 +1,6 @@
+/**
+ * Cytoscape controller owns renderer lifecycle, interaction wiring, post-pass execution, and viewport behavior.
+ */
 import { useEffect, useMemo, useRef } from "react";
 import cytoscape, { type Core, type ElementDefinition, type LayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre";
@@ -5,6 +8,7 @@ import elk from "cytoscape-elk";
 import fcose from "cytoscape-fcose";
 
 import { cytoscapeStyles } from "./cytoscapeStyles";
+import type { GraphPostPass } from "./layout";
 import { useGraphStore } from "../state/graphStore";
 
 cytoscape.use(dagre);
@@ -15,6 +19,7 @@ interface UseCytoscapeControllerOptions {
   container: HTMLDivElement | null;
   elements: ElementDefinition[];
   layout: LayoutOptions;
+  postPass?: GraphPostPass;
   structuralKey: string;
   selectedEntityId: string | null;
   connectedNodeIds: string[];
@@ -25,6 +30,7 @@ export function useCytoscapeController({
   container,
   elements,
   layout,
+  postPass,
   structuralKey,
   selectedEntityId,
   connectedNodeIds,
@@ -134,6 +140,7 @@ export function useCytoscapeController({
     if (didStructureChange) {
       layoutRunner.on("layoutstop", () => {
         cy.resize();
+        postPass?.(cy);
         if (
           shouldPreserveViewport &&
           preservedViewportRef.current &&
@@ -158,7 +165,7 @@ export function useCytoscapeController({
       cy.resize();
       layoutRunner.run();
     });
-  }, [container, layout, stableElements, structuralKey]);
+  }, [container, layout, postPass, stableElements, structuralKey]);
 
   useEffect(() => {
     const cy = cyRef.current;

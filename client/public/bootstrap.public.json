@@ -5,7 +5,7 @@
       "kind": "organization",
       "name": "AWI and MARUM",
       "slug": "org-awi-and-marum",
-      "parentEntityId": "country-deu",
+      "parentEntityId": null,
       "countryCode": "DEU",
       "subtype": "system_operator",
       "status": "active",
@@ -18,14 +18,14 @@
         "operatorCountryRaw": "Germany"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-algaebase",
       "kind": "organization",
       "name": "AlgaeBase",
       "slug": "org-algaebase",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -38,7 +38,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-algaebase",
@@ -74,7 +74,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-aquamaps",
@@ -117,7 +117,7 @@
       "kind": "organization",
       "name": "AquaMaps collaboration",
       "slug": "org-aquamaps-collaboration",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -130,14 +130,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.460Z",
-      "updatedAt": "2026-05-26T16:46:26.460Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-argo-data-management-team",
       "kind": "organization",
       "name": "Argo Data Management Team",
       "slug": "org-argo-data-management-team",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -150,7 +150,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-argo-gdac",
@@ -222,7 +222,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "platform-bbnj-chm",
@@ -230,7 +230,7 @@
       "name": "BBNJ Clearing-House Mechanism (CHM)",
       "slug": "bbnj-chm",
       "parentEntityId": null,
-      "countryCode": null,
+      "countryCode": "INT",
       "subtype": "platform",
       "status": "planned",
       "confidence": 0.98,
@@ -239,7 +239,7 @@
         "subtype": "platform"
       },
       "createdAt": "2026-04-24T00:00:00Z",
-      "updatedAt": "2026-04-24T00:00:00Z"
+      "updatedAt": "2026-05-27T04:34:29.879Z"
     },
     {
       "id": "system-bco-dmo",
@@ -299,7 +299,7 @@
       "kind": "organization",
       "name": "BOLD Systems",
       "slug": "org-bold-systems",
-      "parentEntityId": "country-can",
+      "parentEntityId": null,
       "countryCode": "CAN",
       "subtype": "system_operator",
       "status": "active",
@@ -312,7 +312,7 @@
         "operatorCountryRaw": "Canada"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-bold",
@@ -384,14 +384,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-bio-oracle-team",
       "kind": "organization",
       "name": "Bio-ORACLE team",
       "slug": "org-bio-oracle-team",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -404,14 +404,14 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-bioinformation-and-ddbj-center-nig",
       "kind": "organization",
       "name": "Bioinformation and DDBJ Center NIG",
       "slug": "org-bioinformation-and-ddbj-center-nig",
-      "parentEntityId": "country-jpn",
+      "parentEntityId": null,
       "countryCode": "JPN",
       "subtype": "system_operator",
       "status": "active",
@@ -424,14 +424,14 @@
         "operatorCountryRaw": "Japan"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-cern-and-openaire",
       "kind": "organization",
       "name": "CERN and OpenAIRE",
       "slug": "org-cern-and-openaire",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -444,14 +444,14 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-cioos",
       "kind": "organization",
       "name": "CIOOS",
       "slug": "org-cioos",
-      "parentEntityId": "country-can",
+      "parentEntityId": null,
       "countryCode": "CAN",
       "subtype": "system_operator",
       "status": "active",
@@ -464,7 +464,7 @@
         "operatorCountryRaw": "Canada"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "country-can",
@@ -521,7 +521,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-cmems-datastore",
@@ -600,7 +600,7 @@
       "kind": "organization",
       "name": "Copernicus Marine Service",
       "slug": "org-copernicus-marine-service",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -613,7 +613,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-datras",
@@ -649,7 +649,7 @@
         "parentSystemId": "system-ices-data"
       },
       "createdAt": "2026-05-26T21:51:00.373Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-ddbj",
@@ -692,7 +692,7 @@
       "kind": "organization",
       "name": "Dryad",
       "slug": "org-dryad",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -705,7 +705,7 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-dryad",
@@ -741,14 +741,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-embl-ebi",
       "kind": "organization",
       "name": "EMBL-EBI",
       "slug": "org-embl-ebi",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -761,7 +761,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-emodnet-biology",
@@ -804,7 +804,7 @@
       "kind": "organization",
       "name": "EMODnet Biology consortium",
       "slug": "org-emodnet-biology-consortium",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -817,14 +817,14 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.459Z",
-      "updatedAt": "2026-05-26T16:46:26.459Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-euro-argo-eric",
       "kind": "organization",
       "name": "Euro-Argo ERIC",
       "slug": "org-euro-argo-eric",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -837,7 +837,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-euro-argo",
@@ -873,14 +873,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-european-commission-and-thematic-consortia",
       "kind": "organization",
       "name": "European Commission and thematic consortia",
       "slug": "org-european-commission-and-thematic-consortia",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -893,7 +893,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.459Z",
-      "updatedAt": "2026-05-26T16:46:26.459Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-emodnet",
@@ -1001,7 +1001,7 @@
         "parentSystemId": "system-emodnet-biology"
       },
       "createdAt": "2026-05-26T21:51:00.372Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "country-eur",
@@ -1029,7 +1029,7 @@
       "kind": "organization",
       "name": "FAO",
       "slug": "org-fao",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1042,7 +1042,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.463Z",
-      "updatedAt": "2026-05-26T16:46:26.463Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-fao-fishstat",
@@ -1121,7 +1121,7 @@
       "kind": "organization",
       "name": "FishBase Consortium",
       "slug": "org-fishbase-consortium",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1134,14 +1134,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.460Z",
-      "updatedAt": "2026-05-26T16:46:26.460Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-flanders-marine-institute",
       "kind": "organization",
       "name": "Flanders Marine Institute",
       "slug": "org-flanders-marine-institute",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1154,14 +1154,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.459Z",
-      "updatedAt": "2026-05-26T16:46:26.459Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-gbif-secretariat",
       "kind": "organization",
       "name": "GBIF Secretariat",
       "slug": "org-gbif-secretariat",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1174,14 +1174,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.459Z",
-      "updatedAt": "2026-05-26T16:46:26.459Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-geome-collaboration",
       "kind": "organization",
       "name": "GEOME collaboration",
       "slug": "org-geome-collaboration",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -1194,14 +1194,14 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-ggbn-consortium",
       "kind": "organization",
       "name": "GGBN consortium",
       "slug": "org-ggbn-consortium",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1214,14 +1214,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.460Z",
-      "updatedAt": "2026-05-26T16:46:26.460Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-glodap-community",
       "kind": "organization",
       "name": "GLODAP community",
       "slug": "org-glodap-community",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1234,7 +1234,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-genbank",
@@ -1306,7 +1306,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "country-deu",
@@ -1435,7 +1435,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-go-ship",
@@ -1471,14 +1471,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-ices",
       "kind": "organization",
       "name": "ICES",
       "slug": "org-ices",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1491,7 +1491,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-ices-data",
@@ -1534,7 +1534,7 @@
       "kind": "organization",
       "name": "INSDC members",
       "slug": "org-insdc-members",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1547,14 +1547,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.460Z",
-      "updatedAt": "2026-05-26T16:46:26.460Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-ioc-unesco-iode",
       "kind": "organization",
       "name": "IOC-UNESCO IODE",
       "slug": "org-ioc-unesco-iode",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1567,7 +1567,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.458Z",
-      "updatedAt": "2026-05-26T16:46:26.458Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-intercatch",
@@ -1603,7 +1603,7 @@
         "parentSystemId": "system-ices-data"
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "country-int",
@@ -1631,7 +1631,7 @@
       "kind": "organization",
       "name": "International GO-SHIP community",
       "slug": "org-international-go-ship-community",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -1644,7 +1644,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.374Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-insdc",
@@ -1702,7 +1702,7 @@
       "kind": "organization",
       "name": "Japan Agency for Marine-Earth Science and Technology (JAMSTEC)",
       "slug": "jamstec",
-      "parentEntityId": "country-jpn",
+      "parentEntityId": null,
       "countryCode": "JPN",
       "subtype": "research_institute",
       "status": "active",
@@ -1710,7 +1710,7 @@
       "description": "Top-level organization representing the Japanese publishing actor in the seed path.",
       "properties": {},
       "createdAt": "2026-04-24T00:00:00Z",
-      "updatedAt": "2026-04-24T00:00:00Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-mgnify",
@@ -1789,7 +1789,7 @@
       "kind": "organization",
       "name": "Mercator Ocean International and EU",
       "slug": "org-mercator-ocean-international-and-eu",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -1802,7 +1802,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-molluscabase",
@@ -1838,14 +1838,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-molluscabase-editors-and-vliz",
       "kind": "organization",
       "name": "MolluscaBase editors and VLIZ",
       "slug": "org-molluscabase-editors-and-vliz",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -1858,14 +1858,14 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-ncbi-united-states",
       "kind": "organization",
       "name": "NCBI United States",
       "slug": "org-ncbi-united-states",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -1878,14 +1878,14 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-noaa-ioos",
       "kind": "organization",
       "name": "NOAA IOOS",
       "slug": "org-noaa-ioos",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -1898,14 +1898,14 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-noaa-ncei",
       "kind": "organization",
       "name": "NOAA NCEI",
       "slug": "org-noaa-ncei",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -1918,7 +1918,7 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-noaa-ncei-marine",
@@ -1962,7 +1962,7 @@
       "name": "Ocean Biodiversity Information System (OBIS)",
       "slug": "obis",
       "parentEntityId": null,
-      "countryCode": null,
+      "countryCode": "INT",
       "subtype": "platform",
       "status": "active",
       "confidence": 0.98,
@@ -1971,7 +1971,7 @@
         "subtype": "platform"
       },
       "createdAt": "2026-04-24T00:00:00Z",
-      "updatedAt": "2026-05-26T20:46:47.899Z"
+      "updatedAt": "2026-05-27T04:34:29.879Z"
     },
     {
       "id": "system-odis",
@@ -2050,7 +2050,7 @@
       "kind": "organization",
       "name": "Ocean Observatories Initiative",
       "slug": "org-ocean-observatories-initiative",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -2063,7 +2063,7 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-ooi-data",
@@ -2135,7 +2135,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-oceansites",
@@ -2171,14 +2171,14 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-oceansites-programme",
       "kind": "organization",
       "name": "OceanSITES programme",
       "slug": "org-oceansites-programme",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -2191,7 +2191,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.374Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-pangaea",
@@ -2263,14 +2263,14 @@
         "parentSystemId": "system-ices-data"
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "org-socat-community",
       "kind": "organization",
       "name": "SOCAT community",
       "slug": "org-socat-community",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -2283,14 +2283,14 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.374Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-sea-around-us",
       "kind": "organization",
       "name": "Sea Around Us",
       "slug": "org-sea-around-us",
-      "parentEntityId": "country-can",
+      "parentEntityId": null,
       "countryCode": "CAN",
       "subtype": "system_operator",
       "status": "active",
@@ -2303,7 +2303,7 @@
         "operatorCountryRaw": "Canada"
       },
       "createdAt": "2026-05-26T16:46:26.464Z",
-      "updatedAt": "2026-05-26T16:46:26.464Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-sea-around-us",
@@ -2346,7 +2346,7 @@
       "kind": "organization",
       "name": "Sea Around Us and Q-quatics",
       "slug": "org-sea-around-us-and-q-quatics",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -2359,7 +2359,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T16:46:26.460Z",
-      "updatedAt": "2026-05-26T16:46:26.460Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-seadatanet",
@@ -2438,7 +2438,7 @@
       "kind": "organization",
       "name": "SeaDataNet consortium",
       "slug": "org-seadatanet-consortium",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -2451,7 +2451,7 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T16:46:26.462Z",
-      "updatedAt": "2026-05-26T16:46:26.462Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-sealifebase",
@@ -2523,7 +2523,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.374Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-ioos",
@@ -2587,7 +2587,7 @@
       "kind": "organization",
       "name": "University of Colorado Boulder and collaborators",
       "slug": "org-university-of-colorado-boulder-and-collaborators",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -2600,14 +2600,14 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-vliz-and-lifewatch-belgium",
       "kind": "organization",
       "name": "VLIZ and LifeWatch Belgium",
       "slug": "org-vliz-and-lifewatch-belgium",
-      "parentEntityId": "country-eur",
+      "parentEntityId": null,
       "countryCode": "EUR",
       "subtype": "system_operator",
       "status": "active",
@@ -2620,14 +2620,14 @@
         "operatorCountryRaw": "EU"
       },
       "createdAt": "2026-05-26T21:51:00.372Z",
-      "updatedAt": "2026-05-26T21:51:00.372Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-whoi-and-partner-institutions",
       "kind": "organization",
       "name": "WHOI and partner institutions",
       "slug": "org-whoi-and-partner-institutions",
-      "parentEntityId": "country-usa",
+      "parentEntityId": null,
       "countryCode": "USA",
       "subtype": "system_operator",
       "status": "active",
@@ -2640,14 +2640,14 @@
         "operatorCountryRaw": "USA"
       },
       "createdAt": "2026-05-26T16:46:26.461Z",
-      "updatedAt": "2026-05-26T16:46:26.461Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "org-wmo-and-ioc-unesco",
       "kind": "organization",
       "name": "WMO and IOC UNESCO",
       "slug": "org-wmo-and-ioc-unesco",
-      "parentEntityId": "country-int",
+      "parentEntityId": null,
       "countryCode": "INT",
       "subtype": "system_operator",
       "status": "active",
@@ -2660,7 +2660,7 @@
         "operatorCountryRaw": "international"
       },
       "createdAt": "2026-05-26T21:51:00.375Z",
-      "updatedAt": "2026-05-26T21:51:00.375Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     },
     {
       "id": "system-worms",
@@ -2732,7 +2732,7 @@
         "parentSystemId": null
       },
       "createdAt": "2026-05-26T21:51:00.376Z",
-      "updatedAt": "2026-05-26T21:51:00.376Z"
+      "updatedAt": "2026-05-27T03:28:28.081Z"
     },
     {
       "id": "system-re3data",
@@ -2775,7 +2775,7 @@
       "kind": "organization",
       "name": "re3data consortium",
       "slug": "org-re3data-consortium",
-      "parentEntityId": "country-deu",
+      "parentEntityId": null,
       "countryCode": "DEU",
       "subtype": "system_operator",
       "status": "active",
@@ -2788,7 +2788,7 @@
         "operatorCountryRaw": "Germany"
       },
       "createdAt": "2026-05-26T16:46:26.464Z",
-      "updatedAt": "2026-05-26T16:46:26.464Z"
+      "updatedAt": "2026-05-27T03:24:24.332Z"
     }
   ],
   "relationships": [
@@ -3167,9 +3167,9 @@
     },
     {
       "id": "rel-algaebase-part-of-eur",
-      "sourceEntityId": "org-algaebase",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-algaebase",
+      "type": "governs",
       "status": "active",
       "confidence": 0.91,
       "note": null,
@@ -3199,9 +3199,9 @@
     },
     {
       "id": "rel-aquamaps-collaboration-part-of-int",
-      "sourceEntityId": "org-aquamaps-collaboration",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-aquamaps-collaboration",
+      "type": "governs",
       "status": "active",
       "confidence": 0.9,
       "note": null,
@@ -3231,9 +3231,9 @@
     },
     {
       "id": "rel-argo-data-management-team-part-of-int",
-      "sourceEntityId": "org-argo-data-management-team",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-argo-data-management-team",
+      "type": "governs",
       "status": "active",
       "confidence": 0.96,
       "note": null,
@@ -3263,9 +3263,9 @@
     },
     {
       "id": "rel-awi-and-marum-part-of-deu",
-      "sourceEntityId": "org-awi-and-marum",
-      "targetEntityId": "country-deu",
-      "type": "part_of",
+      "sourceEntityId": "country-deu",
+      "targetEntityId": "org-awi-and-marum",
+      "type": "governs",
       "status": "active",
       "confidence": 0.96,
       "note": null,
@@ -3295,9 +3295,9 @@
     },
     {
       "id": "rel-bio-oracle-team-part-of-eur",
-      "sourceEntityId": "org-bio-oracle-team",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-bio-oracle-team",
+      "type": "governs",
       "status": "active",
       "confidence": 0.92,
       "note": null,
@@ -3327,9 +3327,9 @@
     },
     {
       "id": "rel-bioinformation-and-ddbj-center-nig-part-of-jpn",
-      "sourceEntityId": "org-bioinformation-and-ddbj-center-nig",
-      "targetEntityId": "country-jpn",
-      "type": "part_of",
+      "sourceEntityId": "country-jpn",
+      "targetEntityId": "org-bioinformation-and-ddbj-center-nig",
+      "type": "governs",
       "status": "active",
       "confidence": 0.97,
       "note": null,
@@ -3375,9 +3375,9 @@
     },
     {
       "id": "rel-bold-systems-part-of-can",
-      "sourceEntityId": "org-bold-systems",
-      "targetEntityId": "country-can",
-      "type": "part_of",
+      "sourceEntityId": "country-can",
+      "targetEntityId": "org-bold-systems",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3407,9 +3407,9 @@
     },
     {
       "id": "rel-cern-and-openaire-part-of-eur",
-      "sourceEntityId": "org-cern-and-openaire",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-cern-and-openaire",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3439,9 +3439,9 @@
     },
     {
       "id": "rel-cioos-part-of-can",
-      "sourceEntityId": "org-cioos",
-      "targetEntityId": "country-can",
-      "type": "part_of",
+      "sourceEntityId": "country-can",
+      "targetEntityId": "org-cioos",
+      "type": "governs",
       "status": "active",
       "confidence": 0.93,
       "note": null,
@@ -3471,9 +3471,9 @@
     },
     {
       "id": "rel-copernicus-marine-service-part-of-eur",
-      "sourceEntityId": "org-copernicus-marine-service",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-copernicus-marine-service",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3503,9 +3503,9 @@
     },
     {
       "id": "rel-dryad-part-of-usa",
-      "sourceEntityId": "org-dryad",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-dryad",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -3551,9 +3551,9 @@
     },
     {
       "id": "rel-embl-ebi-part-of-eur",
-      "sourceEntityId": "org-embl-ebi",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-embl-ebi",
+      "type": "governs",
       "status": "active",
       "confidence": 0.98,
       "note": null,
@@ -3583,9 +3583,9 @@
     },
     {
       "id": "rel-emodnet-biology-consortium-part-of-eur",
-      "sourceEntityId": "org-emodnet-biology-consortium",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-emodnet-biology-consortium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.96,
       "note": null,
@@ -3615,9 +3615,9 @@
     },
     {
       "id": "rel-euro-argo-eric-part-of-eur",
-      "sourceEntityId": "org-euro-argo-eric",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-euro-argo-eric",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -3647,9 +3647,9 @@
     },
     {
       "id": "rel-european-commission-and-thematic-consortia-part-of-eur",
-      "sourceEntityId": "org-european-commission-and-thematic-consortia",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-european-commission-and-thematic-consortia",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -3679,9 +3679,9 @@
     },
     {
       "id": "rel-fao-part-of-int",
-      "sourceEntityId": "org-fao",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-fao",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3711,9 +3711,9 @@
     },
     {
       "id": "rel-fishbase-consortium-part-of-int",
-      "sourceEntityId": "org-fishbase-consortium",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-fishbase-consortium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -3759,9 +3759,9 @@
     },
     {
       "id": "rel-flanders-marine-institute-part-of-int",
-      "sourceEntityId": "org-flanders-marine-institute",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-flanders-marine-institute",
+      "type": "governs",
       "status": "active",
       "confidence": 0.98,
       "note": null,
@@ -3791,9 +3791,9 @@
     },
     {
       "id": "rel-gbif-secretariat-part-of-int",
-      "sourceEntityId": "org-gbif-secretariat",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-gbif-secretariat",
+      "type": "governs",
       "status": "active",
       "confidence": 0.97,
       "note": null,
@@ -3823,9 +3823,9 @@
     },
     {
       "id": "rel-geome-collaboration-part-of-usa",
-      "sourceEntityId": "org-geome-collaboration",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-geome-collaboration",
+      "type": "governs",
       "status": "active",
       "confidence": 0.93,
       "note": null,
@@ -3855,9 +3855,9 @@
     },
     {
       "id": "rel-ggbn-consortium-part-of-int",
-      "sourceEntityId": "org-ggbn-consortium",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-ggbn-consortium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.9,
       "note": null,
@@ -3887,9 +3887,9 @@
     },
     {
       "id": "rel-glodap-community-part-of-int",
-      "sourceEntityId": "org-glodap-community",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-glodap-community",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3967,9 +3967,9 @@
     },
     {
       "id": "rel-ices-part-of-int",
-      "sourceEntityId": "org-ices",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-ices",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -3999,9 +3999,9 @@
     },
     {
       "id": "rel-insdc-members-part-of-int",
-      "sourceEntityId": "org-insdc-members",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-insdc-members",
+      "type": "governs",
       "status": "active",
       "confidence": 0.99,
       "note": null,
@@ -4031,9 +4031,9 @@
     },
     {
       "id": "rel-international-go-ship-community-part-of-int",
-      "sourceEntityId": "org-international-go-ship-community",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-international-go-ship-community",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -4095,9 +4095,9 @@
     },
     {
       "id": "rel-ioc-unesco-iode-part-of-int",
-      "sourceEntityId": "org-ioc-unesco-iode",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-ioc-unesco-iode",
+      "type": "governs",
       "status": "active",
       "confidence": 0.98,
       "note": null,
@@ -4123,9 +4123,9 @@
     },
     {
       "id": "rel-jamstec-part-of-japan",
-      "sourceEntityId": "org-jamstec",
-      "targetEntityId": "country-jpn",
-      "type": "part_of",
+      "sourceEntityId": "country-jpn",
+      "targetEntityId": "org-jamstec",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": "JAMSTEC is part of the Japan country context for this view.",
@@ -4163,9 +4163,9 @@
     },
     {
       "id": "rel-mercator-ocean-international-and-eu-part-of-eur",
-      "sourceEntityId": "org-mercator-ocean-international-and-eu",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-mercator-ocean-international-and-eu",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -4195,9 +4195,9 @@
     },
     {
       "id": "rel-molluscabase-editors-and-vliz-part-of-eur",
-      "sourceEntityId": "org-molluscabase-editors-and-vliz",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-molluscabase-editors-and-vliz",
+      "type": "governs",
       "status": "active",
       "confidence": 0.94,
       "note": null,
@@ -4227,9 +4227,9 @@
     },
     {
       "id": "rel-ncbi-united-states-part-of-usa",
-      "sourceEntityId": "org-ncbi-united-states",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-ncbi-united-states",
+      "type": "governs",
       "status": "active",
       "confidence": 0.98,
       "note": null,
@@ -4259,9 +4259,9 @@
     },
     {
       "id": "rel-noaa-ioos-part-of-usa",
-      "sourceEntityId": "org-noaa-ioos",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-noaa-ioos",
+      "type": "governs",
       "status": "active",
       "confidence": 0.92,
       "note": null,
@@ -4291,9 +4291,9 @@
     },
     {
       "id": "rel-noaa-ncei-part-of-usa",
-      "sourceEntityId": "org-noaa-ncei",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-noaa-ncei",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -4337,9 +4337,9 @@
     },
     {
       "id": "rel-ocean-observatories-initiative-part-of-usa",
-      "sourceEntityId": "org-ocean-observatories-initiative",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-ocean-observatories-initiative",
+      "type": "governs",
       "status": "active",
       "confidence": 0.91,
       "note": null,
@@ -4369,9 +4369,9 @@
     },
     {
       "id": "rel-oceansites-programme-part-of-int",
-      "sourceEntityId": "org-oceansites-programme",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-oceansites-programme",
+      "type": "governs",
       "status": "active",
       "confidence": 0.92,
       "note": null,
@@ -4401,9 +4401,9 @@
     },
     {
       "id": "rel-re3data-consortium-part-of-deu",
-      "sourceEntityId": "org-re3data-consortium",
-      "targetEntityId": "country-deu",
-      "type": "part_of",
+      "sourceEntityId": "country-deu",
+      "targetEntityId": "org-re3data-consortium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.9,
       "note": null,
@@ -4433,9 +4433,9 @@
     },
     {
       "id": "rel-sea-around-us-and-q-quatics-part-of-int",
-      "sourceEntityId": "org-sea-around-us-and-q-quatics",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-sea-around-us-and-q-quatics",
+      "type": "governs",
       "status": "active",
       "confidence": 0.92,
       "note": null,
@@ -4465,9 +4465,9 @@
     },
     {
       "id": "rel-sea-around-us-part-of-can",
-      "sourceEntityId": "org-sea-around-us",
-      "targetEntityId": "country-can",
-      "type": "part_of",
+      "sourceEntityId": "country-can",
+      "targetEntityId": "org-sea-around-us",
+      "type": "governs",
       "status": "active",
       "confidence": 0.92,
       "note": null,
@@ -4513,9 +4513,9 @@
     },
     {
       "id": "rel-seadatanet-consortium-part-of-eur",
-      "sourceEntityId": "org-seadatanet-consortium",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-seadatanet-consortium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.93,
       "note": null,
@@ -4545,9 +4545,9 @@
     },
     {
       "id": "rel-socat-community-part-of-int",
-      "sourceEntityId": "org-socat-community",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-socat-community",
+      "type": "governs",
       "status": "active",
       "confidence": 0.96,
       "note": null,
@@ -4577,9 +4577,9 @@
     },
     {
       "id": "rel-university-of-colorado-boulder-and-collaborators-part-of-usa",
-      "sourceEntityId": "org-university-of-colorado-boulder-and-collaborators",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-university-of-colorado-boulder-and-collaborators",
+      "type": "governs",
       "status": "active",
       "confidence": 0.88,
       "note": null,
@@ -4609,9 +4609,9 @@
     },
     {
       "id": "rel-vliz-and-lifewatch-belgium-part-of-eur",
-      "sourceEntityId": "org-vliz-and-lifewatch-belgium",
-      "targetEntityId": "country-eur",
-      "type": "part_of",
+      "sourceEntityId": "country-eur",
+      "targetEntityId": "org-vliz-and-lifewatch-belgium",
+      "type": "governs",
       "status": "active",
       "confidence": 0.95,
       "note": null,
@@ -4641,9 +4641,9 @@
     },
     {
       "id": "rel-whoi-and-partner-institutions-part-of-usa",
-      "sourceEntityId": "org-whoi-and-partner-institutions",
-      "targetEntityId": "country-usa",
-      "type": "part_of",
+      "sourceEntityId": "country-usa",
+      "targetEntityId": "org-whoi-and-partner-institutions",
+      "type": "governs",
       "status": "active",
       "confidence": 0.96,
       "note": null,
@@ -4673,9 +4673,9 @@
     },
     {
       "id": "rel-wmo-and-ioc-unesco-part-of-int",
-      "sourceEntityId": "org-wmo-and-ioc-unesco",
-      "targetEntityId": "country-int",
-      "type": "part_of",
+      "sourceEntityId": "country-int",
+      "targetEntityId": "org-wmo-and-ioc-unesco",
+      "type": "governs",
       "status": "active",
       "confidence": 0.93,
       "note": null,
@@ -4886,17 +4886,6 @@
       "publishedAt": null,
       "accessedAt": "2026-05-26",
       "note": "EMODnet Biology scope and infrastructure"
-    },
-    {
-      "id": "src-implementation-plan",
-      "title": "CHM Network Plan",
-      "sourceType": "working_note",
-      "url": null,
-      "localPath": null,
-      "publisher": "Ocean Agentics",
-      "publishedAt": "2026-04-24",
-      "accessedAt": "2026-04-24",
-      "note": "Path-first graph plan focused on researcher publication and downstream system sync."
     },
     {
       "id": "src-cmems-about",
@@ -6305,13 +6294,6 @@
       "confidenceOverride": null
     },
     {
-      "entityId": "system-bismal",
-      "sourceId": "src-implementation-plan",
-      "claimType": "seed_system",
-      "excerpt": "The working note uses BISMaL as the concrete Japanese publication system.",
-      "confidenceOverride": 0.8
-    },
-    {
       "entityId": "system-bold",
       "sourceId": "src-bold-api",
       "claimType": "workflow_context",
@@ -7145,13 +7127,6 @@
       "claimType": "country_scope_inferred_from_system",
       "excerpt": "Japanese INSDC member archive",
       "confidenceOverride": null
-    },
-    {
-      "relationshipId": "rel-bismal-syncs-to-obis",
-      "sourceId": "src-implementation-plan",
-      "claimType": "seed_sync_path",
-      "excerpt": "The note uses BISMaL -> OBIS via IPT and Darwin Core Archive as the seed sync path.",
-      "confidenceOverride": 0.85
     },
     {
       "relationshipId": "rel-bold-systems-operates-barcode-of-life-data-system",

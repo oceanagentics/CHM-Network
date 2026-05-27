@@ -448,7 +448,7 @@ function main() {
     preferredId: string;
     sourceEntityId: string;
     targetEntityId: string;
-    type: "part_of" | "operates" | "syncs_to";
+    type: "governs" | "operates" | "syncs_to";
     status: string;
     confidence: number;
     note: string | null;
@@ -524,7 +524,7 @@ function main() {
         kind: "organization",
         name: system.operator_name,
         slug: orgEntitySlug,
-        parentEntityId: countryId,
+        parentEntityId: null,
         countryCode: country.code,
         institutionType: "system_operator",
         status: "active",
@@ -573,11 +573,11 @@ function main() {
       });
       resolvedSystemIds.set(system.system_id, systemId);
 
-      const partOfId = ensureRelationship({
-        preferredId: `rel-${orgSlug}-part-of-${country.code.toLowerCase()}`,
-        sourceEntityId: orgId,
-        targetEntityId: countryId,
-        type: "part_of",
+      const governsId = ensureRelationship({
+        preferredId: `rel-${country.code.toLowerCase()}-governs-${orgSlug}`,
+        sourceEntityId: countryId,
+        targetEntityId: orgId,
+        type: "governs",
         status: "active",
         confidence,
         note: null,
@@ -650,7 +650,7 @@ function main() {
           claimType: "operator_inferred_from_system",
         },
         {
-          relationshipId: partOfId,
+          relationshipId: governsId,
           claimType: "country_scope_inferred_from_system",
         },
       ]) {

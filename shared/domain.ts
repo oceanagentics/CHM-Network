@@ -4,7 +4,7 @@ export type EntityKind =
   | "system";
 
 export type RelationshipType =
-  | "part_of"
+  | "governs"
   | "operates"
   | "publishes_to"
   | "syncs_to";

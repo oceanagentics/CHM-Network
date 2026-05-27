@@ -1,25 +1,21 @@
+/**
+ * GraphCanvas composes store state into a projection and hands the resulting scene to Cytoscape.
+ */
 import { useMemo, useState } from "react";
 
 import { projectCytoscapeGraph, projectGraph } from "../graph/projectGraph";
 import { useCytoscapeController } from "../graph/useCytoscapeController";
 import { useGraphStore } from "../state/graphStore";
-import { ReactFlowCanvas } from "./ReactFlowCanvas";
 
 export function GraphCanvas() {
   const graph = useGraphStore((state) => state.graph);
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
-  const rendererMode = useGraphStore((state) => state.rendererMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
-
-  const projectedCountryDisplayMode =
-    rendererMode === "react-flow" && countryDisplayMode === "engulf"
-      ? "node"
-      : countryDisplayMode;
 
   const projection = useMemo(() => {
     if (!graph) {
@@ -29,10 +25,10 @@ export function GraphCanvas() {
     return projectGraph({
       graph,
       viewMode,
-      countryDisplayMode: projectedCountryDisplayMode,
+      countryDisplayMode,
       focusEntityId,
     });
-  }, [focusEntityId, graph, projectedCountryDisplayMode, viewMode]);
+  }, [countryDisplayMode, focusEntityId, graph, viewMode]);
 
   const cytoscapeProjection = useMemo(() => {
     if (!projection) {
@@ -75,7 +71,6 @@ export function GraphCanvas() {
 
   const structuralKey = useMemo(() => {
     return JSON.stringify({
-      rendererMode,
       viewMode,
       layoutMode,
       countryDisplayMode,
@@ -83,19 +78,13 @@ export function GraphCanvas() {
       entityCount: graph?.entities.length ?? 0,
       relationshipCount: graph?.relationships.length ?? 0,
     });
-  }, [
-    countryDisplayMode,
-    focusEntityId,
-    graph,
-    layoutMode,
-    rendererMode,
-    viewMode,
-  ]);
+  }, [countryDisplayMode, focusEntityId, graph, layoutMode, viewMode]);
 
   useCytoscapeController({
-    container: rendererMode === "cytoscape" ? container : null,
+    container,
     elements: cytoscapeProjection?.elements ?? [],
     layout: cytoscapeProjection?.layout ?? { name: "grid" },
+    postPass: cytoscapeProjection?.postPass,
     structuralKey,
     selectedEntityId,
     connectedNodeIds: selectedNeighborhood.connectedNodeIds,
@@ -104,19 +93,6 @@ export function GraphCanvas() {
 
   if (!projection) {
     return <div className="graph-canvas" />;
-  }
-
-  if (rendererMode === "react-flow") {
-    return (
-      <ReactFlowCanvas
-        projection={projection}
-        layoutMode={layoutMode}
-        viewMode={viewMode}
-        selectedEntityId={selectedEntityId}
-        connectedNodeIds={selectedNeighborhood.connectedNodeIds}
-        connectedEdgeIds={selectedNeighborhood.connectedEdgeIds}
-      />
-    );
   }
 
   return <div className="graph-canvas" ref={setContainer} />;

@@ -54,7 +54,7 @@ type RawRelationship = {
 };
 
 const entityKinds = ["country", "organization", "system"] as const;
-const relationshipTypes = ["part_of", "operates", "publishes_to", "syncs_to"] as const;
+const relationshipTypes = ["governs", "operates", "publishes_to", "syncs_to"] as const;
 const statuses = ["active", "planned", "speculative", "deprecated"] as const;
 
 function parseJson(value: string | null): JsonValue {
@@ -278,7 +278,6 @@ export class SqliteGraphRepository {
         `,
         )
         .run(this.entityParams(id, entity));
-      this.syncPartOfRelationship(id, entity.parentEntityId, entity.confidence);
       this.replaceEntitySources(id, entity.sources);
     })();
 
@@ -308,7 +307,6 @@ export class SqliteGraphRepository {
         `,
         )
         .run(this.entityParams(id, entity));
-      this.syncPartOfRelationship(id, entity.parentEntityId, entity.confidence);
       this.replaceEntitySources(id, entity.sources);
     })();
 
@@ -345,11 +343,6 @@ export class SqliteGraphRepository {
           note: relationship.note,
           propertiesJson: stringifyJson(relationship.properties),
         });
-      if (relationship.type === "part_of") {
-        this.db
-          .prepare("UPDATE entities SET parent_entity_id = ? WHERE id = ?")
-          .run(relationship.targetEntityId, relationship.sourceEntityId);
-      }
       this.replaceRelationshipSources(id, relationship.sources);
     })();
 
@@ -361,12 +354,6 @@ export class SqliteGraphRepository {
     const relationship = this.validateRelationshipInput(input, id);
 
     this.db.transaction(() => {
-      if (existing.type === "part_of") {
-        this.db
-          .prepare("UPDATE entities SET parent_entity_id = NULL WHERE id = ? AND parent_entity_id = ?")
-          .run(existing.sourceEntityId, existing.targetEntityId);
-      }
-
       this.db
         .prepare(
           `
@@ -392,12 +379,6 @@ export class SqliteGraphRepository {
           propertiesJson: stringifyJson(relationship.properties),
         });
 
-      if (relationship.type === "part_of") {
-        this.db
-          .prepare("UPDATE entities SET parent_entity_id = ? WHERE id = ?")
-          .run(relationship.targetEntityId, relationship.sourceEntityId);
-      }
-
       this.replaceRelationshipSources(id, relationship.sources);
     })();
 
@@ -405,14 +386,9 @@ export class SqliteGraphRepository {
   }
 
   deleteRelationship(id: string): void {
-    const relationship = this.getRelationship(id);
+    this.getRelationship(id);
 
     this.db.transaction(() => {
-      if (relationship.type === "part_of") {
-        this.db
-          .prepare("UPDATE entities SET parent_entity_id = NULL WHERE id = ? AND parent_entity_id = ?")
-          .run(relationship.sourceEntityId, relationship.targetEntityId);
-      }
       this.db.prepare("DELETE FROM relationships WHERE id = ?").run(id);
     })();
   }
@@ -602,58 +578,6 @@ export class SqliteGraphRepository {
     }
   }
 
-  private syncPartOfRelationship(
-    entityId: string,
-    parentEntityId: string | null,
-    confidence: number,
-  ): void {
-    const existing = this.db
-      .prepare(
-        "SELECT id FROM relationships WHERE source_entity_id = ? AND type = 'part_of' LIMIT 1",
-      )
-      .get(entityId) as { id: string } | undefined;
-
-    if (!parentEntityId) {
-      if (existing) {
-        this.db.prepare("DELETE FROM relationships WHERE id = ?").run(existing.id);
-      }
-      return;
-    }
-
-    if (existing) {
-      this.db
-        .prepare(
-          `
-          UPDATE relationships
-          SET target_entity_id = @targetEntityId
-          WHERE id = @id
-        `,
-        )
-        .run({
-          id: existing.id,
-          targetEntityId: parentEntityId,
-        });
-      return;
-    }
-
-    this.db
-      .prepare(
-        `
-        INSERT INTO relationships (
-          id, source_entity_id, target_entity_id, type, status, confidence, note, properties_json
-        ) VALUES (
-          @id, @sourceEntityId, @targetEntityId, 'part_of', 'active', @confidence, NULL, '{}'
-        )
-      `,
-      )
-      .run({
-        id: createId("rel"),
-        sourceEntityId: entityId,
-        targetEntityId: parentEntityId,
-        confidence,
-      });
-  }
-
   private ensureSourcesExist(sourceIds: string[]): void {
     for (const sourceId of sourceIds) {
       const exists = this.db.prepare("SELECT id FROM sources WHERE id = ?").get(sourceId);
@@ -681,8 +605,8 @@ export class SqliteGraphRepository {
 
     if (input.kind === "organization" && parentEntityId) {
       const parent = this.getEntity(parentEntityId);
-      if (parent.kind !== "country" && parent.kind !== "organization") {
-        throw new Error("organization parent must be a country or organization");
+      if (parent.kind !== "organization") {
+        throw new Error("organization parent must be an organization");
       }
       if (entityId && parent.id === entityId) {
         throw new Error("entity cannot be its own parent");
@@ -724,12 +648,8 @@ export class SqliteGraphRepository {
     const source = this.getEntity(input.sourceEntityId);
     const target = this.getEntity(input.targetEntityId);
 
-    if (
-      input.type === "part_of" &&
-      (source.kind !== "organization" ||
-        (target.kind !== "organization" && target.kind !== "country"))
-    ) {
-      throw new Error("part_of must connect organization to organization or country");
+    if (input.type === "governs" && (source.kind !== "country" || target.kind !== "organization")) {
+      throw new Error("governs must connect country to organization");
     }
     if (
       (input.type === "operates" || input.type === "publishes_to") &&
@@ -744,14 +664,20 @@ export class SqliteGraphRepository {
       throw new Error("syncs_to must connect system to system");
     }
 
-    if (input.type === "part_of" && relationshipId) {
-      const existing = this.db
-        .prepare(
-          "SELECT id FROM relationships WHERE source_entity_id = ? AND type = 'part_of' AND id <> ? LIMIT 1",
-        )
-        .get(input.sourceEntityId, relationshipId);
+    if (input.type === "governs") {
+      const existing = relationshipId
+        ? this.db
+            .prepare(
+              "SELECT id FROM relationships WHERE target_entity_id = ? AND type = 'governs' AND id <> ? LIMIT 1",
+            )
+            .get(input.targetEntityId, relationshipId)
+        : this.db
+            .prepare(
+              "SELECT id FROM relationships WHERE target_entity_id = ? AND type = 'governs' LIMIT 1",
+            )
+            .get(input.targetEntityId);
       if (existing) {
-        throw new Error("organization may only have one part_of relationship");
+        throw new Error("organization may only have one governs relationship");
       }
     }
 
