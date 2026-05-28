@@ -1,14 +1,18 @@
 /**
- * Cytoscape controller owns renderer lifecycle, interaction wiring, post-pass execution, and viewport behavior.
+ * Cytoscape controller owns renderer lifecycle, interaction wiring, post-layout transform execution, and viewport behavior.
  */
 import { useEffect, useMemo, useRef } from "react";
-import cytoscape, { type Core, type ElementDefinition, type LayoutOptions } from "cytoscape";
+import cytoscape, { type Core } from "cytoscape";
 import dagre from "cytoscape-dagre";
 import elk from "cytoscape-elk";
 import fcose from "cytoscape-fcose";
 
 import { cytoscapeStyles } from "./cytoscapeStyles";
-import type { GraphPostPass } from "./layout";
+import type {
+  CytoscapeProjectionOutput,
+  EnabledPostLayoutTransforms,
+  PostLayoutTransform,
+} from "./layout";
 import { useGraphStore } from "../state/graphStore";
 
 cytoscape.use(dagre);
@@ -17,24 +21,47 @@ cytoscape.use(elk);
 
 interface UseCytoscapeControllerOptions {
   container: HTMLDivElement | null;
-  elements: ElementDefinition[];
-  layout: LayoutOptions;
-  postPass?: GraphPostPass;
+  projection: CytoscapeProjectionOutput;
   structuralKey: string;
+  focusedEntityId: string | null;
   selectedEntityId: string | null;
   connectedNodeIds: string[];
   connectedEdgeIds: string[];
+  enabledPostLayoutTransforms: EnabledPostLayoutTransforms;
+}
+
+function collectByIds(
+  cy: Core,
+  elementIds: string[],
+): cytoscape.CollectionReturnValue {
+  let collection = cy.collection();
+  for (const elementId of elementIds) {
+    collection = collection.union(cy.$id(elementId));
+  }
+  return collection;
+}
+
+function runPostLayoutTransforms(
+  cy: Core,
+  transforms: PostLayoutTransform[],
+  enabledTransforms: EnabledPostLayoutTransforms,
+): void {
+  for (const transform of transforms) {
+    if (enabledTransforms[transform.name]) {
+      transform.apply(cy);
+    }
+  }
 }
 
 export function useCytoscapeController({
   container,
-  elements,
-  layout,
-  postPass,
+  projection,
   structuralKey,
+  focusedEntityId,
   selectedEntityId,
   connectedNodeIds,
   connectedEdgeIds,
+  enabledPostLayoutTransforms,
 }: UseCytoscapeControllerOptions): Core | null {
   const cyRef = useRef<Core | null>(null);
   const lastStructuralKeyRef = useRef<string | null>(null);
@@ -57,13 +84,8 @@ export function useCytoscapeController({
 
     cy.on("tap", "node", (event) => {
       const nodeId = event.target.id();
-      preservedViewportRef.current = {
-        zoom: cy.zoom(),
-        pan: cy.pan(),
-      };
       const state = useGraphStore.getState();
       state.setSelectedEntityId(nodeId);
-      state.setFocusEntityId(nodeId);
     });
 
     cy.on("tap", "edge", (event) => {
@@ -106,13 +128,18 @@ export function useCytoscapeController({
     };
   }, [container]);
 
-  const stableElements = useMemo(() => elements, [elements]);
+  const stableElements = useMemo(
+    () => projection.elements,
+    [projection.elements],
+  );
 
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy || !container) {
       return;
     }
+
+    let cancelled = false;
 
     cy.batch(() => {
       cy.elements().remove();
@@ -125,47 +152,123 @@ export function useCytoscapeController({
       didStructureChange && preservedViewportRef.current !== null;
     pendingInitialFitRef.current = didStructureChange && !shouldPreserveViewport;
 
-    const nextLayout = {
-      ...layout,
-      fit: false,
-    } as LayoutOptions & {
-      fit?: boolean;
-      padding?: number;
-    };
-    if (didStructureChange && nextLayout.padding == null) {
-      nextLayout.padding = 48;
-    }
+    const finishLayout = (padding: number) => {
+      if (cancelled) {
+        return;
+      }
 
-    const layoutRunner = cy.layout(nextLayout);
-    if (didStructureChange) {
+      cy.resize();
+      runPostLayoutTransforms(
+        cy,
+        projection.postLayoutTransforms,
+        enabledPostLayoutTransforms,
+      );
+      if (
+        shouldPreserveViewport &&
+        preservedViewportRef.current &&
+        cy.container()?.clientWidth &&
+        cy.container()?.clientHeight
+      ) {
+        cy.zoom(preservedViewportRef.current.zoom);
+        cy.pan(preservedViewportRef.current.pan);
+        preservedViewportRef.current = null;
+        pendingInitialFitRef.current = false;
+        return;
+      }
+
+      if (
+        didStructureChange &&
+        cy.container()?.clientWidth &&
+        cy.container()?.clientHeight
+      ) {
+        cy.fit(cy.elements(), padding);
+        pendingInitialFitRef.current = false;
+      }
+    };
+
+    if (projection.mode === "single") {
+      const nextLayout = {
+        ...projection.layout,
+        fit: false,
+      } as cytoscape.LayoutOptions & {
+        fit?: boolean;
+        padding?: number;
+      };
+      if (didStructureChange && nextLayout.padding == null) {
+        nextLayout.padding = 48;
+      }
+
+      const layoutRunner = cy.layout(nextLayout);
       layoutRunner.on("layoutstop", () => {
+        finishLayout(nextLayout.padding ?? 48);
+      });
+
+      requestAnimationFrame(() => {
+        if (cancelled) {
+          return;
+        }
         cy.resize();
-        postPass?.(cy);
-        if (
-          shouldPreserveViewport &&
-          preservedViewportRef.current &&
-          cy.container()?.clientWidth &&
-          cy.container()?.clientHeight
-        ) {
-          cy.zoom(preservedViewportRef.current.zoom);
-          cy.pan(preservedViewportRef.current.pan);
-          preservedViewportRef.current = null;
-          pendingInitialFitRef.current = false;
+        layoutRunner.run();
+      });
+    } else {
+      const phaseLayout = {
+        ...projection.phaseLayout,
+        fit: false,
+      } as cytoscape.LayoutOptions & {
+        fit?: boolean;
+        padding?: number;
+      };
+      if (didStructureChange && phaseLayout.padding == null) {
+        phaseLayout.padding = 48;
+      }
+
+      requestAnimationFrame(() => {
+        if (cancelled) {
           return;
         }
 
-        if (cy.container()?.clientWidth && cy.container()?.clientHeight) {
-          cy.fit(cy.elements(), nextLayout.padding ?? 48);
-          pendingInitialFitRef.current = false;
+        cy.resize();
+        const nationalCollection = collectByIds(cy, [
+          ...projection.nationalNodeIds,
+          ...projection.nationalEdgeIds,
+        ]);
+        const internationalCollection = collectByIds(cy, [
+          ...projection.internationalNodeIds,
+          ...projection.internationalEdgeIds,
+        ]);
+
+        const runInternationalPhase = () => {
+          if (cancelled) {
+            return;
+          }
+
+          if (internationalCollection.empty()) {
+            finishLayout(phaseLayout.padding ?? 48);
+            return;
+          }
+
+          const internationalLayoutRunner = internationalCollection.layout(phaseLayout);
+          internationalLayoutRunner.on("layoutstop", () => {
+            finishLayout(phaseLayout.padding ?? 48);
+          });
+          internationalLayoutRunner.run();
+        };
+
+        if (nationalCollection.empty()) {
+          runInternationalPhase();
+          return;
         }
+
+        const nationalLayoutRunner = nationalCollection.layout(phaseLayout);
+        nationalLayoutRunner.on("layoutstop", runInternationalPhase);
+        nationalLayoutRunner.run();
       });
     }
 
-    requestAnimationFrame(() => {
-      cy.resize();
-      layoutRunner.run();
-    });
-  }, [container, layout, postPass, stableElements, structuralKey]);
+    return () => {
+      cancelled = true;
+    };
+  }, [container, enabledPostLayoutTransforms, projection, stableElements, structuralKey]);
 
   useEffect(() => {
     const cy = cyRef.current;
@@ -190,6 +293,23 @@ export function useCytoscapeController({
       }
     });
   }, [connectedEdgeIds, connectedNodeIds, selectedEntityId]);
+
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) {
+      return;
+    }
+
+    cy.batch(() => {
+      cy.nodes().removeClass("is-focus");
+
+      if (!focusedEntityId) {
+        return;
+      }
+
+      cy.$id(focusedEntityId).addClass("is-focus");
+    });
+  }, [focusedEntityId]);
 
   return cyRef.current;
 }

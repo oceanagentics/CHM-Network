@@ -7,6 +7,7 @@ import {
   Select,
   Segmented,
   Spin,
+  Switch,
   Typography,
 } from "antd";
 
@@ -17,10 +18,19 @@ import { GraphCanvas } from "./components/GraphCanvas";
 import { LegendPanel } from "./components/LegendPanel";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
 import { isPublicApp } from "./config";
+import {
+  getAvailablePostLayoutTransformNames,
+  type PostLayoutTransformName,
+} from "./graph/layout";
 import { graphLayouts, useGraphStore } from "./state/graphStore";
 
 const { Content, Sider } = Layout;
 const { Text } = Typography;
+
+const postLayoutTransformLabels = {
+  softBanding: "Soft banding",
+  intBlockAnchor: "INT block anchor",
+} satisfies Record<PostLayoutTransformName, string>;
 
 function entityOptions(viewMode: "governance" | "country" | "technical", entities: Entity[]) {
   if (viewMode === "technical") {
@@ -41,6 +51,9 @@ export function App() {
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
+  const enabledPostLayoutTransforms = useGraphStore(
+    (state) => state.enabledPostLayoutTransforms,
+  );
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const setBootstrap = useGraphStore((state) => state.setBootstrap);
   const setError = useGraphStore((state) => state.setError);
@@ -48,6 +61,9 @@ export function App() {
   const setViewMode = useGraphStore((state) => state.setViewMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
+  const setPostLayoutTransformEnabled = useGraphStore(
+    (state) => state.setPostLayoutTransformEnabled,
+  );
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
 
   useEffect(() => {
@@ -84,6 +100,11 @@ export function App() {
         value: entity.id,
       }));
   }, [graph, viewMode]);
+
+  const availablePostLayoutTransforms = useMemo(
+    () => getAvailablePostLayoutTransformNames(layoutMode, viewMode),
+    [layoutMode, viewMode],
+  );
 
   if (loading) {
     return (
@@ -161,6 +182,32 @@ export function App() {
                     setCountryDisplayMode(value as typeof countryDisplayMode)
                   }
                 />
+              </div>
+              <div>
+                <Text type="secondary">Post-layout transforms</Text>
+                {availablePostLayoutTransforms.length === 0 ? (
+                  <div>
+                    <Text type="secondary">None for this layout</Text>
+                  </div>
+                ) : (
+                  <Flex vertical gap={8}>
+                    {availablePostLayoutTransforms.map((transformName) => (
+                      <Flex
+                        key={transformName}
+                        align="center"
+                        justify="space-between"
+                      >
+                        <Text>{postLayoutTransformLabels[transformName]}</Text>
+                        <Switch
+                          checked={enabledPostLayoutTransforms[transformName]}
+                          onChange={(checked) =>
+                            setPostLayoutTransformEnabled(transformName, checked)
+                          }
+                        />
+                      </Flex>
+                    ))}
+                  </Flex>
+                )}
               </div>
             </Flex>
           </Card>

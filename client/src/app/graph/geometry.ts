@@ -2,13 +2,18 @@
  * Geometry defines intrinsic node labels, box sizes, and stable layout hints.
  */
 import type { Entity } from "../../../../shared/domain";
-import { layoutPolicy } from "./layoutPolicy";
 
 export interface NodeGeometry {
   width: number;
   height: number;
   textMaxWidth: number;
 }
+
+const bandByKind = {
+  country: 0,
+  organization: 1,
+  system: 2,
+} satisfies Record<Entity["kind"], number>;
 
 function stylizeCharacters(
   value: string,
@@ -80,5 +85,5 @@ export function getNodeDimensions(kind: Entity["kind"], label: string): NodeGeom
 }
 
 export function getLayoutBand(kind: Entity["kind"]): number {
-  return layoutPolicy.bandByKind[kind];
+  return bandByKind[kind];
 }

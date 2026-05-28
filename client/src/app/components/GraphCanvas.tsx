@@ -3,7 +3,8 @@
  */
 import { useMemo, useState } from "react";
 
-import { projectCytoscapeGraph, projectGraph } from "../graph/projectGraph";
+import { projectCytoscapeGraph } from "../graph/layout";
+import { projectGraph } from "../graph/projection";
 import { useCytoscapeController } from "../graph/useCytoscapeController";
 import { useGraphStore } from "../state/graphStore";
 
@@ -12,10 +13,15 @@ export function GraphCanvas() {
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
+  const enabledPostLayoutTransforms = useGraphStore(
+    (state) => state.enabledPostLayoutTransforms,
+  );
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const structuralFocusEntityId =
+    viewMode === "governance" ? null : focusEntityId;
 
   const projection = useMemo(() => {
     if (!graph) {
@@ -26,9 +32,9 @@ export function GraphCanvas() {
       graph,
       viewMode,
       countryDisplayMode,
-      focusEntityId,
+      focusEntityId: structuralFocusEntityId,
     });
-  }, [countryDisplayMode, focusEntityId, graph, viewMode]);
+  }, [countryDisplayMode, graph, structuralFocusEntityId, viewMode]);
 
   const cytoscapeProjection = useMemo(() => {
     if (!projection) {
@@ -37,6 +43,14 @@ export function GraphCanvas() {
 
     return projectCytoscapeGraph(projection, layoutMode, viewMode);
   }, [layoutMode, projection, viewMode]);
+
+  const controllerProjection =
+    cytoscapeProjection ?? {
+      mode: "single" as const,
+      elements: [] as ReturnType<typeof projectCytoscapeGraph>["elements"],
+      layout: { name: "grid" },
+      postLayoutTransforms: [],
+    };
 
   const selectedNeighborhood = useMemo(() => {
     const connectedNodeIds = new Set<string>();
@@ -74,21 +88,28 @@ export function GraphCanvas() {
       viewMode,
       layoutMode,
       countryDisplayMode,
-      focusEntityId,
-      entityCount: graph?.entities.length ?? 0,
-      relationshipCount: graph?.relationships.length ?? 0,
+      enabledPostLayoutTransforms,
+      nodes: projection?.nodes.map((node) => `${node.id}:${node.parentId ?? ""}`) ?? [],
+      edges:
+        projection?.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`) ?? [],
     });
-  }, [countryDisplayMode, focusEntityId, graph, layoutMode, viewMode]);
+  }, [
+    countryDisplayMode,
+    enabledPostLayoutTransforms,
+    layoutMode,
+    projection,
+    viewMode,
+  ]);
 
   useCytoscapeController({
     container,
-    elements: cytoscapeProjection?.elements ?? [],
-    layout: cytoscapeProjection?.layout ?? { name: "grid" },
-    postPass: cytoscapeProjection?.postPass,
+    projection: controllerProjection,
     structuralKey,
+    focusedEntityId: focusEntityId,
     selectedEntityId,
     connectedNodeIds: selectedNeighborhood.connectedNodeIds,
     connectedEdgeIds: selectedNeighborhood.connectedEdgeIds,
+    enabledPostLayoutTransforms,
   });
 
   if (!projection) {

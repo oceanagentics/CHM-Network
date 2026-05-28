@@ -89,3 +89,36 @@
 - `npm run publish:prod` builds the public bundle, uploads a release archive over SSH, installs it under `/var/www/chm-network-releases/<timestamp>-<sha>`, repoints `/var/www/chm-network`, reloads `nginx`, and verifies `/` plus `/bootstrap.public.json`.
 - The script uses direct SSH/SCP with `~/.ssh/CHM-Network`; do not rely on `gcloud compute scp/ssh` for routine publishing.
 - GCS static hosting is not the active publish path. Public bucket access was blocked by the org's domain-restricted sharing policy.
+
+## Graph View Layers
+- Keep graph view code split into two top-level phases: graph build and graph display.
+- Graph build decides what Cytoscape elements exist:
+  - `state/viewIntent.ts` and `state/graphStore.ts`: view intent and normalized user state
+  - `graph/scope.ts`: scope selection
+  - `graph/projection.ts`: structural projection
+  - `graph/geometry.ts`: intrinsic node geometry and stable layout hints
+- Graph display decides how those elements are positioned and shown:
+  - `graph/layout.ts`: base Cytoscape layout planning and named post-layout transform definitions
+  - `graph/useCytoscapeController.ts`: Cytoscape execution, enabled transform execution, events, and viewport policy
+  - `components/GraphCanvas.tsx`: composition root only
+  - `graph/cytoscapeStyles.ts`: presentation only
+
+## Graph View Code Rules
+- Put new logic in the highest layer that actually owns that concern.
+- `scope.ts` should decide which ids belong in a view. It should return ids only, not parent containers, sizes, or layout options.
+- `projection.ts` should assemble the drawable graph structure: visible nodes, visible edges, derived hierarchy edges, containment, view-specific grouping, and classification such as governance block membership.
+- `geometry.ts` should define intrinsic node facts only: label text, box width and height, text width, and stable hints like `layoutBand`.
+- `layout.ts` should translate projected graph data into Cytoscape elements, base layout behavior, and named post-layout transforms. Put Dagre, ELK, concentric, breadthfirst, multi-phase layout plans, and transform definitions here.
+- `useCytoscapeController.ts` should execute the supplied display plan, run only enabled post-layout transforms after `layoutstop`, wire interactions, and manage fit vs preserve viewport behavior. Do not invent graph semantics here.
+- `GraphCanvas.tsx` should orchestrate the pipeline and pass view intent plus display plans through to the controller. Do not delete fields from display plans, cache coordinates, or add view-specific layout hacks here.
+- `cytoscapeStyles.ts` should stay visual only. Keep colors, borders, labels, arrows, and selection styling here. Do not put semantic geometry or layout behavior here.
+- Post-layout transforms are position-only developer controls. They must not add or remove elements, change labels, change parents, or alter edge inclusion.
+
+## Graph View Change Guide
+- If the change is about which nodes or edges appear in a view, start in `graph/scope.ts`.
+- If the change is about hierarchy, containment, derived edges, or grouping, start in `graph/projection.ts`.
+- If the change is about box size, label wrapping, or band assignment, start in `graph/geometry.ts`.
+- If the change is about how a specific layout algorithm behaves, start in `graph/layout.ts`.
+- If the change is about a named post-layout position transform, start in `graph/layout.ts` and expose it through the existing transform toggle model.
+- If the change is about camera behavior, fit, preserve zoom, or interaction wiring, start in `graph/useCytoscapeController.ts`.
+- Prefer changing one layer cleanly over adding a workaround in a lower layer.

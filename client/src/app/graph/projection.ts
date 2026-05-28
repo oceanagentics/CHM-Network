@@ -4,7 +4,7 @@
 import type { Entity, Relationship, ViewMode } from "../../../../shared/domain";
 import type { CountryDisplayMode } from "../state/graphStore";
 import { buildLabel, getLayoutBand, getNodeDimensions, type NodeGeometry } from "./geometry";
-import { type IndexedGraph } from "./indexGraph";
+import { collectDescendants, type IndexedGraph } from "./indexGraph";
 import {
   getCountryIds,
   getGovernanceIds,
@@ -19,15 +19,18 @@ export interface ProjectionInput {
   focusEntityId: string | null;
 }
 
+export type GovernanceBlock = "national" | "international" | null;
+
 export interface GraphProjectionNode extends NodeGeometry {
   id: string;
   label: string;
   kind: Entity["kind"];
   status: Entity["status"];
   subtype: string | null;
+  countryCode: string | null;
+  governanceBlock: GovernanceBlock;
   layoutBand: number;
   parentId?: string;
-  isFocus: boolean;
 }
 
 export type GraphProjectionEdgeType = Relationship["type"] | "hierarchy";
@@ -48,7 +51,41 @@ export interface GraphProjection {
   effectiveFocusEntityId: string | null;
 }
 
-function buildProjectionNode(entity: Entity, isFocus: boolean): GraphProjectionNode {
+const governanceInternationalBandByKind = {
+  country: 5,
+  organization: 4,
+  system: 3,
+} satisfies Record<Entity["kind"], number>;
+
+function getProjectionLayoutBand(
+  entity: Entity,
+  viewMode: ViewMode,
+  governanceInternationalIds: Set<string>,
+): number {
+  if (viewMode === "governance" && governanceInternationalIds.has(entity.id)) {
+    return governanceInternationalBandByKind[entity.kind];
+  }
+
+  return getLayoutBand(entity.kind);
+}
+
+function getGovernanceBlock(
+  entityId: string,
+  viewMode: ViewMode,
+  governanceInternationalIds: Set<string>,
+): GovernanceBlock {
+  if (viewMode !== "governance") {
+    return null;
+  }
+
+  return governanceInternationalIds.has(entityId) ? "international" : "national";
+}
+
+function buildProjectionNode(
+  entity: Entity,
+  governanceBlock: GovernanceBlock,
+  layoutBand: number,
+): GraphProjectionNode {
   const label = buildLabel(entity);
 
   return {
@@ -57,8 +94,9 @@ function buildProjectionNode(entity: Entity, isFocus: boolean): GraphProjectionN
     kind: entity.kind,
     status: entity.status,
     subtype: entity.subtype,
-    layoutBand: getLayoutBand(entity.kind),
-    isFocus,
+    countryCode: entity.countryCode,
+    governanceBlock,
+    layoutBand,
     ...getNodeDimensions(entity.kind, label),
   };
 }
@@ -184,6 +222,23 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
 
   const includedEntities = graph.entities.filter((entity) => includedIds.has(entity.id));
   const visibleIds = new Set(includedEntities.map((entity) => entity.id));
+  const governanceInternationalIds = new Set<string>();
+
+  if (viewMode === "governance") {
+    for (const entity of includedEntities) {
+      if (entity.countryCode === "INT") {
+        governanceInternationalIds.add(entity.id);
+      }
+    }
+
+    if (graph.entityById["country-int"]) {
+      for (const entityId of collectDescendants(graph, "country-int")) {
+        if (visibleIds.has(entityId)) {
+          governanceInternationalIds.add(entityId);
+        }
+      }
+    }
+  }
 
   const nodes = includedEntities.map((entity) => {
     const parentId = getNodeParentId(
@@ -196,7 +251,11 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
     );
 
     return {
-      ...buildProjectionNode(entity, entity.id === effectiveFocusEntityId),
+      ...buildProjectionNode(
+        entity,
+        getGovernanceBlock(entity.id, viewMode, governanceInternationalIds),
+        getProjectionLayoutBand(entity, viewMode, governanceInternationalIds),
+      ),
       parentId,
     };
   });
