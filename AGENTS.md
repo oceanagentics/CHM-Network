@@ -83,15 +83,9 @@
 
 ## Public Publishing
 - Use the dedicated Compute Engine key at `~/.ssh/CHM-Network` for CHM Network VM access.
-- Build the public static bundle with `npm run build:public`.
+- Publish the public site with `npm run publish:prod`.
 - The public build uses `client/.env.public` and reads from `/bootstrap.public.json` instead of the live API.
 - The export step writes the sanitized bootstrap file to `client/public/bootstrap.public.json`.
-- Upload the built site to the VM with `gcloud compute scp --recurse client/dist chm-network-vm:~/ --project chm-network --zone us-west1-b --ssh-key-file ~/.ssh/CHM-Network`.
-- Publish it on the VM with:
-  - `gcloud compute ssh chm-network-vm --project chm-network --zone us-west1-b --ssh-key-file ~/.ssh/CHM-Network`
-  - `sudo mkdir -p /var/www/chm-network`
-  - `sudo cp -r ~/dist/. /var/www/chm-network/`
-  - `sudo chown -R www-data:www-data /var/www/chm-network`
-  - `sudo nginx -t && sudo systemctl restart nginx`
-- Verify with `curl -I http://34.169.201.150` and `curl http://34.169.201.150/bootstrap.public.json`.
+- `npm run publish:prod` builds the public bundle, uploads a release archive over SSH, installs it under `/var/www/chm-network-releases/<timestamp>-<sha>`, repoints `/var/www/chm-network`, reloads `nginx`, and verifies `/` plus `/bootstrap.public.json`.
+- The script uses direct SSH/SCP with `~/.ssh/CHM-Network`; do not rely on `gcloud compute scp/ssh` for routine publishing.
 - GCS static hosting is not the active publish path. Public bucket access was blocked by the org's domain-restricted sharing policy.
