@@ -105,6 +105,7 @@
 
 ## Graph View Code Rules
 - Put new logic in the highest layer that actually owns that concern.
+- Express graph layout intent as graph structure or layout constraints before the layout solve whenever possible. Avoid moving nodes after the solve; post-solve position overrides make the app responsible for collisions, spacing, crossings, and edge routing side effects.
 - `scope.ts` should decide which ids belong in a view. It should return ids only, not parent containers, sizes, or layout options.
 - `projection.ts` should assemble the drawable graph structure: visible nodes, visible edges, derived hierarchy edges, containment, view-specific grouping, and classification such as governance block membership.
 - `geometry.ts` should define intrinsic node facts only: label text, box width and height, text width, and stable hints like `layoutBand`.

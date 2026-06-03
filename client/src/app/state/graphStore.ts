@@ -9,10 +9,6 @@ import type {
   ViewMode,
 } from "../../../../shared/domain";
 import { indexGraph, type IndexedGraph } from "../graph/indexGraph";
-import type {
-  EnabledPostLayoutTransforms,
-  PostLayoutTransformName,
-} from "../graph/layout";
 import {
   isFocusAllowedForView,
   normalizeFocusForView,
@@ -35,11 +31,6 @@ export const graphLayouts = [
 export type GraphLayout = (typeof graphLayouts)[number];
 export type CountryDisplayMode = "node" | "engulf";
 
-const defaultPostLayoutTransforms: EnabledPostLayoutTransforms = {
-  softBanding: true,
-  intBlockAnchor: true,
-};
-
 interface ViewportSnapshot {
   zoom: number;
   panX: number;
@@ -53,7 +44,6 @@ interface GraphState {
   viewMode: ViewMode;
   layoutMode: GraphLayout;
   countryDisplayMode: CountryDisplayMode;
-  enabledPostLayoutTransforms: EnabledPostLayoutTransforms;
   focusEntityId: string | null;
   selectedEntityId: string | null;
   selectedRelationshipId: string | null;
@@ -66,10 +56,6 @@ interface GraphState {
   setViewMode: (viewMode: ViewMode) => void;
   setLayoutMode: (layoutMode: GraphLayout) => void;
   setCountryDisplayMode: (countryDisplayMode: CountryDisplayMode) => void;
-  setPostLayoutTransformEnabled: (
-    name: PostLayoutTransformName,
-    enabled: boolean,
-  ) => void;
   setFocusEntityId: (focusEntityId: string | null) => void;
   setSelectedEntityId: (selectedEntityId: string | null) => void;
   setSelectedRelationshipId: (selectedRelationshipId: string | null) => void;
@@ -84,7 +70,6 @@ export const useGraphStore = create<GraphState>((set) => ({
   viewMode: "governance",
   layoutMode: "dagre",
   countryDisplayMode: "engulf",
-  enabledPostLayoutTransforms: defaultPostLayoutTransforms,
   focusEntityId: null,
   selectedEntityId: null,
   selectedRelationshipId: null,
@@ -110,13 +95,6 @@ export const useGraphStore = create<GraphState>((set) => ({
   setLayoutMode: (layoutMode) => set({ layoutMode }),
   setCountryDisplayMode: (countryDisplayMode) =>
     set({ countryDisplayMode }),
-  setPostLayoutTransformEnabled: (name, enabled) =>
-    set((state) => ({
-      enabledPostLayoutTransforms: {
-        ...state.enabledPostLayoutTransforms,
-        [name]: enabled,
-      },
-    })),
   setFocusEntityId: (focusEntityId) =>
     set((state) =>
       isFocusAllowedForView(state.graph, state.viewMode, focusEntityId)

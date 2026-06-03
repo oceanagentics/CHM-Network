@@ -1,5 +1,5 @@
 /**
- * Cytoscape controller owns renderer lifecycle, interaction wiring, post-layout transform execution, and viewport behavior.
+ * Cytoscape controller owns renderer lifecycle, interaction wiring, layout execution, and viewport behavior.
  */
 import { useEffect, useMemo, useRef } from "react";
 import cytoscape, { type Core } from "cytoscape";
@@ -8,11 +8,7 @@ import elk from "cytoscape-elk";
 import fcose from "cytoscape-fcose";
 
 import { cytoscapeStyles } from "./cytoscapeStyles";
-import type {
-  CytoscapeProjectionOutput,
-  EnabledPostLayoutTransforms,
-  PostLayoutTransform,
-} from "./layout";
+import type { CytoscapeProjectionOutput } from "./layout";
 import { useGraphStore } from "../state/graphStore";
 
 cytoscape.use(dagre);
@@ -27,30 +23,6 @@ interface UseCytoscapeControllerOptions {
   selectedEntityId: string | null;
   connectedNodeIds: string[];
   connectedEdgeIds: string[];
-  enabledPostLayoutTransforms: EnabledPostLayoutTransforms;
-}
-
-function collectByIds(
-  cy: Core,
-  elementIds: string[],
-): cytoscape.CollectionReturnValue {
-  let collection = cy.collection();
-  for (const elementId of elementIds) {
-    collection = collection.union(cy.$id(elementId));
-  }
-  return collection;
-}
-
-function runPostLayoutTransforms(
-  cy: Core,
-  transforms: PostLayoutTransform[],
-  enabledTransforms: EnabledPostLayoutTransforms,
-): void {
-  for (const transform of transforms) {
-    if (enabledTransforms[transform.name]) {
-      transform.apply(cy);
-    }
-  }
 }
 
 export function useCytoscapeController({
@@ -61,7 +33,6 @@ export function useCytoscapeController({
   selectedEntityId,
   connectedNodeIds,
   connectedEdgeIds,
-  enabledPostLayoutTransforms,
 }: UseCytoscapeControllerOptions): Core | null {
   const cyRef = useRef<Core | null>(null);
   const lastStructuralKeyRef = useRef<string | null>(null);
@@ -158,11 +129,6 @@ export function useCytoscapeController({
       }
 
       cy.resize();
-      runPostLayoutTransforms(
-        cy,
-        projection.postLayoutTransforms,
-        enabledPostLayoutTransforms,
-      );
       if (
         shouldPreserveViewport &&
         preservedViewportRef.current &&
@@ -186,89 +152,34 @@ export function useCytoscapeController({
       }
     };
 
-    if (projection.mode === "single") {
-      const nextLayout = {
-        ...projection.layout,
-        fit: false,
-      } as cytoscape.LayoutOptions & {
-        fit?: boolean;
-        padding?: number;
-      };
-      if (didStructureChange && nextLayout.padding == null) {
-        nextLayout.padding = 48;
-      }
-
-      const layoutRunner = cy.layout(nextLayout);
-      layoutRunner.on("layoutstop", () => {
-        finishLayout(nextLayout.padding ?? 48);
-      });
-
-      requestAnimationFrame(() => {
-        if (cancelled) {
-          return;
-        }
-        cy.resize();
-        layoutRunner.run();
-      });
-    } else {
-      const phaseLayout = {
-        ...projection.phaseLayout,
-        fit: false,
-      } as cytoscape.LayoutOptions & {
-        fit?: boolean;
-        padding?: number;
-      };
-      if (didStructureChange && phaseLayout.padding == null) {
-        phaseLayout.padding = 48;
-      }
-
-      requestAnimationFrame(() => {
-        if (cancelled) {
-          return;
-        }
-
-        cy.resize();
-        const nationalCollection = collectByIds(cy, [
-          ...projection.nationalNodeIds,
-          ...projection.nationalEdgeIds,
-        ]);
-        const internationalCollection = collectByIds(cy, [
-          ...projection.internationalNodeIds,
-          ...projection.internationalEdgeIds,
-        ]);
-
-        const runInternationalPhase = () => {
-          if (cancelled) {
-            return;
-          }
-
-          if (internationalCollection.empty()) {
-            finishLayout(phaseLayout.padding ?? 48);
-            return;
-          }
-
-          const internationalLayoutRunner = internationalCollection.layout(phaseLayout);
-          internationalLayoutRunner.on("layoutstop", () => {
-            finishLayout(phaseLayout.padding ?? 48);
-          });
-          internationalLayoutRunner.run();
-        };
-
-        if (nationalCollection.empty()) {
-          runInternationalPhase();
-          return;
-        }
-
-        const nationalLayoutRunner = nationalCollection.layout(phaseLayout);
-        nationalLayoutRunner.on("layoutstop", runInternationalPhase);
-        nationalLayoutRunner.run();
-      });
+    const nextLayout = {
+      ...projection.layout,
+      fit: false,
+    } as cytoscape.LayoutOptions & {
+      fit?: boolean;
+      padding?: number;
+    };
+    if (didStructureChange && nextLayout.padding == null) {
+      nextLayout.padding = 48;
     }
+
+    const layoutRunner = cy.layout(nextLayout);
+    layoutRunner.on("layoutstop", () => {
+      finishLayout(nextLayout.padding ?? 48);
+    });
+
+    requestAnimationFrame(() => {
+      if (cancelled) {
+        return;
+      }
+      cy.resize();
+      layoutRunner.run();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [container, enabledPostLayoutTransforms, projection, stableElements, structuralKey]);
+  }, [container, projection, stableElements, structuralKey]);
 
   useEffect(() => {
     const cy = cyRef.current;

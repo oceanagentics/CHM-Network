@@ -13,9 +13,6 @@ export function GraphCanvas() {
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
-  const enabledPostLayoutTransforms = useGraphStore(
-    (state) => state.enabledPostLayoutTransforms,
-  );
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
 
@@ -46,10 +43,8 @@ export function GraphCanvas() {
 
   const controllerProjection =
     cytoscapeProjection ?? {
-      mode: "single" as const,
       elements: [] as ReturnType<typeof projectCytoscapeGraph>["elements"],
       layout: { name: "grid" },
-      postLayoutTransforms: [],
     };
 
   const selectedNeighborhood = useMemo(() => {
@@ -88,14 +83,12 @@ export function GraphCanvas() {
       viewMode,
       layoutMode,
       countryDisplayMode,
-      enabledPostLayoutTransforms,
       nodes: projection?.nodes.map((node) => `${node.id}:${node.parentId ?? ""}`) ?? [],
       edges:
         projection?.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`) ?? [],
     });
   }, [
     countryDisplayMode,
-    enabledPostLayoutTransforms,
     layoutMode,
     projection,
     viewMode,
@@ -109,7 +102,6 @@ export function GraphCanvas() {
     selectedEntityId,
     connectedNodeIds: selectedNeighborhood.connectedNodeIds,
     connectedEdgeIds: selectedNeighborhood.connectedEdgeIds,
-    enabledPostLayoutTransforms,
   });
 
   if (!projection) {
