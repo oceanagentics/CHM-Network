@@ -3,6 +3,8 @@
  */
 import type cytoscape from "cytoscape";
 
+const labelFontScale = 2;
+
 export const cytoscapeStyles: cytoscape.StylesheetJson = [
   {
     selector: "node",
@@ -10,7 +12,7 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       label: "data(label)",
       "text-wrap": "wrap",
       "text-max-width": "data(textMaxWidth)",
-      "font-size": 15,
+      "font-size": 15 * labelFontScale,
       "font-family": "Helvetica, Arial, sans-serif",
       color: "#132033",
       "text-valign": "center",
@@ -20,7 +22,7 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       "border-color": "#42658f",
       width: "data(width)",
       height: "data(height)",
-      padding: "10px",
+      padding: `${10 * labelFontScale}px`,
       "overlay-opacity": 0,
     },
   },
@@ -32,10 +34,10 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       "border-style": "dashed",
       "text-valign": "top",
       "text-halign": "center",
-      "padding-top": "28px",
-      "padding-left": "20px",
-      "padding-right": "20px",
-      "padding-bottom": "20px",
+      "padding-top": `${28 * labelFontScale}px`,
+      "padding-left": `${20 * labelFontScale}px`,
+      "padding-right": `${20 * labelFontScale}px`,
+      "padding-bottom": `${20 * labelFontScale}px`,
     },
   },
   { selector: 'node[kind = "organization"]', style: { shape: "round-rectangle", "background-color": "#dcefdc", "border-color": "#5d8b5d" } },
@@ -46,10 +48,10 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       "background-opacity": 0.16,
       "text-valign": "top",
       "text-halign": "center",
-      "padding-top": "28px",
-      "padding-left": "20px",
-      "padding-right": "20px",
-      "padding-bottom": "20px",
+      "padding-top": `${28 * labelFontScale}px`,
+      "padding-left": `${20 * labelFontScale}px`,
+      "padding-right": `${20 * labelFontScale}px`,
+      "padding-bottom": `${20 * labelFontScale}px`,
     },
   },
   {
@@ -61,7 +63,7 @@ export const cytoscapeStyles: cytoscape.StylesheetJson = [
       "target-arrow-shape": "triangle",
       "curve-style": "bezier",
       label: "data(label)",
-      "font-size": 10,
+      "font-size": 10 * labelFontScale,
       "text-background-color": "#ffffff",
       "text-background-opacity": 0.8,
       "text-background-padding": "2px",

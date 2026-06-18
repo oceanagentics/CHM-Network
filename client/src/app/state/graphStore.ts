@@ -68,7 +68,7 @@ export const useGraphStore = create<GraphState>((set) => ({
   loading: true,
   error: null,
   viewMode: "governance",
-  layoutMode: "dagre",
+  layoutMode: "elk-mrtree",
   countryDisplayMode: "engulf",
   focusEntityId: null,
   selectedEntityId: null,
