@@ -13,6 +13,7 @@ import {
 import type { Entity } from "../../../shared/domain";
 import { fetchBootstrap } from "./api";
 import { EditorPanel } from "./components/EditorPanel";
+import { GlobeCanvas } from "./components/GlobeCanvas";
 import { GraphCanvas } from "./components/GraphCanvas";
 import { LegendPanel } from "./components/LegendPanel";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
@@ -39,6 +40,7 @@ export function App() {
   const loading = useGraphStore((state) => state.loading);
   const error = useGraphStore((state) => state.error);
   const viewMode = useGraphStore((state) => state.viewMode);
+  const displayMode = useGraphStore((state) => state.displayMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
@@ -46,6 +48,7 @@ export function App() {
   const setError = useGraphStore((state) => state.setError);
   const setLoading = useGraphStore((state) => state.setLoading);
   const setViewMode = useGraphStore((state) => state.setViewMode);
+  const setDisplayMode = useGraphStore((state) => state.setDisplayMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
@@ -126,6 +129,20 @@ export function App() {
                 />
               </div>
               <div>
+                <Text type="secondary">Display</Text>
+                <Segmented
+                  block
+                  value={displayMode}
+                  options={[
+                    { label: "Graph", value: "graph" },
+                    { label: "Globe", value: "globe" },
+                  ]}
+                  onChange={(value) =>
+                    setDisplayMode(value as typeof displayMode)
+                  }
+                />
+              </div>
+              <div>
                 <Text type="secondary">Focus</Text>
                 <Select
                   allowClear
@@ -171,7 +188,7 @@ export function App() {
       </Sider>
       <Content className="graph-panel">
         <div className="graph-surface">
-          <GraphCanvas />
+          {displayMode === "globe" ? <GlobeCanvas /> : <GraphCanvas />}
         </div>
       </Content>
     </Layout>

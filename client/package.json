@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.3",
+    "@types/three": "^0.185.0",
+    "@types/topojson-client": "^3.1.5",
     "antd": "^6.4.3",
     "cytoscape": "^3.33.1",
     "cytoscape-dagre": "^3.0.0",
@@ -16,6 +18,9 @@
     "cytoscape-fcose": "^2.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "three": "^0.185.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
