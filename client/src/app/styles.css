@@ -149,9 +149,85 @@ body {
     0 18px 34px rgba(23, 44, 76, 0.16);
 }
 
+.graph-surface-node-map-3d {
+  background: #142338;
+}
+
 .graph-canvas {
   width: 100%;
   height: 100%;
+}
+
+.force-graph-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #142338;
+}
+
+.force-graph-canvas canvas {
+  display: block;
+}
+
+.force-graph-label-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.force-graph-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 21px;
+  padding: 0 7px;
+  overflow: hidden;
+  border: 1px solid rgba(196, 221, 255, 0.24);
+  border-radius: 4px;
+  background: rgba(16, 29, 48, 0.76);
+  box-shadow: 0 4px 10px rgba(7, 14, 25, 0.22);
+  color: #dfeeff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(7, 14, 25, 0.72);
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.force-graph-label.is-country {
+  border-color: rgba(247, 212, 112, 0.48);
+  color: #fff2c3;
+}
+
+.force-graph-label.is-organization {
+  border-color: rgba(154, 210, 157, 0.44);
+  color: #e7ffe9;
+}
+
+.force-graph-label.is-system {
+  border-color: rgba(143, 199, 255, 0.42);
+}
+
+.force-graph-label.is-neighbor {
+  border-color: rgba(255, 191, 102, 0.78);
+  background: rgba(58, 41, 22, 0.82);
+  color: #ffe3b5;
+}
+
+.force-graph-label.is-selected,
+.force-graph-label.is-focused {
+  height: 24px;
+  border-color: rgba(255, 120, 94, 0.92);
+  background: rgba(82, 32, 28, 0.9);
+  color: #fff0ed;
+  font-weight: 700;
 }
 
 .systems-surface {

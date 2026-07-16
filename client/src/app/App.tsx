@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Card,
@@ -23,12 +23,18 @@ import { graphLayouts, useGraphStore } from "./state/graphStore";
 
 const { Content, Header, Sider } = Layout;
 const { Text } = Typography;
+const ForceGraphCanvas = lazy(() =>
+  import("./components/ForceGraphCanvas").then((module) => ({
+    default: module.ForceGraphCanvas,
+  })),
+);
 
-type AppRoute = "network-diagram" | "node-map" | "globe" | "systems";
+type AppRoute = "network-diagram" | "node-map" | "node-map-3d" | "globe" | "systems";
 
 const routeHash = {
   "network-diagram": "#/",
   "node-map": "#/node-map",
+  "node-map-3d": "#/node-map-3d",
   globe: "#/globe",
   systems: "#/systems",
 } satisfies Record<AppRoute, string>;
@@ -40,6 +46,10 @@ function getRouteFromHash(): AppRoute {
 
   if (window.location.hash === routeHash["node-map"]) {
     return "node-map";
+  }
+
+  if (window.location.hash === routeHash["node-map-3d"]) {
+    return "node-map-3d";
   }
 
   if (window.location.hash === routeHash.globe) {
@@ -122,6 +132,10 @@ export function App() {
       setDisplayMode("graph");
       setLayoutMode("cose");
       setCountryDisplayMode("node");
+    } else if (activeRoute === "node-map-3d") {
+      setViewMode("governance");
+      setDisplayMode("graph");
+      setCountryDisplayMode("node");
     } else if (activeRoute === "globe") {
       setViewMode("governance");
       setDisplayMode("globe");
@@ -147,6 +161,7 @@ export function App() {
 
   const isSystemsRoute = activeRoute === "systems";
   const isGlobeRoute = activeRoute === "globe";
+  const isThreeNodeMapRoute = activeRoute === "node-map-3d";
   const showGraphControls = !isSystemsRoute;
 
   const focusOptions = useMemo(() => {
@@ -234,6 +249,14 @@ export function App() {
           </a>
           <a
             className="main-nav-link"
+            href={routeHash["node-map-3d"]}
+            aria-current={activeRoute === "node-map-3d" ? "page" : undefined}
+            onClick={(event) => openRoute(event, "node-map-3d")}
+          >
+            3D Node Map
+          </a>
+          <a
+            className="main-nav-link"
             href={routeHash.globe}
             aria-current={activeRoute === "globe" ? "page" : undefined}
             onClick={(event) => openRoute(event, "globe")}
@@ -280,7 +303,7 @@ export function App() {
                       onChange={(value) => setFocusEntityId(value ?? null)}
                     />
                   </div>
-                  {!isGlobeRoute ? (
+                  {!isGlobeRoute && !isThreeNodeMapRoute ? (
                     <div>
                       <Text type="secondary">Layout</Text>
                       <Select
@@ -322,6 +345,18 @@ export function App() {
           ) : isGlobeRoute ? (
             <div className="graph-surface graph-surface-globe">
               <GlobeCanvas />
+            </div>
+          ) : isThreeNodeMapRoute ? (
+            <div className="graph-surface graph-surface-node-map graph-surface-node-map-3d">
+              <Suspense
+                fallback={
+                  <Flex className="graph-canvas" align="center" justify="center">
+                    <Spin size="large" tip="Loading 3D view..." />
+                  </Flex>
+                }
+              >
+                <ForceGraphCanvas />
+              </Suspense>
             </div>
           ) : (
             <div
