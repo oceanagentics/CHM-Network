@@ -24,6 +24,7 @@ export type GovernanceBlock = "national" | "international" | null;
 export interface GraphProjectionNode extends NodeGeometry {
   id: string;
   label: string;
+  simpleLabel: string;
   kind: Entity["kind"];
   status: Entity["status"];
   subtype: string | null;
@@ -91,6 +92,7 @@ function buildProjectionNode(
   return {
     id: entity.id,
     label,
+    simpleLabel: entity.name,
     kind: entity.kind,
     status: entity.status,
     subtype: entity.subtype,
@@ -170,6 +172,8 @@ function edgeLabel(type: GraphProjectionEdgeType): string {
       return "governs";
     case "operates":
       return "operates";
+    case "part_of":
+      return "part of";
     case "publishes_to":
       return "publishes to";
     case "syncs_to":

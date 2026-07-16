@@ -1,0 +1,98 @@
+tag_id,tag_category,tag_key,tag_label,description
+tag-data-format-analytical-product,data_format,analytical_product,Analytical product,Derived analytical product format.
+tag-data-format-argo-standard,data_format,argo_standard,Argo / profile standard,"Argo profiles, quality-controlled profile standards, or cruise/profile data conventions."
+tag-data-format-barcode-data-model,data_format,barcode_data_model,Barcode data model,Barcode-specific data model or standard.
+tag-data-format-bufr,data_format,bufr,BUFR,WMO binary universal form for meteorological/oceanographic data representation.
+tag-data-format-community-standard,data_format,community_standard,Community-specific standard,"Theme-specific, NOAA/community, or other repository-specific standards."
+tag-data-format-controlled-vocabulary,data_format,controlled_vocabulary,Controlled vocabulary,"Domain vocabularies, code lists, or managed terms."
+tag-data-format-csv-tabular,data_format,csv_tabular,CSV / tabular,Delimited text or table-oriented exchange files.
+tag-data-format-darwin-core,data_format,darwin_core,Darwin Core,"Biodiversity occurrence/event data standard used by OBIS, GBIF, EMODnet Biology, BISMaL, GEOME, and related systems."
+tag-data-format-darwin-core-archive,data_format,darwin_core_archive,Darwin Core Archive,"Packaged Darwin Core data archive, typically CSV tables plus meta.xml and EML metadata."
+tag-data-format-doi-package,data_format,doi_package,DOI package,"DOI-centered dataset, publication, or artifact package."
+tag-data-format-eml,data_format,eml,Ecological Metadata Language,Dataset metadata XML used in Darwin Core Archive/IPT publication workflows.
+tag-data-format-emof,data_format,emof,Extended MeasurementOrFact,Darwin Core extension for measurements and facts such as environmental or trait values.
+tag-data-format-fasta,data_format,fasta,FASTA,FASTA sequence flat file format.
+tag-data-format-genbank-flat-file,data_format,genbank_flat_file,GenBank flat file,NCBI GenBank flat-file sequence format.
+tag-data-format-ices-exchange-format,data_format,ices_exchange_format,ICES exchange format,"ICES data, survey, code, or exchange formats."
+tag-data-format-identifier-vocab,data_format,identifier_vocab,Identifier vocabulary,"Identifier-backed vocabulary such as AphiaID, LSID, MRGID, Marine-ID, accessions, or DOI."
+tag-data-format-instrument-data-product,data_format,instrument_data_product,Instrument data product,Instrument or observing-system product format.
+tag-data-format-intercatch-exchange,data_format,intercatch_exchange,InterCatch exchange format,InterCatch fisheries exchange format.
+tag-data-format-json,data_format,json,JSON,JSON data output.
+tag-data-format-metadata-schema,data_format,metadata_schema,Metadata schema,Structured metadata schema or catalogue metadata model.
+tag-data-format-netcdf,data_format,netcdf,NetCDF,Array-oriented scientific data format used by oceanographic systems.
+tag-data-format-odis-architecture,data_format,odis_architecture,ODIS architecture,ODIS/Ocean InfoHub architecture conventions and linked ocean information patterns.
+tag-data-format-platform-metadata,data_format,platform_metadata,Platform metadata,Observing platform metadata records.
+tag-data-format-raster-gridded,data_format,raster_gridded,Raster / gridded layers,"Raster, gridded, model scenario, or mapped analytical products."
+tag-data-format-rdbes-exchange,data_format,rdbes_exchange,RDBES exchange format,Regional DataBase and Estimation System exchange documentation/formats.
+tag-data-format-rdf-linked-data,data_format,rdf_linked_data,RDF / linked data,RDF or linked-data style records.
+tag-data-format-re3data-schema,data_format,re3data_schema,re3data metadata schema,re3data repository registry metadata schema.
+tag-data-format-relational-database,data_format,relational_database,Relational database,Relational database backed data model or exports.
+tag-data-format-seadatanet-standard,data_format,seadatanet_standard,SeaDataNet standard,"SeaDataNet formats, vocabularies, and controlled terms."
+tag-data-format-sequence-standard,data_format,sequence_standard,Sequence archive standard,"INSDC, ENA, SRA, barcode, or sequence archive data standards."
+tag-data-format-shapefile-gis,data_format,shapefile_gis,Shapefile / GIS layers,Geospatial vector or GIS layer files.
+tag-data-format-statistical-collection,data_format,statistical_collection,Statistical collection,Published statistical collections such as FAO fishery/aquaculture data.
+tag-data-format-zarr,data_format,zarr,Zarr,Chunked array data format used for cloud-oriented gridded data.
+tag-data-type-abundance,data_type,abundance,Abundance,Abundance measurements or abundance products.
+tag-data-type-aquaculture-statistics,data_type,aquaculture_statistics,Aquaculture / production statistics,"Aquaculture, production statistics, statistical yearbooks, or FAO statistical products."
+tag-data-type-atmospheric-time-series,data_type,atmospheric_time_series,Atmospheric time series,Atmospheric or ocean-atmosphere time-series data.
+tag-data-type-bathymetry-geology-imagery,data_type,bathymetry_geology_imagery,Bathymetry / geology / imagery,"Bathymetry, marine geology, or imagery holdings."
+tag-data-type-chemical-biogeochemical,data_type,chemical_biogeochemical,Chemical / biogeochemical,"Oxygen, nutrients, carbon, DIC, alkalinity, pH, tracers, fCO2, or biogeochemical data."
+tag-data-type-data-product-visualization,data_type,data_product_visualization,Data product / visualization,"Product catalogue, downloads, visualization, gridded product, or derived display products."
+tag-data-type-environmental-layers,data_type,environmental_layers,Environmental layers,"Physical, chemical, biological, topographic, or environmental layers."
+tag-data-type-fisheries-catch-effort,data_type,fisheries_catch_effort,Fisheries catch / effort,"Catch, effort, landings, discards, bycatch, CPUE, indicators, or fisheries survey data."
+tag-data-type-genomic-sequence,data_type,genomic_sequence,Genomic / sequence,"DNA barcodes, nucleotide sequences, reads, assemblies, amplicons, or metagenomic data."
+tag-data-type-geographic-spatial,data_type,geographic_spatial,Geographic / spatial,"Place names, boundaries, geospatial metadata, maps, or spatial layers."
+tag-data-type-images-media,data_type,images_media,Images / media,"Images, photographs, video, or media records."
+tag-data-type-literature-reference,data_type,literature_reference,Literature / reference,Literature references or bibliographic source records.
+tag-data-type-metadata-catalog-registry,data_type,metadata_catalog_registry,Metadata catalogue / registry,"Catalogue records, repository metadata, registry metadata, knowledge graph, discovery portal, or node catalogue."
+tag-data-type-model-forecast-reanalysis,data_type,model_forecast_reanalysis,Model / forecast / reanalysis,"Model output, forecasts, reanalyses, scenarios, or predicted distributions."
+tag-data-type-occurrence-observation,data_type,occurrence_observation,Occurrence / observation,"Observed, collected, specimen, occurrence, abundance, or distribution records."
+tag-data-type-operational-coordination,data_type,operational_coordination,Operational coordination,"Deployment coordination, operational status, or programme coordination information."
+tag-data-type-physical-oceanography,data_type,physical_oceanography,Physical oceanography,"Profiles, trajectories, salinity, temperature, hydrography, or physical ocean layers."
+tag-data-type-platform-instrument-status,data_type,platform_instrument_status,Platform / instrument status,"Observing platform, instrument, deployment, network status, or technical metadata."
+tag-data-type-policy-treaty-information,data_type,policy_treaty_information,Policy / treaty information,"Treaty implementation, policy, legal, or clearing-house information."
+tag-data-type-research-artifact-publication,data_type,research_artifact_publication,Research artifact / publication,"Datasets, supplementary data, publications, or general research artifacts."
+tag-data-type-sample-biosample,data_type,sample_biosample,Sample / biosample,"Sample, specimen, tissue, biosample, or collection metadata."
+tag-data-type-software-artifact,data_type,software_artifact,Software artifact,Software or computational artifact.
+tag-data-type-taxonomy-nomenclature,data_type,taxonomy_nomenclature,Taxonomy / nomenclature,"Taxonomic names, nomenclature, synonymy, or taxonomic backbone content."
+tag-data-type-trait-ecology,data_type,trait_ecology,Traits / ecology,"Species traits, ecological descriptions, attributes, or ecology data."
+tag-read-method-api,read_method,api,API,Programmatic HTTP/API access.
+tag-read-method-dashboard-viewer,read_method,dashboard_viewer,Dashboard / viewer,"Dashboard, map viewer, monitoring view, or data visualization portal."
+tag-read-method-doi-landing-page,read_method,doi_landing_page,DOI landing page,DOI landing page access.
+tag-read-method-download,read_method,download,Download,"Bulk, file, or product download access."
+tag-read-method-email,read_method,email,Email,Email-based data access or request; not present as a primary current read path.
+tag-read-method-erddap,read_method,erddap,ERDDAP,ERDDAP data service.
+tag-read-method-federated-portal,read_method,federated_portal,Federated portal/service,"Distributed, regional, themed, standards-based, or machine-interface services."
+tag-read-method-ftp,read_method,ftp,FTP,FTP access.
+tag-read-method-harvest,read_method,harvest,Harvest,Machine harvesting or federation-based ingestion/discovery.
+tag-read-method-http,read_method,http,HTTP,HTTP file access.
+tag-read-method-ipt,read_method,ipt,IPT,Integrated Publishing Toolkit access.
+tag-read-method-mcp,read_method,mcp,MCP,"Model Context Protocol access; future/planned, not present in current researched systems."
+tag-read-method-metadata-catalog,read_method,metadata_catalog,Metadata catalogue,Catalogue or registry metadata browsing/search.
+tag-read-method-ogc-wfs,read_method,ogc_wfs,WFS,OGC Web Feature Service.
+tag-read-method-ogc-wms,read_method,ogc_wms,WMS,OGC Web Map Service.
+tag-read-method-ogc-wmts,read_method,ogc_wmts,WMTS,OGC Web Map Tile Service.
+tag-read-method-rest-api,read_method,rest_api,REST API,REST API access.
+tag-read-method-rsync,read_method,rsync,rsync,rsync access.
+tag-read-method-sdk-notebook,read_method,sdk_notebook,SDK / notebook,"R/Python library, notebook, or SDK-based access."
+tag-read-method-search-ui,read_method,search_ui,Search / query UI,"Interactive search, query panel, or tool interface."
+tag-read-method-sparql,read_method,sparql,SPARQL,SPARQL query endpoint.
+tag-read-method-thredds,read_method,thredds,THREDDS,THREDDS data service.
+tag-read-method-toolbox,read_method,toolbox,Toolbox,Provider-specific toolbox or analysis client.
+tag-read-method-web,read_method,web,Web UI,Human-facing website or web portal.
+tag-write-method-api-write,write_method,api_write,API write,Programmatic submission/deposit/update API.
+tag-write-method-doi-archive-publish,write_method,doi_archive_publish,DOI archive publish,Deposit/publish workflow that mints or exposes DOI-backed packages.
+tag-write-method-email,write_method,email,Email submission,Email-based submission/contact workflow.
+tag-write-method-federated-sync,write_method,federated_sync,Federated sync,Member-to-member or network federation data exchange.
+tag-write-method-harvested-node,write_method,harvested_node,Harvested node,System receives data through harvested/federated node or catalogue workflows.
+tag-write-method-indirect-partner-submission,write_method,indirect_partner_submission,Indirect partner submission,"Submission occurs through operators, member nodes, partners, or upstream systems."
+tag-write-method-ipt-publish,write_method,ipt_publish,IPT publish,Publication through GBIF/OBIS Integrated Publishing Toolkit.
+tag-write-method-manager-mediated-submission,write_method,manager_mediated_submission,Manager-mediated submission,Node manager or curator mediates data publication.
+tag-write-method-mcp,write_method,mcp,MCP write,"Model Context Protocol write path; future/planned, not present in current researched systems."
+tag-write-method-no-direct-write,write_method,no_direct_write,No direct write,No direct public contribution/submission path identified for this system.
+tag-write-method-planned-federation,write_method,planned_federation,Planned federation,Planned or likely future federation path.
+tag-write-method-preservation-copy,write_method,preservation_copy,Preservation copy,Long-term archive copy/curation handoff.
+tag-write-method-submission-workflow,write_method,submission_workflow,Submission workflow,Named or guided submission workflow.
+tag-write-method-template-csv-workflow,write_method,template_csv_workflow,Template / CSV workflow,"Template, spreadsheet, CSV, or metadata workflow used for submissions."
+tag-write-method-upload,write_method,upload,Upload,File upload workflow.
+tag-write-method-web-submission,write_method,web_submission,Web submission,"Human-facing deposit, submit, or publish workflow."

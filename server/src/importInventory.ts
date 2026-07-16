@@ -12,8 +12,6 @@ const defaultInventoryDir = path.join(
   "research",
   "2026-05-26-global-system-inventory",
 );
-const importedAt = new Date().toISOString();
-
 const relationshipTypes = new Set([
   "publishes_to",
   "pulls_from",
@@ -367,6 +365,21 @@ function main() {
       @relationshipId, @sourceId, @claimType, @excerpt, @confidenceOverride
     )
   `);
+  const upsertSystemProfile = db.prepare(`
+    INSERT INTO system_profiles (
+      system_id, role, primary_url, aliases, discipline_family, geographic_scope,
+      data_summary, access_summary, submission_summary
+    ) VALUES (
+      @systemId, @role, @primaryUrl, @aliases, @disciplineFamily, @geographicScope,
+      NULL, NULL, NULL
+    )
+    ON CONFLICT(system_id) DO UPDATE SET
+      role = excluded.role,
+      primary_url = excluded.primary_url,
+      aliases = excluded.aliases,
+      discipline_family = excluded.discipline_family,
+      geographic_scope = excluded.geographic_scope
+  `);
 
   function resolveEntityId(
     preferredId: string,
@@ -448,7 +461,7 @@ function main() {
     preferredId: string;
     sourceEntityId: string;
     targetEntityId: string;
-    type: "governs" | "operates" | "syncs_to";
+    type: "governs" | "operates" | "part_of" | "syncs_to";
     status: string;
     confidence: number;
     note: string | null;
@@ -512,10 +525,6 @@ function main() {
         confidence,
         description: null,
         properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
-          operatorCountryRaw: system.operator_country,
           pseudoCountry: Boolean(country.pseudoCountry),
         },
       });
@@ -530,12 +539,7 @@ function main() {
         status: "active",
         confidence,
         description: null,
-        properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
-          operatorCountryRaw: system.operator_country,
-        },
+        properties: {},
       });
       const systemId = ensureEntity({
         preferredId: system.system_id,
@@ -548,28 +552,15 @@ function main() {
         status: system.status,
         confidence,
         description: normalizeString(system.notes),
-        properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
-          subtype: normalizeString(system.role_class),
-          aliases: normalizeString(system.aliases),
-          canonicalUrl: normalizeString(system.canonical_url),
-          operatorName: normalizeString(system.operator_name),
-          operatorCountryRaw: normalizeString(system.operator_country),
-          disciplineFamily: normalizeString(system.discipline_family),
-          scopeTier: normalizeString(system.scope_tier),
-          geographicScope: normalizeString(system.geographic_scope),
-          marineRelevance: normalizeString(system.marine_relevance),
-          researcherInteraction: normalizeString(system.researcher_interaction),
-          dataTypes: normalizeString(system.data_types),
-          submissionSupported: normalizeString(system.submission_supported),
-          accessSupported: normalizeString(system.access_supported),
-          apiOrDownloadModes: normalizeString(system.api_or_download_modes),
-          formatsOrStandards: normalizeString(system.formats_or_standards),
-          persistentIdentifierSupport: normalizeString(system.persistent_identifier_support),
-          parentSystemId: normalizeString(system.parent_system_id),
-        },
+        properties: {},
+      });
+      upsertSystemProfile.run({
+        systemId,
+        role: normalizeString(system.role_class),
+        primaryUrl: normalizeString(system.canonical_url),
+        aliases: normalizeString(system.aliases),
+        disciplineFamily: normalizeString(system.discipline_family),
+        geographicScope: normalizeString(system.geographic_scope),
       });
       resolvedSystemIds.set(system.system_id, systemId);
 
@@ -581,11 +572,7 @@ function main() {
         status: "active",
         confidence,
         note: null,
-        properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
-        },
+        properties: {},
       });
       const operatesId = ensureRelationship({
         preferredId: `rel-${orgSlug}-operates-${slugify(system.system_name)}`,
@@ -595,11 +582,7 @@ function main() {
         status: "active",
         confidence,
         note: null,
-        properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
-        },
+        properties: {},
       });
 
       for (const sourceLink of [
@@ -677,7 +660,19 @@ function main() {
         throw new Error(`system ${system.system_id} cannot parent itself`);
       }
 
-      syncEntityParent.run(parentEntityId, systemId);
+      syncEntityParent.run(null, systemId);
+      if (parentEntityId) {
+        ensureRelationship({
+          preferredId: `rel-${systemId}-part-of-${parentEntityId}`,
+          sourceEntityId: systemId,
+          targetEntityId: parentEntityId,
+          type: "part_of",
+          status: "active",
+          confidence: 0.8,
+          note: null,
+          properties: {},
+        });
+      }
     }
 
     for (const link of links) {
@@ -696,9 +691,6 @@ function main() {
         confidence: parseConfidence(link.confidence, `${link.link_id} confidence`),
         note: normalizeString(link.direction_note),
         properties: {
-          importDataset: path.basename(inventoryDir),
-          importSource: "csv_inventory",
-          importedAt,
           originalRelationType: normalizeString(link.relation_type),
           directionNote: normalizeString(link.direction_note),
           mechanism: normalizeString(link.mechanism),

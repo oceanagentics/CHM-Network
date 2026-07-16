@@ -104,7 +104,13 @@ type SourceDraft = {
 
 const statusOptions = ["active", "planned", "speculative", "deprecated"] as const;
 const entityKindOptions = ["country", "organization", "system"] as const;
-const relationshipTypeOptions = ["governs", "operates", "publishes_to", "syncs_to"] as const;
+const relationshipTypeOptions = [
+  "governs",
+  "operates",
+  "part_of",
+  "publishes_to",
+  "syncs_to",
+] as const;
 
 const defaultLink = (sourceId = ""): SourceLinkDraft => ({
   sourceId,

@@ -7,7 +7,10 @@ import dagre from "cytoscape-dagre";
 import elk from "cytoscape-elk";
 import fcose from "cytoscape-fcose";
 
-import { cytoscapeStyles } from "./cytoscapeStyles";
+import {
+  getCytoscapeStyles,
+  type GraphDisplayMode,
+} from "./cytoscapeStyles";
 import type { CytoscapeProjectionOutput } from "./layout";
 import { useGraphStore } from "../state/graphStore";
 
@@ -23,6 +26,7 @@ interface UseCytoscapeControllerOptions {
   selectedEntityId: string | null;
   connectedNodeIds: string[];
   connectedEdgeIds: string[];
+  displayMode: GraphDisplayMode;
 }
 
 export function useCytoscapeController({
@@ -33,6 +37,7 @@ export function useCytoscapeController({
   selectedEntityId,
   connectedNodeIds,
   connectedEdgeIds,
+  displayMode,
 }: UseCytoscapeControllerOptions): Core | null {
   const cyRef = useRef<Core | null>(null);
   const lastStructuralKeyRef = useRef<string | null>(null);
@@ -50,7 +55,7 @@ export function useCytoscapeController({
     const cy = cytoscape({
       container,
       elements: [],
-      style: cytoscapeStyles,
+      style: getCytoscapeStyles(displayMode),
     });
 
     cy.on("tap", "node", (event) => {
@@ -98,6 +103,15 @@ export function useCytoscapeController({
       cyRef.current = null;
     };
   }, [container]);
+
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) {
+      return;
+    }
+
+    cy.style().fromJson(getCytoscapeStyles(displayMode)).update();
+  }, [displayMode]);
 
   const stableElements = useMemo(
     () => projection.elements,

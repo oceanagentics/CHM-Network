@@ -19,6 +19,11 @@ import type {
   Source,
   SourceInput,
   Status,
+  SystemAccessPath,
+  SystemDataClaim,
+  SystemIdentifierScheme,
+  SystemProfile,
+  SystemSubmissionPath,
   Tag,
 } from "../../shared/domain";
 
@@ -53,8 +58,22 @@ type RawRelationship = {
   updated_at: string;
 };
 
+type RawSystemProfile = {
+  system_id: string;
+  role: string | null;
+  primary_url: string | null;
+  aliases: string | null;
+  discipline_family: string | null;
+  geographic_scope: string | null;
+  data_summary: string | null;
+  access_summary: string | null;
+  submission_summary: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 const entityKinds = ["country", "organization", "system"] as const;
-const relationshipTypes = ["governs", "operates", "publishes_to", "syncs_to"] as const;
+const relationshipTypes = ["governs", "operates", "part_of", "publishes_to", "syncs_to"] as const;
 const statuses = ["active", "planned", "speculative", "deprecated"] as const;
 
 function parseJson(value: string | null): JsonValue {
@@ -100,8 +119,6 @@ function assertConfidence(value: unknown): number {
 
 function mapEntity(row: RawEntity): Entity {
   const properties = parseJson(row.properties_json);
-  const subtypeFromProperties =
-    typeof properties.subtype === "string" ? properties.subtype : null;
 
   return {
     id: row.id,
@@ -110,7 +127,7 @@ function mapEntity(row: RawEntity): Entity {
     slug: row.slug,
     parentEntityId: row.parent_entity_id,
     countryCode: row.country_code,
-    subtype: row.kind === "organization" ? row.institution_type : subtypeFromProperties,
+    subtype: row.kind === "organization" ? row.institution_type : null,
     status: row.status,
     confidence: Number(row.confidence),
     description: row.description,
@@ -168,6 +185,85 @@ function mapRelationshipSource(row: Record<string, unknown>): RelationshipSource
     excerpt: (row.excerpt as string | null) ?? null,
     confidenceOverride:
       row.confidence_override == null ? null : Number(row.confidence_override),
+  };
+}
+
+function mapEntityTag(row: Record<string, unknown>): EntityTag {
+  return {
+    entityId: String(row.entity_id),
+    tagId: String(row.tag_id),
+  };
+}
+
+function mapSystemProfile(row: RawSystemProfile): SystemProfile {
+  return {
+    systemId: row.system_id,
+    role: row.role,
+    primaryUrl: row.primary_url,
+    aliases: row.aliases,
+    disciplineFamily: row.discipline_family,
+    geographicScope: row.geographic_scope,
+    dataSummary: row.data_summary,
+    accessSummary: row.access_summary,
+    submissionSummary: row.submission_summary,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapSystemDataClaim(row: Record<string, unknown>): SystemDataClaim {
+  return {
+    id: String(row.id),
+    systemId: String(row.system_id),
+    category: row.category as SystemDataClaim["category"],
+    label: String(row.label),
+    note: (row.note as string | null) ?? null,
+    confidence: Number(row.confidence),
+    sourceId: (row.source_id as string | null) ?? null,
+  };
+}
+
+function mapSystemAccessPath(row: Record<string, unknown>): SystemAccessPath {
+  return {
+    id: String(row.id),
+    systemId: String(row.system_id),
+    method: String(row.method),
+    label: String(row.label),
+    url: (row.url as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    confidence: Number(row.confidence),
+    sourceId: (row.source_id as string | null) ?? null,
+  };
+}
+
+function mapSystemSubmissionPath(row: Record<string, unknown>): SystemSubmissionPath {
+  return {
+    id: String(row.id),
+    systemId: String(row.system_id),
+    method: String(row.method),
+    label: String(row.label),
+    url: (row.url as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    confidence: Number(row.confidence),
+    sourceId: (row.source_id as string | null) ?? null,
+  };
+}
+
+function mapSystemIdentifierScheme(row: Record<string, unknown>): SystemIdentifierScheme {
+  return {
+    id: String(row.id),
+    systemId: String(row.system_id),
+    scheme: String(row.scheme),
+    appliesTo: (row.applies_to as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    sourceId: (row.source_id as string | null) ?? null,
+  };
+}
+
+function mapRelationshipTag(row: Record<string, unknown>): RelationshipTag {
+  return {
+    relationshipId: String(row.relationship_id),
+    tagId: String(row.tag_id),
   };
 }
 
@@ -230,10 +326,32 @@ export class SqliteGraphRepository {
       .all() as Tag[];
     const entityTags = this.db
       .prepare("SELECT * FROM entity_tags ORDER BY entity_id, tag_id")
-      .all() as EntityTag[];
+      .all()
+      .map((row) => mapEntityTag(row as Record<string, unknown>));
     const relationshipTags = this.db
       .prepare("SELECT * FROM relationship_tags ORDER BY relationship_id, tag_id")
-      .all() as RelationshipTag[];
+      .all()
+      .map((row) => mapRelationshipTag(row as Record<string, unknown>));
+    const systemProfiles = this.db
+      .prepare("SELECT * FROM system_profiles ORDER BY system_id")
+      .all()
+      .map((row) => mapSystemProfile(row as RawSystemProfile));
+    const systemDataClaims = this.db
+      .prepare("SELECT * FROM system_data_claims ORDER BY system_id, category, label")
+      .all()
+      .map((row) => mapSystemDataClaim(row as Record<string, unknown>));
+    const systemAccessPaths = this.db
+      .prepare("SELECT * FROM system_access_paths ORDER BY system_id, method, label")
+      .all()
+      .map((row) => mapSystemAccessPath(row as Record<string, unknown>));
+    const systemSubmissionPaths = this.db
+      .prepare("SELECT * FROM system_submission_paths ORDER BY system_id, method, label")
+      .all()
+      .map((row) => mapSystemSubmissionPath(row as Record<string, unknown>));
+    const systemIdentifierSchemes = this.db
+      .prepare("SELECT * FROM system_identifier_schemes ORDER BY system_id, scheme")
+      .all()
+      .map((row) => mapSystemIdentifierScheme(row as Record<string, unknown>));
 
     const mappedEntities = entities.map((entity) => mapEntity(entity));
     const savedViews = filterSavedViews(
@@ -250,6 +368,11 @@ export class SqliteGraphRepository {
       tags,
       entityTags,
       relationshipTags,
+      systemProfiles,
+      systemDataClaims,
+      systemAccessPaths,
+      systemSubmissionPaths,
+      systemIdentifierSchemes,
       savedViews,
     };
   }
@@ -504,11 +627,7 @@ export class SqliteGraphRepository {
 
   private entityParams(id: string, input: EntityInput) {
     const properties = { ...input.properties };
-    if (input.kind === "system" && input.subtype) {
-      properties.subtype = input.subtype;
-    } else if (input.kind !== "system") {
-      delete properties.subtype;
-    }
+    delete properties.subtype;
 
     return {
       id,
@@ -656,6 +775,12 @@ export class SqliteGraphRepository {
       (source.kind !== "organization" || target.kind !== "system")
     ) {
       throw new Error(`${input.type} must connect organization to system`);
+    }
+    if (
+      input.type === "part_of" &&
+      (source.kind !== "system" || target.kind !== "system")
+    ) {
+      throw new Error("part_of must connect system to system");
     }
     if (
       input.type === "syncs_to" &&

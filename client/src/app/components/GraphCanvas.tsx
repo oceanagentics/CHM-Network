@@ -6,9 +6,14 @@ import { useMemo, useState } from "react";
 import { projectCytoscapeGraph } from "../graph/layout";
 import { projectGraph } from "../graph/projection";
 import { useCytoscapeController } from "../graph/useCytoscapeController";
+import type { GraphDisplayMode } from "../graph/cytoscapeStyles";
 import { useGraphStore } from "../state/graphStore";
 
-export function GraphCanvas() {
+interface GraphCanvasProps {
+  displayMode?: GraphDisplayMode;
+}
+
+export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
   const graph = useGraphStore((state) => state.graph);
   const viewMode = useGraphStore((state) => state.viewMode);
   const layoutMode = useGraphStore((state) => state.layoutMode);
@@ -38,8 +43,8 @@ export function GraphCanvas() {
       return null;
     }
 
-    return projectCytoscapeGraph(projection, layoutMode, viewMode);
-  }, [layoutMode, projection, viewMode]);
+    return projectCytoscapeGraph(projection, layoutMode, viewMode, displayMode);
+  }, [displayMode, layoutMode, projection, viewMode]);
 
   const controllerProjection =
     cytoscapeProjection ?? {
@@ -81,6 +86,7 @@ export function GraphCanvas() {
   const structuralKey = useMemo(() => {
     return JSON.stringify({
       viewMode,
+      displayMode,
       layoutMode,
       countryDisplayMode,
       nodes: projection?.nodes.map((node) => `${node.id}:${node.parentId ?? ""}`) ?? [],
@@ -89,6 +95,7 @@ export function GraphCanvas() {
     });
   }, [
     countryDisplayMode,
+    displayMode,
     layoutMode,
     projection,
     viewMode,
@@ -102,6 +109,7 @@ export function GraphCanvas() {
     selectedEntityId,
     connectedNodeIds: selectedNeighborhood.connectedNodeIds,
     connectedEdgeIds: selectedNeighborhood.connectedEdgeIds,
+    displayMode,
   });
 
   if (!projection) {

@@ -16,6 +16,11 @@ const requiredTables = [
   "tags",
   "entity_tags",
   "relationship_tags",
+  "system_profiles",
+  "system_data_claims",
+  "system_access_paths",
+  "system_submission_paths",
+  "system_identifier_schemes",
   "saved_views",
 ] as const;
 

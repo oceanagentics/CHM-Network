@@ -8,6 +8,11 @@ import type {
   RelationshipTag,
   SavedView,
   Source,
+  SystemAccessPath,
+  SystemDataClaim,
+  SystemIdentifierScheme,
+  SystemProfile,
+  SystemSubmissionPath,
   Tag,
 } from "../../../../shared/domain";
 
@@ -23,6 +28,11 @@ export interface IndexedGraph extends GraphBootstrapPayload {
   relationshipSourcesByRelationshipId: Record<string, RelationshipSource[]>;
   entityTagsByEntityId: Record<string, EntityTag[]>;
   relationshipTagsByRelationshipId: Record<string, RelationshipTag[]>;
+  systemProfileBySystemId: Record<string, SystemProfile>;
+  systemDataClaimsBySystemId: Record<string, SystemDataClaim[]>;
+  systemAccessPathsBySystemId: Record<string, SystemAccessPath[]>;
+  systemSubmissionPathsBySystemId: Record<string, SystemSubmissionPath[]>;
+  systemIdentifierSchemesBySystemId: Record<string, SystemIdentifierScheme[]>;
   savedViewById: Record<string, SavedView>;
 }
 
@@ -83,6 +93,34 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
   const savedViewById = Object.fromEntries(
     payload.savedViews.map((savedView) => [savedView.id, savedView]),
   );
+  const systemProfileBySystemId = Object.fromEntries(
+    payload.systemProfiles.map((profile) => [profile.systemId, profile]),
+  );
+
+  const systemDataClaimsBySystemId: Record<string, SystemDataClaim[]> = {};
+  for (const claim of payload.systemDataClaims) {
+    systemDataClaimsBySystemId[claim.systemId] ??= [];
+    systemDataClaimsBySystemId[claim.systemId].push(claim);
+  }
+
+  const systemAccessPathsBySystemId: Record<string, SystemAccessPath[]> = {};
+  for (const accessPath of payload.systemAccessPaths) {
+    systemAccessPathsBySystemId[accessPath.systemId] ??= [];
+    systemAccessPathsBySystemId[accessPath.systemId].push(accessPath);
+  }
+
+  const systemSubmissionPathsBySystemId: Record<string, SystemSubmissionPath[]> = {};
+  for (const submissionPath of payload.systemSubmissionPaths) {
+    systemSubmissionPathsBySystemId[submissionPath.systemId] ??= [];
+    systemSubmissionPathsBySystemId[submissionPath.systemId].push(submissionPath);
+  }
+
+  const systemIdentifierSchemesBySystemId: Record<string, SystemIdentifierScheme[]> =
+    {};
+  for (const identifierScheme of payload.systemIdentifierSchemes) {
+    systemIdentifierSchemesBySystemId[identifierScheme.systemId] ??= [];
+    systemIdentifierSchemesBySystemId[identifierScheme.systemId].push(identifierScheme);
+  }
 
   return {
     ...payload,
@@ -97,6 +135,11 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
     relationshipSourcesByRelationshipId,
     entityTagsByEntityId,
     relationshipTagsByRelationshipId,
+    systemProfileBySystemId,
+    systemDataClaimsBySystemId,
+    systemAccessPathsBySystemId,
+    systemSubmissionPathsBySystemId,
+    systemIdentifierSchemesBySystemId,
     savedViewById,
   };
 }
@@ -135,4 +178,3 @@ export function collectAncestors(
 
   return visited;
 }
-

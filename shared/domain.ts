@@ -6,6 +6,7 @@ export type EntityKind =
 export type RelationshipType =
   | "governs"
   | "operates"
+  | "part_of"
   | "publishes_to"
   | "syncs_to";
 
@@ -85,6 +86,63 @@ export interface RelationshipTag {
   tagId: string;
 }
 
+export interface SystemProfile {
+  systemId: string;
+  role: string | null;
+  primaryUrl: string | null;
+  aliases: string | null;
+  disciplineFamily: string | null;
+  geographicScope: string | null;
+  dataSummary: string | null;
+  accessSummary: string | null;
+  submissionSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SystemDataClaimCategory = "data_type" | "data_format" | "standard";
+
+export interface SystemDataClaim {
+  id: string;
+  systemId: string;
+  category: SystemDataClaimCategory;
+  label: string;
+  note: string | null;
+  confidence: number;
+  sourceId: string | null;
+}
+
+export interface SystemAccessPath {
+  id: string;
+  systemId: string;
+  method: string;
+  label: string;
+  url: string | null;
+  note: string | null;
+  confidence: number;
+  sourceId: string | null;
+}
+
+export interface SystemSubmissionPath {
+  id: string;
+  systemId: string;
+  method: string;
+  label: string;
+  url: string | null;
+  note: string | null;
+  confidence: number;
+  sourceId: string | null;
+}
+
+export interface SystemIdentifierScheme {
+  id: string;
+  systemId: string;
+  scheme: string;
+  appliesTo: string | null;
+  note: string | null;
+  sourceId: string | null;
+}
+
 export interface SavedView {
   id: string;
   name: string;
@@ -105,6 +163,11 @@ export interface GraphBootstrapPayload {
   tags: Tag[];
   entityTags: EntityTag[];
   relationshipTags: RelationshipTag[];
+  systemProfiles: SystemProfile[];
+  systemDataClaims: SystemDataClaim[];
+  systemAccessPaths: SystemAccessPath[];
+  systemSubmissionPaths: SystemSubmissionPath[];
+  systemIdentifierSchemes: SystemIdentifierScheme[];
   savedViews: SavedView[];
 }
 

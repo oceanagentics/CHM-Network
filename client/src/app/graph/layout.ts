@@ -6,11 +6,13 @@ import type cytoscape from "cytoscape";
 
 import type { Entity, Relationship, ViewMode } from "../../../../shared/domain";
 import type { GraphLayout } from "../state/graphStore";
+import type { GraphDisplayMode } from "./cytoscapeStyles";
 import type { GovernanceBlock, GraphProjection, GraphProjectionEdgeType } from "./projection";
 
 type GraphNodeData = {
   id: string;
   label: string;
+  simpleLabel: string;
   kind: Entity["kind"];
   status: Entity["status"];
   subtype?: string | null;
@@ -186,6 +188,7 @@ export function projectCytoscapeGraph(
   projection: GraphProjection,
   layoutMode: GraphLayout,
   viewMode: ViewMode,
+  displayMode: GraphDisplayMode = "diagram",
   policy: DisplayPolicy = displayPolicy,
 ): CytoscapeProjectionOutput {
   const suppressDerivedHierarchyEdges = layoutMode.startsWith("elk-");
@@ -196,6 +199,7 @@ export function projectCytoscapeGraph(
     data: {
       id: node.id,
       label: node.label,
+      simpleLabel: node.simpleLabel,
       kind: node.kind,
       status: node.status,
       subtype: node.subtype,
@@ -205,7 +209,7 @@ export function projectCytoscapeGraph(
       width: node.width,
       height: node.height,
       textMaxWidth: node.textMaxWidth,
-      parent: node.parentId,
+      parent: displayMode === "node-map" ? undefined : node.parentId,
     } satisfies GraphNodeData,
   }));
 
