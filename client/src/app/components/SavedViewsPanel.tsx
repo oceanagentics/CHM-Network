@@ -30,6 +30,7 @@ function buildSavedViewPayload(state: ReturnType<typeof useGraphStore.getState>)
     },
     layout: {
       algorithm: state.layoutMode,
+      displayMode: state.displayMode,
       viewport: state.viewport,
     },
     style: {},
@@ -44,6 +45,7 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
   const savedViews = useGraphStore((state) => state.savedViews);
   const setSavedViews = useGraphStore((state) => state.setSavedViews);
   const setViewMode = useGraphStore((state) => state.setViewMode);
+  const setDisplayMode = useGraphStore((state) => state.setDisplayMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
@@ -119,6 +121,7 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
     };
     const layout = savedView.layout as {
       algorithm?: ReturnType<typeof useGraphStore.getState>["layoutMode"];
+      displayMode?: ReturnType<typeof useGraphStore.getState>["displayMode"];
     };
 
     if (filter.viewMode) {
@@ -132,6 +135,9 @@ export function SavedViewsPanel({ readOnly = false }: SavedViewsPanelProps) {
     }
     if (layout.algorithm) {
       setLayoutMode(layout.algorithm);
+    }
+    if (layout.displayMode) {
+      setDisplayMode(layout.displayMode);
     }
   }
 

@@ -14,6 +14,7 @@ import {
 import type { Entity } from "../../../shared/domain";
 import { fetchBootstrap } from "./api";
 import { EntityDetailsPanel } from "./components/EntityDetailsPanel";
+import { GlobeCanvas } from "./components/GlobeCanvas";
 import { GraphCanvas } from "./components/GraphCanvas";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
 import { SystemDirectoryView } from "./components/SystemDirectoryView";
@@ -23,11 +24,12 @@ import { graphLayouts, useGraphStore } from "./state/graphStore";
 const { Content, Header, Sider } = Layout;
 const { Text } = Typography;
 
-type AppRoute = "network-diagram" | "node-map" | "systems";
+type AppRoute = "network-diagram" | "node-map" | "globe" | "systems";
 
 const routeHash = {
   "network-diagram": "#/",
   "node-map": "#/node-map",
+  globe: "#/globe",
   systems: "#/systems",
 } satisfies Record<AppRoute, string>;
 
@@ -38,6 +40,10 @@ function getRouteFromHash(): AppRoute {
 
   if (window.location.hash === routeHash["node-map"]) {
     return "node-map";
+  }
+
+  if (window.location.hash === routeHash.globe) {
+    return "globe";
   }
 
   if (window.location.hash === routeHash.systems) {
@@ -73,6 +79,7 @@ export function App() {
   const setError = useGraphStore((state) => state.setError);
   const setLoading = useGraphStore((state) => state.setLoading);
   const setViewMode = useGraphStore((state) => state.setViewMode);
+  const setDisplayMode = useGraphStore((state) => state.setDisplayMode);
   const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
@@ -112,10 +119,16 @@ export function App() {
   useEffect(() => {
     if (activeRoute === "node-map") {
       setViewMode("governance");
+      setDisplayMode("graph");
       setLayoutMode("cose");
+      setCountryDisplayMode("node");
+    } else if (activeRoute === "globe") {
+      setViewMode("governance");
+      setDisplayMode("globe");
       setCountryDisplayMode("node");
     } else {
       setViewMode("governance");
+      setDisplayMode("graph");
       setLayoutMode("elk-mrtree");
       setCountryDisplayMode("engulf");
     }
@@ -126,11 +139,15 @@ export function App() {
     activeRoute,
     resetSelection,
     setCountryDisplayMode,
+    setDisplayMode,
     setFocusEntityId,
     setLayoutMode,
     setViewMode,
   ]);
+
   const isSystemsRoute = activeRoute === "systems";
+  const isGlobeRoute = activeRoute === "globe";
+  const showGraphControls = !isSystemsRoute;
 
   const focusOptions = useMemo(() => {
     if (!graph) {
@@ -170,7 +187,7 @@ export function App() {
   if (loading) {
     return (
       <Flex className="app-shell" align="center" justify="center">
-        <Spin size="large" tip="Loading graph data…" />
+        <Spin size="large" tip="Loading graph data..." />
       </Flex>
     );
   }
@@ -217,6 +234,14 @@ export function App() {
           </a>
           <a
             className="main-nav-link"
+            href={routeHash.globe}
+            aria-current={activeRoute === "globe" ? "page" : undefined}
+            onClick={(event) => openRoute(event, "globe")}
+          >
+            Globe
+          </a>
+          <a
+            className="main-nav-link"
             href={routeHash.systems}
             aria-current={activeRoute === "systems" ? "page" : undefined}
             onClick={(event) => openRoute(event, "systems")}
@@ -226,7 +251,7 @@ export function App() {
         </nav>
       </Header>
       <Layout className="app-body">
-        {!isSystemsRoute ? (
+        {showGraphControls ? (
           <Sider width={420} className="left-rail" theme="light">
             <Flex vertical gap={12} className="left-rail-stack">
               <Card size="small" title="View Controls">
@@ -255,18 +280,20 @@ export function App() {
                       onChange={(value) => setFocusEntityId(value ?? null)}
                     />
                   </div>
-                  <div>
-                    <Text type="secondary">Layout</Text>
-                    <Select
-                      className="full-width"
-                      value={layoutMode}
-                      options={graphLayouts.map((layout) => ({
-                        label: layout,
-                        value: layout,
-                      }))}
-                      onChange={(value) => setLayoutMode(value)}
-                    />
-                  </div>
+                  {!isGlobeRoute ? (
+                    <div>
+                      <Text type="secondary">Layout</Text>
+                      <Select
+                        className="full-width"
+                        value={layoutMode}
+                        options={graphLayouts.map((layout) => ({
+                          label: layout,
+                          value: layout,
+                        }))}
+                        onChange={(value) => setLayoutMode(value)}
+                      />
+                    </div>
+                  ) : null}
                   <div>
                     <Text type="secondary">Country Display</Text>
                     <Segmented
@@ -291,6 +318,10 @@ export function App() {
           {isSystemsRoute ? (
             <div className="systems-surface">
               <SystemDirectoryView />
+            </div>
+          ) : isGlobeRoute ? (
+            <div className="graph-surface graph-surface-globe">
+              <GlobeCanvas />
             </div>
           ) : (
             <div

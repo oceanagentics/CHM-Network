@@ -30,6 +30,17 @@ export const graphLayouts = [
 
 export type GraphLayout = (typeof graphLayouts)[number];
 export type CountryDisplayMode = "node" | "engulf";
+export type GraphDisplayMode = "graph" | "globe";
+
+function getInitialDisplayMode(): GraphDisplayMode {
+  if (typeof window === "undefined") {
+    return "graph";
+  }
+
+  return new URLSearchParams(window.location.search).get("display") === "globe"
+    ? "globe"
+    : "graph";
+}
 
 interface ViewportSnapshot {
   zoom: number;
@@ -42,6 +53,7 @@ interface GraphState {
   loading: boolean;
   error: string | null;
   viewMode: ViewMode;
+  displayMode: GraphDisplayMode;
   layoutMode: GraphLayout;
   countryDisplayMode: CountryDisplayMode;
   focusEntityId: string | null;
@@ -54,6 +66,7 @@ interface GraphState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setViewMode: (viewMode: ViewMode) => void;
+  setDisplayMode: (displayMode: GraphDisplayMode) => void;
   setLayoutMode: (layoutMode: GraphLayout) => void;
   setCountryDisplayMode: (countryDisplayMode: CountryDisplayMode) => void;
   setFocusEntityId: (focusEntityId: string | null) => void;
@@ -68,6 +81,7 @@ export const useGraphStore = create<GraphState>((set) => ({
   loading: true,
   error: null,
   viewMode: "governance",
+  displayMode: getInitialDisplayMode(),
   layoutMode: "elk-mrtree",
   countryDisplayMode: "engulf",
   focusEntityId: null,
@@ -85,6 +99,7 @@ export const useGraphStore = create<GraphState>((set) => ({
   setSavedViews: (savedViews) => set({ savedViews }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
+  setDisplayMode: (displayMode) => set({ displayMode }),
   setViewMode: (viewMode) =>
     set((state) => ({
       viewMode,
