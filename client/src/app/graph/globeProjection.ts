@@ -40,7 +40,7 @@ const countryAnchors: Record<string, Anchor> = {
   EUR: { lat: 50.8, lng: 10.9 },
   FRA: { lat: 46.2, lng: 2.2 },
   GBR: { lat: 55.4, lng: -3.4 },
-  INT: { lat: 8, lng: -28 },
+  INT: { lat: -74, lng: 0 },
   JPN: { lat: 36.2, lng: 138.3 },
   USA: { lat: 39.8, lng: -98.6 },
 };

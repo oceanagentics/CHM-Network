@@ -19,6 +19,7 @@ import { GraphCanvas } from "./components/GraphCanvas";
 import { SavedViewsPanel } from "./components/SavedViewsPanel";
 import { SystemDirectoryView } from "./components/SystemDirectoryView";
 import { isPublicApp } from "./config";
+import type { NodeMap3dArrangement } from "./graph/nodeMap3dLayout";
 import { graphLayouts, useGraphStore } from "./state/graphStore";
 
 const { Content, Header, Sider } = Layout;
@@ -77,6 +78,8 @@ function entityOptions(viewMode: "governance" | "country" | "technical", entitie
 
 export function App() {
   const [activeRoute, setActiveRoute] = useState<AppRoute>(() => getRouteFromHash());
+  const [nodeMap3dArrangement, setNodeMap3dArrangement] =
+    useState<NodeMap3dArrangement>("current");
   const graph = useGraphStore((state) => state.graph);
   const loading = useGraphStore((state) => state.loading);
   const error = useGraphStore((state) => state.error);
@@ -317,6 +320,23 @@ export function App() {
                       />
                     </div>
                   ) : null}
+                  {isThreeNodeMapRoute ? (
+                    <div>
+                      <Text type="secondary">3D Arrangement</Text>
+                      <Segmented
+                        block
+                        value={nodeMap3dArrangement}
+                        options={[
+                          { label: "Current", value: "current" },
+                          { label: "Flat", value: "flat" },
+                          { label: "Globe", value: "globe" },
+                        ]}
+                        onChange={(value) =>
+                          setNodeMap3dArrangement(value as NodeMap3dArrangement)
+                        }
+                      />
+                    </div>
+                  ) : null}
                   <div>
                     <Text type="secondary">Country Display</Text>
                     <Segmented
@@ -355,7 +375,7 @@ export function App() {
                   </Flex>
                 }
               >
-                <ForceGraphCanvas />
+                <ForceGraphCanvas arrangement={nodeMap3dArrangement} />
               </Suspense>
             </div>
           ) : (
@@ -373,7 +393,11 @@ export function App() {
           )}
         </Content>
         {showEntityDetails ? (
-          <Sider width={380} className="right-rail" theme="light">
+          <Sider
+            width={380}
+            className={isThreeNodeMapRoute ? "right-rail right-rail-node-map-3d" : "right-rail"}
+            theme="light"
+          >
             <div className="right-rail-stack">
               <EntityDetailsPanel />
             </div>

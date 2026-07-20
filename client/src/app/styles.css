@@ -101,6 +101,10 @@ body {
   border-inline-start: 0 !important;
 }
 
+.right-rail-node-map-3d {
+  background: #142338 !important;
+}
+
 .left-rail-stack {
   height: calc(100vh - 48px);
   overflow-y: auto;
@@ -150,7 +154,9 @@ body {
 }
 
 .graph-surface-node-map-3d {
+  border-inline-end: 0;
   background: #142338;
+  box-shadow: none;
 }
 
 .graph-canvas {
@@ -187,14 +193,18 @@ body {
   height: 21px;
   padding: 0 7px;
   overflow: hidden;
+  appearance: none;
   border: 1px solid rgba(196, 221, 255, 0.24);
   border-radius: 4px;
   background: rgba(16, 29, 48, 0.76);
   box-shadow: 0 4px 10px rgba(7, 14, 25, 0.22);
   color: #dfeeff;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
+  pointer-events: auto;
   text-overflow: ellipsis;
   text-shadow: 0 1px 2px rgba(7, 14, 25, 0.72);
   white-space: nowrap;
