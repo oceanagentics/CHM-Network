@@ -1,26 +1,19 @@
 import type { MouseEvent } from "react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   Alert,
-  Card,
   Flex,
   Layout,
-  Select,
   Segmented,
   Spin,
   Typography,
 } from "antd";
 
-import type { Entity } from "../../../shared/domain";
 import { fetchBootstrap } from "./api";
 import { EntityDetailsPanel } from "./components/EntityDetailsPanel";
-import { GlobeCanvas } from "./components/GlobeCanvas";
-import { GraphCanvas } from "./components/GraphCanvas";
-import { SavedViewsPanel } from "./components/SavedViewsPanel";
 import { SystemDirectoryView } from "./components/SystemDirectoryView";
-import { isPublicApp } from "./config";
 import type { NodeMap3dArrangement } from "./graph/nodeMap3dLayout";
-import { graphLayouts, useGraphStore } from "./state/graphStore";
+import { useGraphStore } from "./state/graphStore";
 
 const { Content, Header, Sider } = Layout;
 const { Text } = Typography;
@@ -30,50 +23,27 @@ const ForceGraphCanvas = lazy(() =>
   })),
 );
 
-type AppRoute = "network-diagram" | "node-map" | "node-map-3d" | "globe" | "systems";
+type AppRoute = "ryu" | "systems";
 
 const routeHash = {
-  "network-diagram": "#/",
-  "node-map": "#/node-map",
-  "node-map-3d": "#/node-map-3d",
-  globe: "#/globe",
+  ryu: "#/ryu",
   systems: "#/systems",
 } satisfies Record<AppRoute, string>;
 
 function getRouteFromHash(): AppRoute {
   if (typeof window === "undefined") {
-    return "network-diagram";
+    return "ryu";
   }
 
-  if (window.location.hash === routeHash["node-map"]) {
-    return "node-map";
-  }
-
-  if (window.location.hash === routeHash["node-map-3d"]) {
-    return "node-map-3d";
-  }
-
-  if (window.location.hash === routeHash.globe) {
-    return "globe";
+  if (window.location.hash === routeHash.ryu || window.location.hash === "#/node-map-3d") {
+    return "ryu";
   }
 
   if (window.location.hash === routeHash.systems) {
     return "systems";
   }
 
-  return "network-diagram";
-}
-
-function entityOptions(viewMode: "governance" | "country" | "technical", entities: Entity[]) {
-  if (viewMode === "technical") {
-    return entities.filter((entity) => entity.kind === "system");
-  }
-
-  if (viewMode === "country") {
-    return entities.filter((entity) => entity.kind === "country");
-  }
-
-  return entities;
+  return "ryu";
 }
 
 export function App() {
@@ -83,17 +53,12 @@ export function App() {
   const graph = useGraphStore((state) => state.graph);
   const loading = useGraphStore((state) => state.loading);
   const error = useGraphStore((state) => state.error);
-  const viewMode = useGraphStore((state) => state.viewMode);
-  const layoutMode = useGraphStore((state) => state.layoutMode);
-  const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
-  const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const setBootstrap = useGraphStore((state) => state.setBootstrap);
   const setError = useGraphStore((state) => state.setError);
   const setLoading = useGraphStore((state) => state.setLoading);
   const setViewMode = useGraphStore((state) => state.setViewMode);
   const setDisplayMode = useGraphStore((state) => state.setDisplayMode);
-  const setLayoutMode = useGraphStore((state) => state.setLayoutMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
   const resetSelection = useGraphStore((state) => state.resetSelection);
@@ -130,24 +95,10 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (activeRoute === "node-map") {
-      setViewMode("governance");
-      setDisplayMode("graph");
-      setLayoutMode("cose");
-      setCountryDisplayMode("node");
-    } else if (activeRoute === "node-map-3d") {
+    if (activeRoute === "ryu") {
       setViewMode("governance");
       setDisplayMode("graph");
       setCountryDisplayMode("node");
-    } else if (activeRoute === "globe") {
-      setViewMode("governance");
-      setDisplayMode("globe");
-      setCountryDisplayMode("node");
-    } else {
-      setViewMode("governance");
-      setDisplayMode("graph");
-      setLayoutMode("elk-mrtree");
-      setCountryDisplayMode("engulf");
     }
 
     setFocusEntityId(null);
@@ -158,27 +109,10 @@ export function App() {
     setCountryDisplayMode,
     setDisplayMode,
     setFocusEntityId,
-    setLayoutMode,
     setViewMode,
   ]);
 
   const isSystemsRoute = activeRoute === "systems";
-  const isGlobeRoute = activeRoute === "globe";
-  const isThreeNodeMapRoute = activeRoute === "node-map-3d";
-  const showGraphControls = !isSystemsRoute;
-
-  const focusOptions = useMemo(() => {
-    if (!graph) {
-      return [];
-    }
-
-    return entityOptions(viewMode, graph.entities)
-      .sort((left, right) => left.name.localeCompare(right.name))
-      .map((entity) => ({
-        label: entity.name,
-        value: entity.id,
-      }));
-  }, [graph, viewMode]);
   const showEntityDetails =
     graph != null &&
     selectedEntityId != null &&
@@ -228,43 +162,19 @@ export function App() {
       <Header className="main-nav">
         <a
           className="main-nav-brand"
-          href={routeHash["network-diagram"]}
-          onClick={(event) => openRoute(event, "network-diagram")}
+          href={routeHash.ryu}
+          onClick={(event) => openRoute(event, "ryu")}
         >
           CHM Network Explorer
         </a>
         <nav className="main-nav-links" aria-label="Main">
           <a
             className="main-nav-link"
-            href={routeHash["network-diagram"]}
-            aria-current={activeRoute === "network-diagram" ? "page" : undefined}
-            onClick={(event) => openRoute(event, "network-diagram")}
+            href={routeHash.ryu}
+            aria-current={activeRoute === "ryu" ? "page" : undefined}
+            onClick={(event) => openRoute(event, "ryu")}
           >
-            Network Diagram
-          </a>
-          <a
-            className="main-nav-link"
-            href={routeHash["node-map"]}
-            aria-current={activeRoute === "node-map" ? "page" : undefined}
-            onClick={(event) => openRoute(event, "node-map")}
-          >
-            Node Map
-          </a>
-          <a
-            className="main-nav-link"
-            href={routeHash["node-map-3d"]}
-            aria-current={activeRoute === "node-map-3d" ? "page" : undefined}
-            onClick={(event) => openRoute(event, "node-map-3d")}
-          >
-            3D Node Map
-          </a>
-          <a
-            className="main-nav-link"
-            href={routeHash.globe}
-            aria-current={activeRoute === "globe" ? "page" : undefined}
-            onClick={(event) => openRoute(event, "globe")}
-          >
-            Globe
+            Ryu
           </a>
           <a
             className="main-nav-link"
@@ -277,83 +187,24 @@ export function App() {
         </nav>
       </Header>
       <Layout className="app-body">
-        {showGraphControls ? (
+        {!isSystemsRoute ? (
           <Sider width={420} className="left-rail" theme="light">
             <Flex vertical gap={12} className="left-rail-stack">
-              <Card size="small" title="View Controls">
-                <Flex vertical gap={12}>
-                  <div>
-                    <Text type="secondary">View</Text>
-                    <Select
-                      className="full-width"
-                      value={viewMode}
-                      options={[
-                        { label: "Governance", value: "governance" },
-                        { label: "Country", value: "country" },
-                        { label: "Technical", value: "technical" },
-                      ]}
-                      onChange={(value) => setViewMode(value)}
-                    />
-                  </div>
-                  <div>
-                    <Text type="secondary">Focus</Text>
-                    <Select
-                      allowClear
-                      className="full-width"
-                      value={focusEntityId ?? undefined}
-                      placeholder="Auto"
-                      options={focusOptions}
-                      onChange={(value) => setFocusEntityId(value ?? null)}
-                    />
-                  </div>
-                  {!isGlobeRoute && !isThreeNodeMapRoute ? (
-                    <div>
-                      <Text type="secondary">Layout</Text>
-                      <Select
-                        className="full-width"
-                        value={layoutMode}
-                        options={graphLayouts.map((layout) => ({
-                          label: layout,
-                          value: layout,
-                        }))}
-                        onChange={(value) => setLayoutMode(value)}
-                      />
-                    </div>
-                  ) : null}
-                  {isThreeNodeMapRoute ? (
-                    <div>
-                      <Text type="secondary">3D Arrangement</Text>
-                      <Segmented
-                        block
-                        value={nodeMap3dArrangement}
-                        options={[
-                          { label: "Current", value: "current" },
-                          { label: "Flat", value: "flat" },
-                          { label: "Globe", value: "globe" },
-                        ]}
-                        onChange={(value) =>
-                          setNodeMap3dArrangement(value as NodeMap3dArrangement)
-                        }
-                      />
-                    </div>
-                  ) : null}
-                  <div>
-                    <Text type="secondary">Country Display</Text>
-                    <Segmented
-                      block
-                      value={countryDisplayMode}
-                      options={[
-                        { label: "Node", value: "node" },
-                        { label: "Engulf children", value: "engulf" },
-                      ]}
-                      onChange={(value) =>
-                        setCountryDisplayMode(value as typeof countryDisplayMode)
-                      }
-                    />
-                  </div>
-                </Flex>
-              </Card>
-              <SavedViewsPanel readOnly={isPublicApp} />
+              <div className="left-rail-control">
+                <Text type="secondary">3D Arrangement</Text>
+                <Segmented
+                  block
+                  value={nodeMap3dArrangement}
+                  options={[
+                    { label: "Current", value: "current" },
+                    { label: "Flat", value: "flat" },
+                    { label: "Globe", value: "globe" },
+                  ]}
+                  onChange={(value) =>
+                    setNodeMap3dArrangement(value as NodeMap3dArrangement)
+                  }
+                />
+              </div>
             </Flex>
           </Sider>
         ) : null}
@@ -362,11 +213,7 @@ export function App() {
             <div className="systems-surface">
               <SystemDirectoryView />
             </div>
-          ) : isGlobeRoute ? (
-            <div className="graph-surface graph-surface-globe">
-              <GlobeCanvas />
-            </div>
-          ) : isThreeNodeMapRoute ? (
+          ) : (
             <div className="graph-surface graph-surface-node-map graph-surface-node-map-3d">
               <Suspense
                 fallback={
@@ -378,24 +225,12 @@ export function App() {
                 <ForceGraphCanvas arrangement={nodeMap3dArrangement} />
               </Suspense>
             </div>
-          ) : (
-            <div
-              className={
-                activeRoute === "node-map"
-                  ? "graph-surface graph-surface-node-map"
-                  : "graph-surface"
-              }
-            >
-              <GraphCanvas
-                displayMode={activeRoute === "node-map" ? "node-map" : "diagram"}
-              />
-            </div>
           )}
         </Content>
         {showEntityDetails ? (
           <Sider
             width={380}
-            className={isThreeNodeMapRoute ? "right-rail right-rail-node-map-3d" : "right-rail"}
+            className={isSystemsRoute ? "right-rail" : "right-rail right-rail-node-map-3d"}
             theme="light"
           >
             <div className="right-rail-stack">
