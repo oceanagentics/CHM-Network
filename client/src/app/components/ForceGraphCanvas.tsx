@@ -136,6 +136,8 @@ const nodeColorByKind = {
   organization: "#9ad29d",
   system: "#8fc7ff",
 } satisfies Record<ForceGraphNode["kind"], string>;
+const selectedOrange = "#ff4f2f";
+const connectedOrange = "#ff785e";
 
 const linkColorByType = {
   governs: "#c8dfff",
@@ -1284,10 +1286,10 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
     (node: RenderNode) => {
       const nodeId = String(node.id);
       if (nodeId === selectedEntityId || nodeId === focusEntityId) {
-        return "#ff785e";
+        return selectedOrange;
       }
       if (highlighted.nodeIds.has(nodeId)) {
-        return "#ffbf66";
+        return connectedOrange;
       }
       return nodeColorByKind[node.kind];
     },
@@ -1311,10 +1313,10 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
   const linkColor = useCallback(
     (link: RenderLink) => {
       if (link.id === selectedRelationshipId) {
-        return "#ff785e";
+        return selectedOrange;
       }
       if (highlighted.linkIds.has(link.id)) {
-        return "#ffbf66";
+        return connectedOrange;
       }
       return linkColorByType[link.type];
     },

@@ -85,7 +85,7 @@ const diagramStyles: cytoscape.StylesheetJson = [
     selector: ".is-focus",
     style: {
       "border-width": 4,
-      "border-color": "#ff7f50",
+      "border-color": "#ff4f2f",
       "z-index-compare": "manual",
       "z-index": 999,
     },
@@ -93,15 +93,20 @@ const diagramStyles: cytoscape.StylesheetJson = [
   {
     selector: ".is-selected",
     style: {
-      "underlay-color": "#ff7f50",
+      "background-color": "#ff4f2f",
+      "border-color": "#ff4f2f",
+      color: "#ffffff",
+      "underlay-color": "#ff4f2f",
       "underlay-opacity": 1,
-      "underlay-padding": 8,
+      "underlay-padding": 11,
+      "z-index-compare": "manual",
+      "z-index": 1000,
     },
   },
   {
     selector: ".is-neighbor",
     style: {
-      "underlay-color": "#ff7f50",
+      "underlay-color": "#ff785e",
       "underlay-opacity": 1,
       "underlay-padding": 6,
       "z-index-compare": "manual",
@@ -111,8 +116,8 @@ const diagramStyles: cytoscape.StylesheetJson = [
   {
     selector: ".is-connected",
     style: {
-      "line-color": "#ff7f50",
-      "target-arrow-color": "#ff7f50",
+      "line-color": "#ff785e",
+      "target-arrow-color": "#ff785e",
       width: 4.4,
       "z-index-compare": "manual",
       "z-index": 997,
@@ -170,7 +175,7 @@ const nodeMapStyles: cytoscape.StylesheetJson = [
     style: {
       "background-color": "#ffffff",
       "border-width": 2,
-      "border-color": "#ff785e",
+      "border-color": "#ff4f2f",
       width: 12,
       height: 12,
       "z-index-compare": "manual",
@@ -180,16 +185,20 @@ const nodeMapStyles: cytoscape.StylesheetJson = [
   {
     selector: ".is-selected",
     style: {
-      "underlay-color": "#ff785e",
+      "background-color": "#ff4f2f",
+      "border-color": "#ff4f2f",
+      "underlay-color": "#ff4f2f",
       "underlay-opacity": 1,
-      "underlay-padding": 5,
+      "underlay-padding": 8,
+      "z-index-compare": "manual",
+      "z-index": 1000,
     },
   },
   {
     selector: ".is-neighbor",
     style: {
-      "underlay-color": "#ffbf66",
-      "underlay-opacity": 0.82,
+      "underlay-color": "#ff785e",
+      "underlay-opacity": 0.88,
       "underlay-padding": 4,
       "z-index-compare": "manual",
       "z-index": 998,
