@@ -1,60 +1,60 @@
-source_id,title,source_type,publisher,url,accessed_at,evidence_scope,notes
-src-algaebase-content,AlgaeBase Content,official_about,AlgaeBase,https://admin.algaebase.org/content/,2026-05-26,AlgaeBase inclusion policy and domain coverage,AlgaeBase inclusion policy and domain coverage
-src-aquamaps-about,About AquaMaps,official_about,AquaMaps,https://aquamaps.org/main/AboutAquaMaps.php,2026-05-26,AquaMaps scope and source dependencies,AquaMaps scope and source dependencies
-src-argo-data,Argo Data,official_about,Argo,https://argo.ucsd.edu/data/,2026-05-26,Argo data access overview,Argo data access overview
-src-argovis-about,Argovis platform slide deck,official_docs,Argovis,https://argovis.colorado.edu/Argovis_hackathon_S2024_Giglio.pdf,2026-05-26,Argovis platform scope and data interfaces,Argovis platform scope and data interfaces
-src-bcodmo-about,BCO-DMO About,official_about,BCO-DMO,https://www.bco-dmo.org/about,2026-05-26,BCO-DMO scope and NCEI preservation copies,BCO-DMO scope and NCEI preservation copies
-src-biooracle-home,Bio-ORACLE,official_about,Bio-ORACLE,https://www.bio-oracle.org/,2026-05-26,Global marine environmental layers for biodiversity modelling,Global marine environmental layers for biodiversity modelling
-src-bismal-about,About BISMaL,official_about,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/about.html,2026-07-15,"BISMaL scope, operation by JAMSTEC GODAC, contents, and J-OBIS/OBIS relation",Official BISMaL about page used for system capability tagging.
-src-bismal-data,About BISMaL data,official_docs,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/b_data.html,2026-07-15,"BISMaL occurrence records, taxon metadata, DarwinCore storage, downloads, media, and literature content",Official BISMaL data page used for system capability tagging.
-src-bismal-home,BISMaL homepage,official_about,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/,2026-07-15,"BISMaL system scope, occurrence records, datasets, public data counts, and collaborators",Official BISMaL landing page used for system capability tagging.
-src-bismal-occurrences,BISMaL occurrence records,official_docs,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/occurrences,2026-07-15,BISMaL occurrence search and download options,Official BISMaL occurrence search/download page used for system capability tagging.
-src-bold-mission,BOLD Mission,official_about,BOLD,https://boldsystems.org/about/mission/,2026-05-26,BOLD role in DNA barcode publication and identification,BOLD role in DNA barcode publication and identification
-src-cioos-about,About the Canadian Integrated Ocean Observing System Catalogue,official_about,CIOOS,https://catalogue.cioos.ca/about,2026-05-26,CIOOS catalogue federation and API model,CIOOS catalogue federation and API model
-src-cmems-about,Copernicus Marine About,official_about,Copernicus Marine,https://marine.copernicus.eu/about,2026-05-26,Copernicus Marine service scope,Copernicus Marine service scope
-src-cmems-datastore,Copernicus Marine Data Store,official_about,Copernicus Marine,https://data.marine.copernicus.eu/,2026-05-26,Copernicus Marine data delivery portal,Copernicus Marine data delivery portal
-src-datras,DATRAS,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/DATRAS.aspx,2026-05-26,DATRAS scope and access model,DATRAS scope and access model
-src-ddbj-about,About DDBJ Center,official_about,DDBJ,https://www.ddbj.nig.ac.jp/about/index-e.html,2026-05-26,DDBJ scope and history,DDBJ scope and history
-src-dryad-about,Dryad Who we are,official_about,Dryad,https://datadryad.org/about,2026-05-26,Dryad open data publishing model,Dryad open data publishing model
-src-emodnet-about,About EMODnet,official_about,EMODnet,https://emodnet.ec.europa.eu/en/about_emodnet,2026-05-26,EMODnet umbrella network,EMODnet umbrella network
-src-emodnet-biology,Biology,official_about,EMODnet,https://emodnet.ec.europa.eu/en/biology-0,2026-05-26,EMODnet Biology scope and infrastructure,EMODnet Biology scope and infrastructure
-src-ena-what,What is ENA,official_about,EMBL-EBI,https://www.ebi.ac.uk/training/online/course/nucleotide-sequence-data-resources-ebi/what-ena,2026-05-26,ENA repository scope,ENA repository scope
-src-euroargo-leaflet,Euro-Argo leaflet,official_docs,Euro-Argo ERIC,https://www.euro-argo.eu/content/download/124660/file/leafletEuro-Argo_EN-201902.pdf,2026-05-26,Euro-Argo scope and European contribution to Argo,Euro-Argo scope and European contribution to Argo
-src-eurobis-home,Home EurOBIS,official_about,EurOBIS,https://www.eurobis.org/,2026-05-26,EurOBIS scope and OBIS node role,EurOBIS scope and OBIS node role
-src-fao-fishstat,FAO Fishery and Aquaculture Data Dissemination,official_about,FAO,https://www.fao.org/statistics/data-dissemination/fishery-and-aquaculture/en,2026-05-26,FAO FishStat dissemination page,FAO FishStat dissemination page
-src-fishbase-intro,FishBase Introduction,official_docs,FishBase,https://fishbase.se/fishonline/english/FOL_Introduction.htm,2026-05-26,FishBase scope and user community,FishBase scope and user community
-src-gbif-what-is,What is GBIF,official_about,GBIF,https://www.gbif.org/what-is-gbif,2026-05-26,GBIF network and data infrastructure,GBIF network and data infrastructure
-src-genbank-overview,GenBank Overview,official_about,NCBI,https://www.ncbi.nlm.nih.gov/genbank/,2026-05-26,GenBank archive scope,GenBank archive scope
-src-geome-home,GEOME homepage,official_about,GEOME,https://geome-db.org/,2026-05-26,GEOME field metadata platform overview,GEOME field metadata platform overview
-src-ggbn-about,What is GGBN,official_about,GGBN,https://www.ggbn.org/ggbn_portal/site/wf?p=What_is_GGBN,2026-05-26,Genome biodiversity network portal,Genome biodiversity network portal
-src-glodap-about,Welcome to GLODAP,official_about,GLODAP,https://glodap.info/,2026-05-26,GLODAP synthesis scope and data products,GLODAP synthesis scope and data products
-src-ices-data,ICES Marine Data,official_about,ICES,https://www.ices.dk/data/Pages/default.aspx?ID=1,2026-05-26,ICES marine data portal,ICES marine data portal
-src-insdc-about,About INSDC,official_about,INSDC,https://www.insdc.org/about-insdc/,2026-05-26,INSDC members and exchange model,INSDC members and exchange model
-src-intercatch,InterCatch,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/InterCatch.aspx,2026-05-26,InterCatch fisheries workflow and access model,InterCatch fisheries workflow and access model
-src-ioc-pitch,Designing and implementing the BBNJ Clearing-House Mechanism (CHM): Contribution from the Intergovernmental Oceanographic Commission,docx,IOC-UNESCO,https://oceanagentics.slack.com/files/U0AQY6J9SG7/F0ARNA2MC5C/ioc_unesco_pitch_for_bbnj_chm_strategic_briefing_final__2_.docx,2026-04-24,IOC pitch used as a source for the OBIS-to-CHM pathway.,IOC pitch used as a source for the OBIS-to-CHM pathway.
-src-ioos-about,IOOS About Us,official_about,IOOS,https://ioos.noaa.gov/about/about-us/,2026-05-26,IOOS mission and system model,IOOS mission and system model
-src-marine-regions-about,Marine Regions About,official_about,Marine Regions,https://www.marineregions.org/about.php,2026-05-26,Marine geographic gazetteer and boundaries,Marine geographic gazetteer and boundaries
-src-mgnify-about,About MGnify,official_about,MGnify,https://docs.mgnify.org/src/docs/about.html,2026-05-26,MGnify scope and ENA archiving partnership,MGnify scope and ENA archiving partnership
-src-molluscabase-about,MolluscaBase,official_about,MolluscaBase,https://molluscabase.org/about.php,2026-05-26,MolluscaBase scope and downstream backbone use,MolluscaBase scope and downstream backbone use
-src-ncei-marine,NOAA NCEI Marine Products,official_about,NOAA NCEI,https://www.ncei.noaa.gov/products/marine,2026-05-26,NCEI marine archive scope,NCEI marine archive scope
-src-obis-about,OBIS About,official_about,OBIS,https://obis.org/about/,2026-05-26,OBIS scope and role,OBIS scope and role
-src-obis-access,OBIS Manual Data Access,official_docs,OBIS,https://manual.obis.org/access.html,2026-07-15,"OBIS access through homepage, mapper, R package, API, full exports, downloads, and IPT",Official OBIS manual data access page used for system capability tagging.
-src-obis-darwin-core,OBIS Manual Darwin Core,official_docs,OBIS,https://manual.obis.org/darwin_core.html,2026-05-26,OBIS scientificNameID handling and WoRMS pull,OBIS scientificNameID handling and WoRMS pull
-src-obis-ipt,OBIS Manual IPT,official_docs,OBIS,https://manual.obis.org/ipt,2026-05-26,OBIS publication workflow via IPT and Darwin Core Archive,OBIS publication workflow via IPT and Darwin Core Archive
-src-obis-support,A Digital Foundation for the BBNJ Agreement - Potential contributions of OBIS to the implementation of the High Seas Treaty,web_article,OBIS,https://obis.org/2025/11/13/obis-support-to-bbnj/,2026-04-24,OBIS article positioning the platform as a likely CHM sync destination.,OBIS article positioning the platform as a likely CHM sync destination.
-src-oceaninfohub-about,Ocean InfoHub Project Overview,official_about,Ocean InfoHub,https://oceaninfohub.org/project-overview/,2026-05-26,Ocean InfoHub scope and ODIS relationship,Ocean InfoHub scope and ODIS relationship
-src-oceanops-ioc,OceanOPS at IOC UNESCO,official_about,IOC UNESCO,https://www.ioc.unesco.org/en/joint-centre-oceanographic-marine-meteorological-observing-programme,2026-05-26,OceanOPS coordination role across observing programmes,OceanOPS coordination role across observing programmes
-src-oceansites-format,OceanSITES Data Format Reference Manual,official_docs,OceanSITES,https://www.ocean-ops.org/oceansites/docs/oceansites_data_format_reference_manual.pdf,2026-05-26,OceanSITES programme overview and open data framing,OceanSITES programme overview and open data framing
-src-odis,ODIS,official_about,Ocean InfoHub,https://oceaninfohub.org/odis/,2026-05-26,ODIS federation scope,ODIS federation scope
-src-ooi-data,OOI Data Portal,official_about,OOI,https://oceanobservatories.org/data-portal/,2026-05-26,OOI data portal scope,OOI data portal scope
-src-pangaea-about,PANGAEA About,official_about,PANGAEA,https://pangaea.de/about/,2026-05-26,PANGAEA data publisher scope,PANGAEA data publisher scope
-src-rdbes,Regional DataBase and Estimation System,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/rdbes.aspx,2026-05-26,RDBES scope governance and data facilities,RDBES scope governance and data facilities
-src-re3data-about,re3data About,official_about,re3data,https://www.re3data.org/about,2026-05-26,Registry of research data repositories,Registry of research data repositories
-src-seaaroundus-about,Sea Around Us About,official_about,Sea Around Us,https://www.seaaroundus.org/about-2/,2026-05-26,Sea Around Us scope and outputs,Sea Around Us scope and outputs
-src-seadatanet-cdi,SeaDataNet Common Data Index,official_docs,SeaDataNet,https://cdi.seadatanet.org/,2026-05-26,CDI API and EMODnet Biology harvesting,CDI API and EMODnet Biology harvesting
-src-seadatanet-home,SeaDataNet Home,official_about,SeaDataNet,https://www.seadatanet.org/,2026-05-26,Pan-European marine data infrastructure,Pan-European marine data infrastructure
-src-sealifebase-who,SeaLifeBase Who We Are,official_about,SeaLifeBase,https://www.sealifebase.se/home/who_we_are.php,2026-05-26,SeaLifeBase scope and stewardship,SeaLifeBase scope and stewardship
-src-socat-about,About SOCAT,official_about,SOCAT,https://socat.info/index.php/about/,2026-05-26,SOCAT products and community quality control,SOCAT products and community quality control
-src-us-goship-about,U.S. GO-SHIP,official_about,U.S. GO-SHIP,https://usgoship.ucsd.edu/,2026-05-26,GO-SHIP scope and sustained hydrographic network role,GO-SHIP scope and sustained hydrographic network role
-src-worms-about,WoRMS About,official_about,WoRMS,https://www.marinespecies.org/about.php,2026-05-26,Global marine species register,Global marine species register
-src-zenodo-about,About Zenodo,official_about,Zenodo,https://about.zenodo.org/,2026-05-26,Zenodo catch-all repository model,Zenodo catch-all repository model
+source_id,title,source_type,publisher,url,accessed_at,notes
+src-algaebase-content,AlgaeBase Content,official_about,AlgaeBase,https://admin.algaebase.org/content/,2026-05-26,AlgaeBase inclusion policy and domain coverage
+src-aquamaps-about,About AquaMaps,official_about,AquaMaps,https://aquamaps.org/main/AboutAquaMaps.php,2026-05-26,AquaMaps scope and source dependencies
+src-argo-data,Argo Data,official_about,Argo,https://argo.ucsd.edu/data/,2026-05-26,Argo data access overview
+src-argovis-about,Argovis platform slide deck,official_docs,Argovis,https://argovis.colorado.edu/Argovis_hackathon_S2024_Giglio.pdf,2026-05-26,Argovis platform scope and data interfaces
+src-bcodmo-about,BCO-DMO About,official_about,BCO-DMO,https://www.bco-dmo.org/about,2026-05-26,BCO-DMO scope and NCEI preservation copies
+src-biooracle-home,Bio-ORACLE,official_about,Bio-ORACLE,https://www.bio-oracle.org/,2026-05-26,Global marine environmental layers for biodiversity modelling
+src-bismal-about,About BISMaL,official_about,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/about.html,2026-07-15,Official BISMaL about page used for system capability tagging.
+src-bismal-data,About BISMaL data,official_docs,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/b_data.html,2026-07-15,Official BISMaL data page used for system capability tagging.
+src-bismal-home,BISMaL homepage,official_about,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/,2026-07-15,Official BISMaL landing page used for system capability tagging.
+src-bismal-occurrences,BISMaL occurrence records,official_docs,JAMSTEC GODAC,https://www.godac.jamstec.go.jp/bismal/e/occurrences,2026-07-15,Official BISMaL occurrence search/download page used for system capability tagging.
+src-bold-mission,BOLD Mission,official_about,BOLD,https://boldsystems.org/about/mission/,2026-05-26,BOLD role in DNA barcode publication and identification
+src-cioos-about,About the Canadian Integrated Ocean Observing System Catalogue,official_about,CIOOS,https://catalogue.cioos.ca/about,2026-05-26,CIOOS catalogue federation and API model
+src-cmems-about,Copernicus Marine About,official_about,Copernicus Marine,https://marine.copernicus.eu/about,2026-05-26,Copernicus Marine service scope
+src-cmems-datastore,Copernicus Marine Data Store,official_about,Copernicus Marine,https://data.marine.copernicus.eu/,2026-05-26,Copernicus Marine data delivery portal
+src-datras,DATRAS,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/DATRAS.aspx,2026-05-26,DATRAS scope and access model
+src-ddbj-about,About DDBJ Center,official_about,DDBJ,https://www.ddbj.nig.ac.jp/about/index-e.html,2026-05-26,DDBJ scope and history
+src-dryad-about,Dryad Who we are,official_about,Dryad,https://datadryad.org/about,2026-05-26,Dryad open data publishing model
+src-emodnet-about,About EMODnet,official_about,EMODnet,https://emodnet.ec.europa.eu/en/about_emodnet,2026-05-26,EMODnet umbrella network
+src-emodnet-biology,Biology,official_about,EMODnet,https://emodnet.ec.europa.eu/en/biology-0,2026-05-26,EMODnet Biology scope and infrastructure
+src-ena-what,What is ENA,official_about,EMBL-EBI,https://www.ebi.ac.uk/training/online/course/nucleotide-sequence-data-resources-ebi/what-ena,2026-05-26,ENA repository scope
+src-euroargo-leaflet,Euro-Argo leaflet,official_docs,Euro-Argo ERIC,https://www.euro-argo.eu/content/download/124660/file/leafletEuro-Argo_EN-201902.pdf,2026-05-26,Euro-Argo scope and European contribution to Argo
+src-eurobis-home,Home EurOBIS,official_about,EurOBIS,https://www.eurobis.org/,2026-05-26,EurOBIS scope and OBIS node role
+src-fao-fishstat,FAO Fishery and Aquaculture Data Dissemination,official_about,FAO,https://www.fao.org/statistics/data-dissemination/fishery-and-aquaculture/en,2026-05-26,FAO FishStat dissemination page
+src-fishbase-intro,FishBase Introduction,official_docs,FishBase,https://fishbase.se/fishonline/english/FOL_Introduction.htm,2026-05-26,FishBase scope and user community
+src-gbif-what-is,What is GBIF,official_about,GBIF,https://www.gbif.org/what-is-gbif,2026-05-26,GBIF network and data infrastructure
+src-genbank-overview,GenBank Overview,official_about,NCBI,https://www.ncbi.nlm.nih.gov/genbank/,2026-05-26,GenBank archive scope
+src-geome-home,GEOME homepage,official_about,GEOME,https://geome-db.org/,2026-05-26,GEOME field metadata platform overview
+src-ggbn-about,What is GGBN,official_about,GGBN,https://www.ggbn.org/ggbn_portal/site/wf?p=What_is_GGBN,2026-05-26,Genome biodiversity network portal
+src-glodap-about,Welcome to GLODAP,official_about,GLODAP,https://glodap.info/,2026-05-26,GLODAP synthesis scope and data products
+src-ices-data,ICES Marine Data,official_about,ICES,https://www.ices.dk/data/Pages/default.aspx?ID=1,2026-05-26,ICES marine data portal
+src-insdc-about,About INSDC,official_about,INSDC,https://www.insdc.org/about-insdc/,2026-05-26,INSDC members and exchange model
+src-intercatch,InterCatch,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/InterCatch.aspx,2026-05-26,InterCatch fisheries workflow and access model
+src-ioc-pitch,Designing and implementing the BBNJ Clearing-House Mechanism (CHM): Contribution from the Intergovernmental Oceanographic Commission,docx,IOC-UNESCO,https://oceanagentics.slack.com/files/U0AQY6J9SG7/F0ARNA2MC5C/ioc_unesco_pitch_for_bbnj_chm_strategic_briefing_final__2_.docx,2026-04-24,IOC pitch used as a source for the OBIS-to-CHM pathway.
+src-ioos-about,IOOS About Us,official_about,IOOS,https://ioos.noaa.gov/about/about-us/,2026-05-26,IOOS mission and system model
+src-marine-regions-about,Marine Regions About,official_about,Marine Regions,https://www.marineregions.org/about.php,2026-05-26,Marine geographic gazetteer and boundaries
+src-mgnify-about,About MGnify,official_about,MGnify,https://docs.mgnify.org/src/docs/about.html,2026-05-26,MGnify scope and ENA archiving partnership
+src-molluscabase-about,MolluscaBase,official_about,MolluscaBase,https://molluscabase.org/about.php,2026-05-26,MolluscaBase scope and downstream backbone use
+src-ncei-marine,NOAA NCEI Marine Products,official_about,NOAA NCEI,https://www.ncei.noaa.gov/products/marine,2026-05-26,NCEI marine archive scope
+src-obis-about,OBIS About,official_about,OBIS,https://obis.org/about/,2026-05-26,OBIS scope and role
+src-obis-access,OBIS Manual Data Access,official_docs,OBIS,https://manual.obis.org/access.html,2026-07-15,Official OBIS manual data access page used for system capability tagging.
+src-obis-darwin-core,OBIS Manual Darwin Core,official_docs,OBIS,https://manual.obis.org/darwin_core.html,2026-05-26,OBIS scientificNameID handling and WoRMS pull
+src-obis-ipt,OBIS Manual IPT,official_docs,OBIS,https://manual.obis.org/ipt,2026-05-26,OBIS publication workflow via IPT and Darwin Core Archive
+src-obis-support,A Digital Foundation for the BBNJ Agreement - Potential contributions of OBIS to the implementation of the High Seas Treaty,web_article,OBIS,https://obis.org/2025/11/13/obis-support-to-bbnj/,2026-04-24,OBIS article positioning the platform as a likely CHM sync destination.
+src-oceaninfohub-about,Ocean InfoHub Project Overview,official_about,Ocean InfoHub,https://oceaninfohub.org/project-overview/,2026-05-26,Ocean InfoHub scope and ODIS relationship
+src-oceanops-ioc,OceanOPS at IOC UNESCO,official_about,IOC UNESCO,https://www.ioc.unesco.org/en/joint-centre-oceanographic-marine-meteorological-observing-programme,2026-05-26,OceanOPS coordination role across observing programmes
+src-oceansites-format,OceanSITES Data Format Reference Manual,official_docs,OceanSITES,https://www.ocean-ops.org/oceansites/docs/oceansites_data_format_reference_manual.pdf,2026-05-26,OceanSITES programme overview and open data framing
+src-odis,ODIS,official_about,Ocean InfoHub,https://oceaninfohub.org/odis/,2026-05-26,ODIS federation scope
+src-ooi-data,OOI Data Portal,official_about,OOI,https://oceanobservatories.org/data-portal/,2026-05-26,OOI data portal scope
+src-pangaea-about,PANGAEA About,official_about,PANGAEA,https://pangaea.de/about/,2026-05-26,PANGAEA data publisher scope
+src-rdbes,Regional DataBase and Estimation System,official_about,ICES,https://www.ices.dk/data/data-portals/Pages/rdbes.aspx,2026-05-26,RDBES scope governance and data facilities
+src-re3data-about,re3data About,official_about,re3data,https://www.re3data.org/about,2026-05-26,Registry of research data repositories
+src-seaaroundus-about,Sea Around Us About,official_about,Sea Around Us,https://www.seaaroundus.org/about-2/,2026-05-26,Sea Around Us scope and outputs
+src-seadatanet-cdi,SeaDataNet Common Data Index,official_docs,SeaDataNet,https://cdi.seadatanet.org/,2026-05-26,CDI API and EMODnet Biology harvesting
+src-seadatanet-home,SeaDataNet Home,official_about,SeaDataNet,https://www.seadatanet.org/,2026-05-26,Pan-European marine data infrastructure
+src-sealifebase-who,SeaLifeBase Who We Are,official_about,SeaLifeBase,https://www.sealifebase.se/home/who_we_are.php,2026-05-26,SeaLifeBase scope and stewardship
+src-socat-about,About SOCAT,official_about,SOCAT,https://socat.info/index.php/about/,2026-05-26,SOCAT products and community quality control
+src-us-goship-about,U.S. GO-SHIP,official_about,U.S. GO-SHIP,https://usgoship.ucsd.edu/,2026-05-26,GO-SHIP scope and sustained hydrographic network role
+src-worms-about,WoRMS About,official_about,WoRMS,https://www.marinespecies.org/about.php,2026-05-26,Global marine species register
+src-zenodo-about,About Zenodo,official_about,Zenodo,https://about.zenodo.org/,2026-05-26,Zenodo catch-all repository model

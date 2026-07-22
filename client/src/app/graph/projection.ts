@@ -17,6 +17,7 @@ export interface ProjectionInput {
   viewMode: ViewMode;
   countryDisplayMode: CountryDisplayMode;
   focusEntityId: string | null;
+  searchEntityIds?: ReadonlySet<string> | null;
 }
 
 export type GovernanceBlock = "national" | "international" | null;
@@ -26,7 +27,6 @@ export interface GraphProjectionNode extends NodeGeometry {
   label: string;
   simpleLabel: string;
   kind: Entity["kind"];
-  status: Entity["status"];
   subtype: string | null;
   countryCode: string | null;
   governanceBlock: GovernanceBlock;
@@ -41,7 +41,6 @@ export interface GraphProjectionEdge {
   source: string;
   target: string;
   type: GraphProjectionEdgeType;
-  status: Relationship["status"];
   label: string;
   isDerivedHierarchy: boolean;
 }
@@ -94,7 +93,6 @@ function buildProjectionNode(
     label,
     simpleLabel: entity.name,
     kind: entity.kind,
-    status: entity.status,
     subtype: entity.subtype,
     countryCode: entity.countryCode,
     governanceBlock,
@@ -117,6 +115,33 @@ function getCountryContainerByCode(
       .filter((entity) => entity.kind === "country" && entity.countryCode)
       .map((entity) => [entity.countryCode as string, entity.id]),
   );
+}
+
+function includeCountryContainers(
+  graph: IndexedGraph,
+  seedIds: Set<string>,
+  countryContainerByCode: Record<string, string>,
+  viewMode: ViewMode,
+  countryDisplayMode: CountryDisplayMode,
+): Set<string> {
+  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
+    return seedIds;
+  }
+
+  const ids = new Set(seedIds);
+  for (const entityId of seedIds) {
+    const entity = graph.entityById[entityId];
+    if (!entity?.countryCode || entity.kind === "country") {
+      continue;
+    }
+
+    const countryContainerId = countryContainerByCode[entity.countryCode];
+    if (countryContainerId) {
+      ids.add(countryContainerId);
+    }
+  }
+
+  return ids;
 }
 
 function canUseHierarchyParentAsVisualContainer(
@@ -201,7 +226,13 @@ function shouldHideEdgeInEngulfMode(
 }
 
 export function projectGraph(input: ProjectionInput): GraphProjection {
-  const { graph, viewMode, countryDisplayMode, focusEntityId } = input;
+  const {
+    graph,
+    viewMode,
+    countryDisplayMode,
+    focusEntityId,
+    searchEntityIds = null,
+  } = input;
 
   const defaultCountry = graph.entities.find((entity) => entity.kind === "country")?.id ?? null;
   const defaultSystem = graph.entities.find((entity) => entity.kind === "system")?.id ?? null;
@@ -222,7 +253,19 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
     includedIds = getTechnicalIds(graph, effectiveFocusEntityId);
   }
 
-  includedIds = includeAncestorChains(graph, includedIds);
+  if (searchEntityIds) {
+    includedIds = new Set(
+      [...includedIds].filter((entityId) => searchEntityIds.has(entityId)),
+    );
+  }
+
+  includedIds = includeCountryContainers(
+    graph,
+    includeAncestorChains(graph, includedIds),
+    countryContainerByCode,
+    viewMode,
+    countryDisplayMode,
+  );
 
   const includedEntities = graph.entities.filter((entity) => includedIds.has(entity.id));
   const visibleIds = new Set(includedEntities.map((entity) => entity.id));
@@ -285,7 +328,6 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
       source: relationship.sourceEntityId,
       target: relationship.targetEntityId,
       type: relationship.type,
-      status: relationship.status,
       label: edgeLabel(relationship.type),
       isDerivedHierarchy: false,
     }));
@@ -302,7 +344,6 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
         source: entity.id,
         target: entity.parentEntityId as string,
         type: "hierarchy" as const,
-        status: entity.status,
         label: edgeLabel("hierarchy"),
         isDerivedHierarchy: true,
       })),

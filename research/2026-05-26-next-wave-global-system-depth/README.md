@@ -22,7 +22,7 @@ This next-wave depth pass is intended to cover:
 ## How To Read The Files
 
 - `systems.csv` uses the same column schema as the first-pass inventory.
-- `system_links.csv` is for evidence-backed workflow and interoperability links.
+- `system_links.csv` is for source-backed workflow and interoperability links.
 - `sources.csv` is the provenance table for both systems and links.
 - `exclusions_and_notes.md` carries forward deferred items, normalization choices, and research notes for this wave.
 

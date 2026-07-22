@@ -50,7 +50,6 @@ type SourceRow = {
   publisher: string;
   url: string;
   accessed_at: string;
-  evidence_scope: string;
   notes: string;
 };
 
@@ -74,8 +73,6 @@ type SystemRow = {
   formats_or_standards: string;
   persistent_identifier_support: string;
   parent_system_id: string;
-  status: string;
-  confidence: string;
   official_source_id: string;
   workflow_source_id: string;
   notes: string;
@@ -88,10 +85,6 @@ type LinkRow = {
   relation_type: string;
   direction_note: string;
   mechanism: string;
-  status: string;
-  confidence: string;
-  evidence_source_id: string;
-  evidence_note: string;
 };
 
 function normalizeString(value: string | undefined): string | null {
@@ -99,21 +92,13 @@ function normalizeString(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-function slugify(value: string): string {
+function idPart(value: string): string {
   return value
     .toLowerCase()
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
-}
-
-function parseConfidence(raw: string, fieldName: string): number {
-  const value = Number(raw);
-  if (Number.isNaN(value) || value < 0 || value > 1) {
-    throw new Error(`invalid ${fieldName}: ${raw}`);
-  }
-  return value;
 }
 
 function parseCsv(text: string): CsvRow[] {
@@ -280,7 +265,7 @@ function main() {
       }
     }
     resolveCountry(system.operator_country);
-    const orgId = `org-${slugify(system.operator_name)}`;
+    const orgId = `org-${idPart(system.operator_name)}`;
     const existingCountry = operatorCountryByOrgId.get(orgId);
     if (existingCountry && existingCountry !== system.operator_country) {
       throw new Error(`operator ${system.operator_name} has conflicting countries`);
@@ -295,27 +280,22 @@ function main() {
     if (!systemIds.has(link.target_system_id) && !resolveExistingSystemId(link.target_system_id)) {
       throw new Error(`link ${link.link_id} references missing target system ${link.target_system_id}`);
     }
-    if (!sourceIds.has(link.evidence_source_id)) {
-      throw new Error(`link ${link.link_id} references missing source ${link.evidence_source_id}`);
-    }
     if (!relationshipTypes.has(link.relation_type)) {
       throw new Error(`link ${link.link_id} has unsupported relation_type ${link.relation_type}`);
     }
   }
 
   const findEntityById = db.prepare(
-    "SELECT id, kind, slug, parent_entity_id FROM entities WHERE id = ?",
+    "SELECT id, kind, parent_entity_id FROM entities WHERE id = ?",
   );
-  const findEntityBySlug = db.prepare(
-    "SELECT id, kind, slug, parent_entity_id FROM entities WHERE kind = ? AND slug = ? LIMIT 1",
+  const findEntityByName = db.prepare(
+    "SELECT id, kind, parent_entity_id FROM entities WHERE kind = ? AND name = ? LIMIT 1",
   );
   const insertEntity = db.prepare(`
     INSERT INTO entities (
-      id, kind, name, slug, parent_entity_id, country_code, institution_type,
-      status, confidence, description, properties_json
+      id, kind, name, parent_entity_id, country_code, institution_type, properties_json
     ) VALUES (
-      @id, @kind, @name, @slug, @parentEntityId, @countryCode, @institutionType,
-      @status, @confidence, @description, @propertiesJson
+      @id, @kind, @name, @parentEntityId, @countryCode, @institutionType, @propertiesJson
     )
   `);
   const insertSource = db.prepare(`
@@ -325,18 +305,11 @@ function main() {
       @id, @title, @sourceType, @url, NULL, @publisher, NULL, @accessedAt, @note
     )
   `);
-  const insertEntitySource = db.prepare(`
-    INSERT OR IGNORE INTO entity_sources (
-      entity_id, source_id, claim_type, excerpt, confidence_override
-    ) VALUES (
-      @entityId, @sourceId, @claimType, @excerpt, @confidenceOverride
-    )
-  `);
   const insertRelationship = db.prepare(`
     INSERT INTO relationships (
-      id, source_entity_id, target_entity_id, type, status, confidence, note, properties_json
+      id, source_entity_id, target_entity_id, type, note, properties_json
     ) VALUES (
-      @id, @sourceEntityId, @targetEntityId, @type, @status, @confidence, @note, @propertiesJson
+      @id, @sourceEntityId, @targetEntityId, @type, @note, @propertiesJson
     )
   `);
   const findRelationshipById = db.prepare(
@@ -358,25 +331,17 @@ function main() {
   const syncEntityParent = db.prepare(
     "UPDATE entities SET parent_entity_id = ? WHERE id = ?",
   );
-  const insertRelationshipSource = db.prepare(`
-    INSERT OR IGNORE INTO relationship_sources (
-      relationship_id, source_id, claim_type, excerpt, confidence_override
-    ) VALUES (
-      @relationshipId, @sourceId, @claimType, @excerpt, @confidenceOverride
-    )
-  `);
   const upsertSystemProfile = db.prepare(`
     INSERT INTO system_profiles (
-      system_id, role, primary_url, aliases, discipline_family, geographic_scope,
-      data_summary, access_summary, submission_summary
+      system_id, primary_url, short_description, aliases, role, discipline_family, geographic_scope
     ) VALUES (
-      @systemId, @role, @primaryUrl, @aliases, @disciplineFamily, @geographicScope,
-      NULL, NULL, NULL
+      @systemId, @primaryUrl, @shortDescription, @aliases, @role, @disciplineFamily, @geographicScope
     )
     ON CONFLICT(system_id) DO UPDATE SET
-      role = excluded.role,
       primary_url = excluded.primary_url,
+      short_description = excluded.short_description,
       aliases = excluded.aliases,
+      role = excluded.role,
       discipline_family = excluded.discipline_family,
       geographic_scope = excluded.geographic_scope
   `);
@@ -384,10 +349,10 @@ function main() {
   function resolveEntityId(
     preferredId: string,
     kind: "country" | "organization" | "system",
-    slug: string,
+    name: string,
   ): string {
     const exact = findEntityById.get(preferredId) as
-      | { id: string; kind: string; slug: string | null }
+      | { id: string; kind: string }
       | undefined;
     if (exact) {
       if (exact.kind !== kind) {
@@ -399,7 +364,7 @@ function main() {
     const aliasId = entityAliases.get(preferredId);
     if (aliasId) {
       const aliased = findEntityById.get(aliasId) as
-        | { id: string; kind: string; slug: string | null }
+        | { id: string; kind: string }
         | undefined;
       if (aliased) {
         if (aliased.kind !== kind) {
@@ -409,26 +374,22 @@ function main() {
       }
     }
 
-    const bySlug = findEntityBySlug.get(kind, slug) as
-      | { id: string; kind: string; slug: string | null }
+    const byName = findEntityByName.get(kind, name) as
+      | { id: string; kind: string }
       | undefined;
-    return bySlug?.id ?? preferredId;
+    return byName?.id ?? preferredId;
   }
 
   function ensureEntity(params: {
     preferredId: string;
     kind: "country" | "organization" | "system";
     name: string;
-    slug: string;
     parentEntityId: string | null;
     countryCode: string | null;
     institutionType: string | null;
-    status: string;
-    confidence: number;
-    description: string | null;
     properties: Record<string, unknown>;
   }): string {
-    const actualId = resolveEntityId(params.preferredId, params.kind, params.slug);
+    const actualId = resolveEntityId(params.preferredId, params.kind, params.name);
     const existing = findEntityById.get(actualId) as
       | { id: string; kind: string; parent_entity_id: string | null }
       | undefined;
@@ -438,13 +399,9 @@ function main() {
         id: actualId,
         kind: params.kind,
         name: params.name,
-        slug: params.slug,
         parentEntityId: params.parentEntityId,
         countryCode: params.countryCode,
         institutionType: params.institutionType,
-        status: params.status,
-        confidence: params.confidence,
-        description: params.description,
         propertiesJson: JSON.stringify(params.properties),
       });
       return actualId;
@@ -462,8 +419,6 @@ function main() {
     sourceEntityId: string;
     targetEntityId: string;
     type: "governs" | "operates" | "part_of" | "syncs_to";
-    status: string;
-    confidence: number;
     note: string | null;
     properties: Record<string, unknown>;
   }): string {
@@ -486,8 +441,6 @@ function main() {
       sourceEntityId: params.sourceEntityId,
       targetEntityId: params.targetEntityId,
       type: params.type,
-      status: params.status,
-      confidence: params.confidence,
       note: params.note,
       propertiesJson: JSON.stringify(params.properties),
     });
@@ -510,20 +463,14 @@ function main() {
 
     for (const system of systems) {
       const country = resolveCountry(system.operator_country);
-      const confidence = parseConfidence(system.confidence, `${system.system_id} confidence`);
-      const orgSlug = slugify(system.operator_name);
-      const orgEntitySlug = `org-${orgSlug}`;
+      const orgSlug = idPart(system.operator_name);
       const countryId = ensureEntity({
         preferredId: country.id,
         kind: "country",
         name: country.name,
-        slug: slugify(country.name),
         parentEntityId: null,
         countryCode: country.code,
         institutionType: null,
-        status: "active",
-        confidence,
-        description: null,
         properties: {
           pseudoCountry: Boolean(country.pseudoCountry),
         },
@@ -532,121 +479,47 @@ function main() {
         preferredId: `org-${orgSlug}`,
         kind: "organization",
         name: system.operator_name,
-        slug: orgEntitySlug,
         parentEntityId: null,
         countryCode: country.code,
         institutionType: "system_operator",
-        status: "active",
-        confidence,
-        description: null,
         properties: {},
       });
       const systemId = ensureEntity({
         preferredId: system.system_id,
         kind: "system",
         name: system.system_name,
-        slug: slugify(system.system_name),
         parentEntityId: null,
         countryCode: country.code,
         institutionType: null,
-        status: system.status,
-        confidence,
-        description: normalizeString(system.notes),
         properties: {},
       });
       upsertSystemProfile.run({
         systemId,
-        role: normalizeString(system.role_class),
         primaryUrl: normalizeString(system.canonical_url),
+        shortDescription: normalizeString(system.notes),
         aliases: normalizeString(system.aliases),
+        role: normalizeString(system.role_class),
         disciplineFamily: normalizeString(system.discipline_family),
         geographicScope: normalizeString(system.geographic_scope),
       });
       resolvedSystemIds.set(system.system_id, systemId);
 
-      const governsId = ensureRelationship({
+      ensureRelationship({
         preferredId: `rel-${country.code.toLowerCase()}-governs-${orgSlug}`,
         sourceEntityId: countryId,
         targetEntityId: orgId,
         type: "governs",
-        status: "active",
-        confidence,
         note: null,
         properties: {},
       });
-      const operatesId = ensureRelationship({
-        preferredId: `rel-${orgSlug}-operates-${slugify(system.system_name)}`,
+      ensureRelationship({
+        preferredId: `rel-${orgSlug}-operates-${idPart(system.system_name)}`,
         sourceEntityId: orgId,
         targetEntityId: systemId,
         type: "operates",
-        status: "active",
-        confidence,
         note: null,
         properties: {},
       });
-
-      for (const sourceLink of [
-        {
-          sourceId: system.official_source_id,
-          claimType: "official_definition",
-          excerpt: normalizeString(system.notes),
-        },
-        {
-          sourceId: system.workflow_source_id,
-          claimType: "workflow_context",
-          excerpt: normalizeString(system.notes),
-        },
-      ]) {
-        insertEntitySource.run({
-          entityId: systemId,
-          sourceId: sourceLink.sourceId,
-          claimType: sourceLink.claimType,
-          excerpt: sourceLink.excerpt,
-          confidenceOverride: null,
-        });
-      }
-
-      for (const sourceLink of [
-        {
-          targetId: orgId,
-          claimType: "operator_inferred_from_system",
-        },
-        {
-          targetId: countryId,
-          claimType: "country_scope_inferred_from_system",
-        },
-      ]) {
-        for (const sourceId of [system.official_source_id, system.workflow_source_id]) {
-          insertEntitySource.run({
-            entityId: sourceLink.targetId,
-            sourceId,
-            claimType: sourceLink.claimType,
-            excerpt: normalizeString(system.notes),
-            confidenceOverride: null,
-          });
-        }
-      }
-
-      for (const sourceLink of [
-        {
-          relationshipId: operatesId,
-          claimType: "operator_inferred_from_system",
-        },
-        {
-          relationshipId: governsId,
-          claimType: "country_scope_inferred_from_system",
-        },
-      ]) {
-        for (const sourceId of [system.official_source_id, system.workflow_source_id]) {
-          insertRelationshipSource.run({
-            relationshipId: sourceLink.relationshipId,
-            sourceId,
-            claimType: sourceLink.claimType,
-            excerpt: normalizeString(system.notes),
-            confidenceOverride: null,
-          });
-        }
-      }
     }
 
     for (const system of systems) {
@@ -664,19 +537,17 @@ function main() {
       if (parentEntityId) {
         ensureRelationship({
           preferredId: `rel-${systemId}-part-of-${parentEntityId}`,
-          sourceEntityId: systemId,
-          targetEntityId: parentEntityId,
-          type: "part_of",
-          status: "active",
-          confidence: 0.8,
-          note: null,
-          properties: {},
-        });
+        sourceEntityId: systemId,
+        targetEntityId: parentEntityId,
+        type: "part_of",
+        note: null,
+        properties: {},
+      });
       }
     }
 
     for (const link of links) {
-      const relationshipId = ensureRelationship({
+      ensureRelationship({
         preferredId: link.link_id,
         sourceEntityId:
           resolvedSystemIds.get(link.source_system_id) ??
@@ -687,24 +558,13 @@ function main() {
           resolveExistingSystemId(link.target_system_id) ??
           link.target_system_id,
         type: "syncs_to",
-        status: link.status,
-        confidence: parseConfidence(link.confidence, `${link.link_id} confidence`),
         note: normalizeString(link.direction_note),
         properties: {
           originalRelationType: normalizeString(link.relation_type),
           directionNote: normalizeString(link.direction_note),
           mechanism: normalizeString(link.mechanism),
-          evidenceNote: normalizeString(link.evidence_note),
           semanticDirection: link.relation_type === "federates_with" ? "bidirectional" : "outbound",
         },
-      });
-
-      insertRelationshipSource.run({
-        relationshipId,
-        sourceId: link.evidence_source_id,
-        claimType: "relationship_evidence",
-        excerpt: normalizeString(link.evidence_note),
-        confidenceOverride: null,
       });
     }
   })();

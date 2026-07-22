@@ -66,6 +66,17 @@
 - Relationship metadata such as `transferMethod`, `format`, `standard`, and `artifact` belongs in `relationships.properties_json`.
 - The editor sends provenance links inline with entity and relationship saves and replaces those links transactionally.
 
+## Ryu Access Routes
+- Treat `systemNode.ryu` as the first-class operational route index for agents.
+- Keep `systemNode.access` descriptive and evidence-facing; use `systemNode.ryu.routes` to decide how an agent should actually retrieve data.
+- Use `ryu` only for machine access routes; human lookup, web UI, manual request, researcher-library, and raw-source context stays in `systemNode.access`.
+- For node/system research and rich record backfills, follow `RICH_RESEARCH_RECORDS.md` for the full `ryu` shape and research rules.
+- Store `ryu` on system entities in `entities.properties_json.ryu`, and project it as `systemNode.ryu` in bootstrap payloads.
+- Keep `ryu` compact: route id, status, mode, priority, capabilities, target, upstream, format, contractRef, and caveat.
+- Do not store MCP/API tool contracts in `ryu`; `contractRef` points to the relevant MCP, API, or service contract.
+- Treat `status='planned'` as non-live; do not use that route for runtime access unless the requested work is planning or implementation.
+- Prefer the lowest-priority route that matches the needed capability. Empty `routes` means no approved operational route is recorded yet.
+
 ## Startup Behavior
 - On startup, the server opens `data/chm-network.sqlite` and validates that the required app tables exist.
 - If the DB file is missing or invalid, the server fails fast instead of creating or reseeding an alternate graph.

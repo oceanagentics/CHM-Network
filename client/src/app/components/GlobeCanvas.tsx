@@ -607,7 +607,7 @@ export function GlobeCanvas() {
         source,
         target,
         isHighlighted ? "#d92332" : link.color,
-        link.status !== "active",
+        false,
         isHighlighted,
       );
       arc.userData = { relationshipId: link.id };

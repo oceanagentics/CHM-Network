@@ -5,7 +5,6 @@ export interface GlobeNode {
   id: string;
   label: string;
   kind: Entity["kind"];
-  status: Entity["status"];
   countryCode: string | null;
   lat: number;
   lng: number;
@@ -19,7 +18,6 @@ export interface GlobeLink {
   source: string;
   target: string;
   type: GraphProjectionEdge["type"];
-  status: GraphProjectionEdge["status"];
   color: string;
 }
 
@@ -140,7 +138,6 @@ export function projectGlobeGraph(projection: GraphProjection): GlobeProjection 
       id: node.id,
       label: visibleLabel(node.label) || node.id,
       kind: node.kind,
-      status: node.status,
       countryCode: node.countryCode,
       lat: Math.max(-82, Math.min(82, anchor.lat + offset.lat)),
       lng: ((anchor.lng + offset.lng + 540) % 360) - 180,
@@ -157,7 +154,6 @@ export function projectGlobeGraph(projection: GraphProjection): GlobeProjection 
       source: edge.source,
       target: edge.target,
       type: edge.type,
-      status: edge.status,
       color: colorByLinkType[edge.type],
     })),
   };

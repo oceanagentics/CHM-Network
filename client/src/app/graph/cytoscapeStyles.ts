@@ -79,8 +79,6 @@ const diagramStyles: cytoscape.StylesheetJson = [
   { selector: 'edge[type = "part_of"]', style: { "line-color": "#7d8797", "target-arrow-color": "#7d8797", "line-style": "dashed", width: 1.8 } },
   { selector: 'edge[type = "publishes_to"]', style: { "line-color": "#2d6cc9", "target-arrow-color": "#2d6cc9", width: 3 } },
   { selector: 'edge[type = "syncs_to"]', style: { "line-color": "#8a59b7", "target-arrow-color": "#8a59b7", width: 3 } },
-  { selector: '[status = "planned"]', style: { "border-style": "dashed", "line-style": "dashed" } },
-  { selector: '[status = "speculative"]', style: { "border-style": "dotted", "line-style": "dotted", opacity: 0.7 } },
   {
     selector: ".is-focus",
     style: {
@@ -168,8 +166,6 @@ const nodeMapStyles: cytoscape.StylesheetJson = [
   { selector: 'edge[type = "part_of"]', style: { "line-color": "#8fb3db", "line-style": "dotted", "line-opacity": 0.28 } },
   { selector: 'edge[type = "publishes_to"]', style: { "line-color": "#ff5f6d", "line-opacity": 0.62, width: 1.2 } },
   { selector: 'edge[type = "syncs_to"]', style: { "line-color": "#c99cff", "line-opacity": 0.56, width: 1.2 } },
-  { selector: '[status = "planned"]', style: { "line-style": "dashed" } },
-  { selector: '[status = "speculative"]', style: { "line-style": "dotted", opacity: 0.72 } },
   {
     selector: ".is-focus",
     style: {

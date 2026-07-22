@@ -10,20 +10,15 @@ export type RelationshipType =
   | "publishes_to"
   | "syncs_to";
 
-export type Status = "active" | "planned" | "speculative" | "deprecated";
 export type ViewMode = "governance" | "country" | "technical";
 
 export interface Entity {
   id: string;
   kind: EntityKind;
   name: string;
-  slug: string | null;
   parentEntityId: string | null;
   countryCode: string | null;
   subtype: string | null;
-  status: Status;
-  confidence: number;
-  description: string | null;
   properties: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -34,8 +29,6 @@ export interface Relationship {
   sourceEntityId: string;
   targetEntityId: string;
   type: RelationshipType;
-  status: Status;
-  confidence: number;
   note: string | null;
   properties: Record<string, unknown>;
   createdAt: string;
@@ -54,20 +47,10 @@ export interface Source {
   note: string | null;
 }
 
-export interface EntitySource {
-  entityId: string;
-  sourceId: string;
-  claimType: string;
-  excerpt: string | null;
-  confidenceOverride: number | null;
-}
-
-export interface RelationshipSource {
-  relationshipId: string;
-  sourceId: string;
-  claimType: string;
-  excerpt: string | null;
-  confidenceOverride: number | null;
+export interface SourceRef {
+  id: string;
+  title: string;
+  url: string;
 }
 
 export interface Tag {
@@ -86,61 +69,117 @@ export interface RelationshipTag {
   tagId: string;
 }
 
-export interface SystemProfile {
-  systemId: string;
-  role: string | null;
-  primaryUrl: string | null;
-  aliases: string | null;
-  disciplineFamily: string | null;
-  geographicScope: string | null;
-  dataSummary: string | null;
-  accessSummary: string | null;
-  submissionSummary: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type SystemDataClaimCategory = "data_type" | "data_format" | "standard";
-
-export interface SystemDataClaim {
+export interface SystemOperatorRef {
   id: string;
-  systemId: string;
-  category: SystemDataClaimCategory;
-  label: string;
-  note: string | null;
-  confidence: number;
-  sourceId: string | null;
+  name: string;
+  countryCode: string | null;
 }
+
+export type SystemDataDescriptorCategory = "type" | "format" | "standard";
+
+export interface SystemDataDescriptor {
+  id: string;
+  category: SystemDataDescriptorCategory;
+  label: string;
+  description: string | null;
+  source: SourceRef | null;
+}
+
+export type SystemAccessType = "read" | "submit" | "partner_sync" | "none";
 
 export interface SystemAccessPath {
   id: string;
-  systemId: string;
+  type: SystemAccessType;
   method: string;
   label: string;
-  url: string | null;
-  note: string | null;
-  confidence: number;
-  sourceId: string | null;
+  url: string;
+  description: string;
+  source: SourceRef;
 }
 
-export interface SystemSubmissionPath {
+export interface SystemGalleryItem {
   id: string;
-  systemId: string;
-  method: string;
-  label: string;
-  url: string | null;
-  note: string | null;
-  confidence: number;
-  sourceId: string | null;
+  type: "image" | "embed";
+  url: string;
+  thumbnailUrl: string | null;
+  title: string | null;
+  caption: string | null;
+  source: SourceRef;
+  sortOrder: number;
+}
+
+export type SystemMetricKey =
+  | "record_count"
+  | "storage_size_bytes"
+  | "publication_count"
+  | "citation_count"
+  | "view_count"
+  | "download_count"
+  | "registered_user_count"
+  | "contributor_count"
+  | string;
+
+export interface SourcedMetric {
+  id: string;
+  key: SystemMetricKey;
+  value: number;
+  unit: string;
+  description: string | null;
+  observedAt: string | null;
+  source: SourceRef;
 }
 
 export interface SystemIdentifierScheme {
   id: string;
-  systemId: string;
   scheme: string;
   appliesTo: string | null;
-  note: string | null;
-  sourceId: string | null;
+  description: string | null;
+  source: SourceRef | null;
+}
+
+export interface SystemRyuRoute {
+  id: string;
+  status: string;
+  mode: string;
+  priority: number;
+  capabilities: string[];
+  target: string | null;
+  upstream: string | null;
+  format: string | null;
+  contractRef: string | null;
+  caveat: string | null;
+}
+
+export interface SystemRyu {
+  routes: SystemRyuRoute[];
+}
+
+export interface SystemNode {
+  id: string;
+  kind: "system";
+  name: string;
+  countryCode: string | null;
+  parentSystemId: string | null;
+  operator: SystemOperatorRef | null;
+  primaryUrl: string | null;
+  shortDescription: string | null;
+  longDescription: string | null;
+  aliases: string[];
+  role: string | null;
+  disciplineFamily: string | null;
+  geographicScope: string | null;
+  gallery: SystemGalleryItem[];
+  data: {
+    descriptors: SystemDataDescriptor[];
+    recordCount: SourcedMetric | null;
+    storageSize: SourcedMetric | null;
+  };
+  access: SystemAccessPath[];
+  identifiers: SystemIdentifierScheme[];
+  usage: SourcedMetric[];
+  ryu: SystemRyu;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SavedView {
@@ -158,16 +197,10 @@ export interface GraphBootstrapPayload {
   entities: Entity[];
   relationships: Relationship[];
   sources: Source[];
-  entitySources: EntitySource[];
-  relationshipSources: RelationshipSource[];
   tags: Tag[];
   entityTags: EntityTag[];
   relationshipTags: RelationshipTag[];
-  systemProfiles: SystemProfile[];
-  systemDataClaims: SystemDataClaim[];
-  systemAccessPaths: SystemAccessPath[];
-  systemSubmissionPaths: SystemSubmissionPath[];
-  systemIdentifierSchemes: SystemIdentifierScheme[];
+  systemNodes: SystemNode[];
   savedViews: SavedView[];
 }
 
@@ -179,43 +212,21 @@ export interface SavedViewInput {
   style: Record<string, unknown>;
 }
 
-export interface EntitySourceInput {
-  sourceId: string;
-  claimType: string;
-  excerpt: string | null;
-  confidenceOverride: number | null;
-}
-
-export interface RelationshipSourceInput {
-  sourceId: string;
-  claimType: string;
-  excerpt: string | null;
-  confidenceOverride: number | null;
-}
-
 export interface EntityInput {
   kind: EntityKind;
   name: string;
-  slug: string | null;
   parentEntityId: string | null;
   countryCode: string | null;
   subtype: string | null;
-  status: Status;
-  confidence: number;
-  description: string | null;
   properties: Record<string, unknown>;
-  sources: EntitySourceInput[];
 }
 
 export interface RelationshipInput {
   sourceEntityId: string;
   targetEntityId: string;
   type: RelationshipType;
-  status: Status;
-  confidence: number;
   note: string | null;
   properties: Record<string, unknown>;
-  sources: RelationshipSourceInput[];
 }
 
 export interface SourceInput {

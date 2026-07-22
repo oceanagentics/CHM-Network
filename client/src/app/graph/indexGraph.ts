@@ -1,18 +1,12 @@
 import type {
   Entity,
-  EntitySource,
   EntityTag,
   GraphBootstrapPayload,
   Relationship,
-  RelationshipSource,
   RelationshipTag,
   SavedView,
   Source,
-  SystemAccessPath,
-  SystemDataClaim,
-  SystemIdentifierScheme,
-  SystemProfile,
-  SystemSubmissionPath,
+  SystemNode,
   Tag,
 } from "../../../../shared/domain";
 
@@ -21,18 +15,12 @@ export interface IndexedGraph extends GraphBootstrapPayload {
   relationshipById: Record<string, Relationship>;
   sourceById: Record<string, Source>;
   tagById: Record<string, Tag>;
+  systemNodeById: Record<string, SystemNode>;
   childrenByParentId: Record<string, string[]>;
   outgoingByEntityId: Record<string, string[]>;
   incomingByEntityId: Record<string, string[]>;
-  entitySourcesByEntityId: Record<string, EntitySource[]>;
-  relationshipSourcesByRelationshipId: Record<string, RelationshipSource[]>;
   entityTagsByEntityId: Record<string, EntityTag[]>;
   relationshipTagsByRelationshipId: Record<string, RelationshipTag[]>;
-  systemProfileBySystemId: Record<string, SystemProfile>;
-  systemDataClaimsBySystemId: Record<string, SystemDataClaim[]>;
-  systemAccessPathsBySystemId: Record<string, SystemAccessPath[]>;
-  systemSubmissionPathsBySystemId: Record<string, SystemSubmissionPath[]>;
-  systemIdentifierSchemesBySystemId: Record<string, SystemIdentifierScheme[]>;
   savedViewById: Record<string, SavedView>;
 }
 
@@ -43,6 +31,9 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
   );
   const sourceById = Object.fromEntries(payload.sources.map((source) => [source.id, source]));
   const tagById = Object.fromEntries(payload.tags.map((tag) => [tag.id, tag]));
+  const systemNodeById = Object.fromEntries(
+    payload.systemNodes.map((systemNode) => [systemNode.id, systemNode]),
+  );
 
   const childrenByParentId: Record<string, string[]> = {};
   for (const entity of payload.entities) {
@@ -59,21 +50,6 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
     outgoingByEntityId[relationship.sourceEntityId].push(relationship.id);
     incomingByEntityId[relationship.targetEntityId] ??= [];
     incomingByEntityId[relationship.targetEntityId].push(relationship.id);
-  }
-
-  const entitySourcesByEntityId: Record<string, EntitySource[]> = {};
-  for (const entitySource of payload.entitySources) {
-    entitySourcesByEntityId[entitySource.entityId] ??= [];
-    entitySourcesByEntityId[entitySource.entityId].push(entitySource);
-  }
-
-  const relationshipSourcesByRelationshipId: Record<string, RelationshipSource[]> =
-    {};
-  for (const relationshipSource of payload.relationshipSources) {
-    relationshipSourcesByRelationshipId[relationshipSource.relationshipId] ??= [];
-    relationshipSourcesByRelationshipId[relationshipSource.relationshipId].push(
-      relationshipSource,
-    );
   }
 
   const entityTagsByEntityId: Record<string, EntityTag[]> = {};
@@ -93,34 +69,6 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
   const savedViewById = Object.fromEntries(
     payload.savedViews.map((savedView) => [savedView.id, savedView]),
   );
-  const systemProfileBySystemId = Object.fromEntries(
-    payload.systemProfiles.map((profile) => [profile.systemId, profile]),
-  );
-
-  const systemDataClaimsBySystemId: Record<string, SystemDataClaim[]> = {};
-  for (const claim of payload.systemDataClaims) {
-    systemDataClaimsBySystemId[claim.systemId] ??= [];
-    systemDataClaimsBySystemId[claim.systemId].push(claim);
-  }
-
-  const systemAccessPathsBySystemId: Record<string, SystemAccessPath[]> = {};
-  for (const accessPath of payload.systemAccessPaths) {
-    systemAccessPathsBySystemId[accessPath.systemId] ??= [];
-    systemAccessPathsBySystemId[accessPath.systemId].push(accessPath);
-  }
-
-  const systemSubmissionPathsBySystemId: Record<string, SystemSubmissionPath[]> = {};
-  for (const submissionPath of payload.systemSubmissionPaths) {
-    systemSubmissionPathsBySystemId[submissionPath.systemId] ??= [];
-    systemSubmissionPathsBySystemId[submissionPath.systemId].push(submissionPath);
-  }
-
-  const systemIdentifierSchemesBySystemId: Record<string, SystemIdentifierScheme[]> =
-    {};
-  for (const identifierScheme of payload.systemIdentifierSchemes) {
-    systemIdentifierSchemesBySystemId[identifierScheme.systemId] ??= [];
-    systemIdentifierSchemesBySystemId[identifierScheme.systemId].push(identifierScheme);
-  }
 
   return {
     ...payload,
@@ -128,18 +76,12 @@ export function indexGraph(payload: GraphBootstrapPayload): IndexedGraph {
     relationshipById,
     sourceById,
     tagById,
+    systemNodeById,
     childrenByParentId,
     outgoingByEntityId,
     incomingByEntityId,
-    entitySourcesByEntityId,
-    relationshipSourcesByRelationshipId,
     entityTagsByEntityId,
     relationshipTagsByRelationshipId,
-    systemProfileBySystemId,
-    systemDataClaimsBySystemId,
-    systemAccessPathsBySystemId,
-    systemSubmissionPathsBySystemId,
-    systemIdentifierSchemesBySystemId,
     savedViewById,
   };
 }

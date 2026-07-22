@@ -9,6 +9,7 @@ import type {
   ViewMode,
 } from "../../../../shared/domain";
 import { indexGraph, type IndexedGraph } from "../graph/indexGraph";
+import { emptySearchFilters, type GraphSearchFilters } from "../search";
 import {
   isFocusAllowedForView,
   normalizeFocusForView,
@@ -61,6 +62,8 @@ interface GraphState {
   selectedRelationshipId: string | null;
   savedViews: SavedView[];
   viewport: ViewportSnapshot | null;
+  searchQuery: string;
+  searchFilters: GraphSearchFilters;
   setBootstrap: (payload: GraphBootstrapPayload) => void;
   setSavedViews: (savedViews: SavedView[]) => void;
   setLoading: (loading: boolean) => void;
@@ -73,6 +76,10 @@ interface GraphState {
   setSelectedEntityId: (selectedEntityId: string | null) => void;
   setSelectedRelationshipId: (selectedRelationshipId: string | null) => void;
   setViewport: (viewport: ViewportSnapshot | null) => void;
+  setSearchQuery: (searchQuery: string) => void;
+  setSearchFilters: (searchFilters: GraphSearchFilters) => void;
+  resetSearchFilters: () => void;
+  resetSearch: () => void;
   resetSelection: () => void;
 }
 
@@ -89,6 +96,8 @@ export const useGraphStore = create<GraphState>((set) => ({
   selectedRelationshipId: null,
   savedViews: [],
   viewport: null,
+  searchQuery: "",
+  searchFilters: emptySearchFilters(),
   setBootstrap: (payload) =>
     set({
       graph: indexGraph(payload),
@@ -121,5 +130,13 @@ export const useGraphStore = create<GraphState>((set) => ({
   setSelectedRelationshipId: (selectedRelationshipId) =>
     set({ selectedRelationshipId, selectedEntityId: null }),
   setViewport: (viewport) => set({ viewport }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchFilters: (searchFilters) => set({ searchFilters }),
+  resetSearchFilters: () => set({ searchFilters: emptySearchFilters() }),
+  resetSearch: () =>
+    set({
+      searchQuery: "",
+      searchFilters: emptySearchFilters(),
+    }),
   resetSelection: () => set({ selectedEntityId: null, selectedRelationshipId: null }),
 }));

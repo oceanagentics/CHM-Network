@@ -17,7 +17,7 @@ The current plan already assumes:
 
 - a zoomable hierarchy
 - graph-style relationships
-- explicit sources and confidence
+- explicit sources and source traceability
 - current and potential pathways
 
 That is strongly supported by the UN study, and the IOC pitch sharpens it further by explicitly describing the CHM as a `system-of-systems`.
@@ -152,7 +152,7 @@ For each important external system, record:
 - identifier regime
 - auth pattern
 - likely CHM integration mode
-- confidence level
+- source traceability
 
 This will give the graph a real technical layer instead of only institution names.
 

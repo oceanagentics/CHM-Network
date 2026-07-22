@@ -4,7 +4,7 @@
  */
 import type cytoscape from "cytoscape";
 
-import type { Entity, Relationship, ViewMode } from "../../../../shared/domain";
+import type { Entity, ViewMode } from "../../../../shared/domain";
 import type { GraphLayout } from "../state/graphStore";
 import type { GraphDisplayMode } from "./cytoscapeStyles";
 import type { GovernanceBlock, GraphProjection, GraphProjectionEdgeType } from "./projection";
@@ -14,7 +14,6 @@ type GraphNodeData = {
   label: string;
   simpleLabel: string;
   kind: Entity["kind"];
-  status: Entity["status"];
   subtype?: string | null;
   countryCode?: string | null;
   governanceBlock?: GovernanceBlock;
@@ -30,7 +29,6 @@ type GraphEdgeData = {
   source: string;
   target: string;
   type: GraphProjectionEdgeType;
-  status: Relationship["status"];
   label: string;
   isDerivedHierarchy?: boolean;
 };
@@ -201,7 +199,6 @@ export function projectCytoscapeGraph(
       label: node.label,
       simpleLabel: node.simpleLabel,
       kind: node.kind,
-      status: node.status,
       subtype: node.subtype,
       countryCode: node.countryCode,
       governanceBlock: node.governanceBlock,
@@ -219,7 +216,6 @@ export function projectCytoscapeGraph(
       source: edge.source,
       target: edge.target,
       type: edge.type,
-      status: edge.status,
       label: edge.label,
       isDerivedHierarchy: edge.isDerivedHierarchy,
     } satisfies GraphEdgeData,

@@ -1,222 +1,27 @@
-import type { ReactNode } from "react";
-import { CloseOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import { Button, Card, Collapse, Flex, List, Tag, Tooltip, Typography } from "antd";
+import { useState, type ReactNode } from "react";
+import { CloseOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { Button, Card, Flex, List, Tabs, Tag, Typography } from "antd";
 
 import type {
   Entity,
-  EntitySource,
   Relationship,
-  Source,
+  SourceRef,
+  SourcedMetric,
   SystemAccessPath,
-  SystemDataClaim,
+  SystemDataDescriptor,
+  SystemGalleryItem,
   SystemIdentifierScheme,
-  SystemSubmissionPath,
+  SystemNode,
+  SystemRyuRoute,
 } from "../../../../shared/domain";
 import { useGraphStore } from "../state/graphStore";
+
+type DetailTabKey = "user" | "raw";
 
 function labelize(value: string): string {
   return value
     .replaceAll("_", " ")
     .replace(/\b\w/g, (match) => match.toUpperCase());
-}
-
-function confidence(value: number): string {
-  return value.toFixed(2);
-}
-
-interface FieldHelp {
-  description: string;
-  options: string[];
-}
-
-interface DownloadLink {
-  id: string;
-  label: string;
-  url: string;
-  note?: string | null;
-}
-
-interface DetailItem {
-  id: string;
-  label: string;
-  value: string;
-}
-
-interface ItemOverview {
-  text: string;
-  sourceTitle: string | null;
-  sourceUrl: string | null;
-}
-
-const fieldHelp: Record<string, FieldHelp> = {
-  "entity type": {
-    description: "The kind of graph item this record represents.",
-    options: [
-      "Country: a national jurisdiction represented on the map.",
-      "Organization: an agency, institution, or network operator.",
-      "System: a data platform, catalog, portal, or technical service.",
-    ],
-  },
-  status: {
-    description: "The current operating state recorded for this item.",
-    options: [
-      "Active: currently in use.",
-      "Planned: expected or announced but not yet operating.",
-      "Speculative: plausible but still uncertain.",
-      "Deprecated: retired, replaced, or no longer maintained.",
-    ],
-  },
-  confidence: {
-    description: "How strongly the available evidence supports this record.",
-    options: [
-      "1.00 is highest confidence.",
-      "Lower values mean the record needs stronger confirmation.",
-      "Source-specific confidence can also appear in evidence links.",
-    ],
-  },
-  country: {
-    description: "The country code attached to this entity when the data can locate it.",
-    options: [
-      "Usually an ISO country code.",
-      "May be blank for international, regional, or unresolved records.",
-    ],
-  },
-  evidence: {
-    description: "Sources linked to this entity, used to support the claims shown here.",
-    options: [
-      "May include publisher, source type, and source URL.",
-      "Evidence can support identity, status, access, and relationship claims.",
-    ],
-  },
-  connections: {
-    description: "Relationships connecting this item to neighboring countries, organizations, or systems.",
-    options: [
-      "Governs: country to organization.",
-      "Operates, publishes to, and syncs to: organization/system workflows.",
-      "Part of: system hierarchy.",
-    ],
-  },
-  subtype: {
-    description: "A more specific classification for an organization or system.",
-    options: [
-      "Examples include agency, program, platform, catalog, repository, or portal.",
-      "Values are recorded from the available research data.",
-    ],
-  },
-};
-
-const downloadKeyPattern = /download|downloadurl|downloadpage|dataurl|accessurl|data_link|data link/i;
-const dataTypeKeyPattern = /data.?type|data.?format|file.?type|file.?format|format|formats|mime/i;
-const resolutionKeyPattern = /resolution|spatial|scale|pixel|temporal|time/i;
-
-function helpFor(label: string) {
-  return fieldHelp[label.toLowerCase()];
-}
-
-function HelpLabel({ label }: { label: string }) {
-  const help = helpFor(label);
-
-  if (!help) {
-    return <>{label}</>;
-  }
-
-  return (
-    <span className="entity-detail-label-with-help">
-      <span>{label}</span>
-      <Tooltip
-        placement="left"
-        title={
-          <div className="entity-detail-help">
-            <Typography.Text strong>{label}</Typography.Text>
-            <Typography.Paragraph>{help.description}</Typography.Paragraph>
-            <ul>
-              {help.options.map((option) => (
-                <li key={option}>{option}</li>
-              ))}
-            </ul>
-          </div>
-        }
-      >
-        <InfoCircleOutlined
-          aria-label={`About ${label}`}
-          className="entity-detail-help-icon"
-        />
-      </Tooltip>
-    </span>
-  );
-}
-
-function valueToStrings(value: unknown): string[] {
-  if (value === null || value === undefined || value === "") {
-    return [];
-  }
-
-  if (Array.isArray(value)) {
-    return value.flatMap(valueToStrings);
-  }
-
-  if (typeof value === "object") {
-    return Object.entries(value)
-      .flatMap(([key, nestedValue]) =>
-        valueToStrings(nestedValue).map((nestedString) => `${labelize(key)}: ${nestedString}`),
-      );
-  }
-
-  return [String(value)];
-}
-
-function propertyValues(
-  properties: Record<string, unknown>,
-  pattern: RegExp,
-): DetailItem[] {
-  return Object.entries(properties).flatMap(([key, value]) =>
-    pattern.test(key)
-      ? valueToStrings(value).map((propertyValue, index) => ({
-          id: `${key}-${index}`,
-          label: labelize(key),
-          value: propertyValue,
-        }))
-      : [],
-  );
-}
-
-function downloadLinksFromProperties(
-  properties: Record<string, unknown>,
-): DownloadLink[] {
-  return propertyValues(properties, downloadKeyPattern)
-    .filter((item) => /^https?:\/\//i.test(item.value))
-    .map((item) => ({
-      id: `property-${item.id}`,
-      label: item.label,
-      url: item.value,
-    }));
-}
-
-function downloadLinksFromAccessPaths(paths: SystemAccessPath[]): DownloadLink[] {
-  return paths
-    .filter((path) => {
-      const searchable = `${path.method} ${path.label} ${path.note ?? ""}`;
-      return Boolean(path.url) && /download|data|access|api|portal|catalog/i.test(searchable);
-    })
-    .map((path) => ({
-      id: path.id,
-      label: labelize(path.label),
-      url: path.url ?? "",
-      note: path.note,
-    }));
-}
-
-function resolutionItemsForEntity(entity: Entity, claims: SystemDataClaim[]): DetailItem[] {
-  const propertyItems = propertyValues(entity.properties, resolutionKeyPattern);
-  const claimItems = claims
-    .filter((claim) => claim.note && resolutionKeyPattern.test(claim.note))
-    .map((claim) => ({
-      id: `claim-${claim.id}`,
-      label: labelize(claim.label),
-      value: claim.note ?? "",
-    }));
-
-  return [...propertyItems, ...claimItems];
 }
 
 function InlineField({
@@ -228,9 +33,7 @@ function InlineField({
 }) {
   return (
     <div className="entity-detail-item">
-      <Typography.Text className="entity-detail-label">
-        <HelpLabel label={label} />
-      </Typography.Text>
+      <Typography.Text className="entity-detail-label">{label}</Typography.Text>
       <div className="entity-detail-value">{children}</div>
     </div>
   );
@@ -243,124 +46,269 @@ function EmptyValue({ children = "Not recorded" }: { children?: ReactNode }) {
 function DetailSection({
   title,
   children,
-  defaultOpen = false,
 }: {
   title: string;
   children: ReactNode;
-  defaultOpen?: boolean;
 }) {
   return (
-    <Collapse
-      className="entity-detail-collapse"
-      defaultActiveKey={defaultOpen ? [title] : []}
-      expandIconPosition="end"
-      items={[
-        {
-          key: title,
-          label: (
-            <Typography.Text strong>
-              <HelpLabel label={title} />
-            </Typography.Text>
-          ),
-          children,
-        },
-      ]}
-      size="small"
-    />
+    <section className="entity-detail-section">
+      <Typography.Text strong>{title}</Typography.Text>
+      {children}
+    </section>
   );
 }
 
-function claimList(claims: SystemDataClaim[], category: SystemDataClaim["category"]) {
-  return claims.filter((claim) => claim.category === category);
+function SourceLink({ source }: { source: SourceRef }) {
+  return (
+    <Typography.Link href={source.url} target="_blank" rel="noreferrer">
+      {source.title}
+    </Typography.Link>
+  );
 }
 
-function ClaimTags({ claims }: { claims: SystemDataClaim[] }) {
-  if (claims.length === 0) {
+function descriptorList(
+  descriptors: SystemDataDescriptor[],
+  category: SystemDataDescriptor["category"],
+) {
+  return descriptors.filter((descriptor) => descriptor.category === category);
+}
+
+function DescriptorTags({ descriptors }: { descriptors: SystemDataDescriptor[] }) {
+  if (descriptors.length === 0) {
     return <EmptyValue />;
   }
 
   return (
     <Flex gap={4} wrap>
-      {claims.map((claim) => (
-        <Tag key={claim.id} bordered={false}>
-          {labelize(claim.label)}
+      {descriptors.map((descriptor) => (
+        <Tag key={descriptor.id} bordered={false}>
+          {labelize(descriptor.label)}
         </Tag>
       ))}
     </Flex>
   );
 }
 
-function DetailTags({ items }: { items: DetailItem[] }) {
-  if (items.length === 0) {
+function formatBytes(value: number) {
+  const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+  let size = value;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toLocaleString(undefined, { maximumFractionDigits: unitIndex === 0 ? 0 : 1 })} ${units[unitIndex]}`;
+}
+
+function formatMetricValue(metric: SourcedMetric) {
+  if (metric.key === "storage_size_bytes" || metric.unit === "bytes") {
+    return formatBytes(metric.value);
+  }
+
+  return `${metric.value.toLocaleString()} ${metric.unit}`;
+}
+
+function MetricValue({ metric }: { metric: SourcedMetric | null }) {
+  if (!metric) {
     return <EmptyValue />;
   }
 
-  return (
-    <Flex gap={4} wrap>
-      {items.map((item) => (
-        <Tooltip key={item.id} title={item.label}>
-          <Tag bordered={false}>{item.value}</Tag>
-        </Tooltip>
-      ))}
-    </Flex>
-  );
-}
-
-function DownloadLinks({ links }: { links: DownloadLink[] }) {
-  if (links.length === 0) {
-    return <EmptyValue />;
-  }
-
-  return (
-    <Flex vertical gap={4}>
-      {links.map((link) => (
-        <Flex key={link.id} vertical gap={2}>
-          <Typography.Link href={link.url} target="_blank" rel="noreferrer">
-            {link.label}
-          </Typography.Link>
-          {link.note ? (
-            <Typography.Text type="secondary">{link.note}</Typography.Text>
-          ) : null}
-        </Flex>
-      ))}
-    </Flex>
-  );
-}
-
-function DetailList({ items }: { items: DetailItem[] }) {
-  if (items.length === 0) {
-    return <EmptyValue />;
-  }
-
-  return (
-    <Flex vertical gap={4}>
-      {items.map((item) => (
-        <Typography.Text key={item.id}>
-          <Typography.Text type="secondary">{item.label}: </Typography.Text>
-          {item.value}
-        </Typography.Text>
-      ))}
-    </Flex>
-  );
-}
-
-function pathDescription(path: SystemAccessPath | SystemSubmissionPath) {
   return (
     <Flex vertical gap={2}>
+      <Typography.Text>{formatMetricValue(metric)}</Typography.Text>
+      {metric.description ? (
+        <Typography.Text type="secondary">{metric.description}</Typography.Text>
+      ) : null}
+      <Typography.Text type="secondary">
+        Source: <SourceLink source={metric.source} />
+        {metric.observedAt ? ` · observed ${metric.observedAt}` : ""}
+      </Typography.Text>
+    </Flex>
+  );
+}
+
+function AccessDescription({ path }: { path: SystemAccessPath }) {
+  return (
+    <Flex vertical gap={4}>
       <Flex align="center" gap={6} wrap>
         <Typography.Text>{labelize(path.label)}</Typography.Text>
+        <Tag bordered={false}>{labelize(path.type)}</Tag>
         <Tag bordered={false}>{labelize(path.method)}</Tag>
-        <Typography.Text type="secondary">
-          confidence {confidence(path.confidence)}
-        </Typography.Text>
       </Flex>
-      {path.url ? (
-        <Typography.Link href={path.url} target="_blank" rel="noreferrer">
-          {path.url}
-        </Typography.Link>
+      <Typography.Text type="secondary">{path.description}</Typography.Text>
+      <Typography.Link href={path.url} target="_blank" rel="noreferrer">
+        {path.url}
+      </Typography.Link>
+      <Typography.Text type="secondary">
+        Source: <SourceLink source={path.source} />
+      </Typography.Text>
+    </Flex>
+  );
+}
+
+function RyuRouteDescription({ route }: { route: SystemRyuRoute }) {
+  return (
+    <Flex vertical gap={4}>
+      <Flex align="center" gap={6} wrap>
+        <Typography.Text>{route.id}</Typography.Text>
+        <Tag bordered={false}>{labelize(route.status)}</Tag>
+        <Tag bordered={false}>{labelize(route.mode)}</Tag>
+        <Tag bordered={false}>Priority {route.priority}</Tag>
+        {route.capabilities.map((capability) => (
+          <Tag key={capability} bordered={false}>{labelize(capability)}</Tag>
+        ))}
+      </Flex>
+      {route.target ? (
+        <Typography.Text type="secondary">Target: {route.target}</Typography.Text>
       ) : null}
-      {path.note ? (
-        <Typography.Text type="secondary">{path.note}</Typography.Text>
+      {route.upstream ? (
+        <Typography.Text type="secondary">Upstream: {route.upstream}</Typography.Text>
+      ) : null}
+      {route.format ? (
+        <Typography.Text type="secondary">Format: {route.format}</Typography.Text>
+      ) : null}
+      {route.contractRef ? (
+        <Typography.Text type="secondary">Contract: {route.contractRef}</Typography.Text>
+      ) : null}
+      {route.caveat ? (
+        <Typography.Text type="secondary">{route.caveat}</Typography.Text>
+      ) : null}
+    </Flex>
+  );
+}
+
+function Gallery({ items }: { items: SystemGalleryItem[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  if (items.length === 0) {
+    return <EmptyValue>No gallery item recorded</EmptyValue>;
+  }
+
+  const activeItem = items[Math.min(activeIndex, items.length - 1)];
+  const hasMultipleItems = items.length > 1;
+  const previousItem = () => {
+    setActiveIndex((currentIndex) =>
+      currentIndex === 0 ? items.length - 1 : currentIndex - 1,
+    );
+  };
+  const nextItem = () => {
+    setActiveIndex((currentIndex) => (currentIndex + 1) % items.length);
+  };
+
+  return (
+    <div className="entity-gallery-slider">
+      <figure className="entity-gallery-item" key={activeItem.id}>
+        {activeItem.type === "image" ? (
+          <a
+            className="entity-gallery-image-link"
+            href={activeItem.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img
+              src={activeItem.thumbnailUrl ?? activeItem.url}
+              alt={activeItem.title ?? activeItem.caption ?? "Database sample"}
+              loading="lazy"
+            />
+          </a>
+        ) : (
+          <iframe
+            src={activeItem.url}
+            title={activeItem.title ?? activeItem.id}
+            loading="lazy"
+          />
+        )}
+        <figcaption>
+          {activeItem.title ? <Typography.Text>{activeItem.title}</Typography.Text> : null}
+          {activeItem.caption ? (
+            <Typography.Text type="secondary">{activeItem.caption}</Typography.Text>
+          ) : null}
+          <Typography.Text type="secondary">
+            Source: <SourceLink source={activeItem.source} />
+          </Typography.Text>
+        </figcaption>
+      </figure>
+      {hasMultipleItems ? (
+        <Flex className="entity-gallery-controls" align="center" justify="space-between">
+          <Button
+            aria-label="Previous gallery image"
+            icon={<LeftOutlined />}
+            size="small"
+            type="text"
+            onClick={previousItem}
+          />
+          <Typography.Text type="secondary">
+            {Math.min(activeIndex, items.length - 1) + 1} / {items.length}
+          </Typography.Text>
+          <Button
+            aria-label="Next gallery image"
+            icon={<RightOutlined />}
+            size="small"
+            type="text"
+            onClick={nextItem}
+          />
+        </Flex>
+      ) : null}
+    </div>
+  );
+}
+
+function SystemIntro({ system }: { system: SystemNode }) {
+  return (
+    <section className="entity-system-intro">
+      <Flex className="entity-system-heading" vertical gap={4}>
+        <Typography.Title className="entity-system-name" level={3}>
+          {system.name}
+        </Typography.Title>
+        <Typography.Text className="entity-system-operator">
+          {system.operator?.name ?? "Operator not recorded"}
+        </Typography.Text>
+        {system.primaryUrl ? (
+          <Typography.Link
+            className="entity-system-url"
+            href={system.primaryUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {system.primaryUrl}
+          </Typography.Link>
+        ) : (
+          <Typography.Text className="entity-system-url" type="secondary">
+            Main URL not recorded
+          </Typography.Text>
+        )}
+      </Flex>
+      {system.shortDescription ? (
+        <Typography.Paragraph className="entity-detail-note entity-system-short-description">
+          {system.shortDescription}
+        </Typography.Paragraph>
+      ) : null}
+      <Gallery items={system.gallery} />
+      {system.longDescription ? (
+        <Typography.Paragraph className="entity-detail-note entity-system-long-description">
+          {system.longDescription}
+        </Typography.Paragraph>
+      ) : null}
+    </section>
+  );
+}
+
+function IdentifierDescription({ scheme }: { scheme: SystemIdentifierScheme }) {
+  return (
+    <Flex vertical gap={2}>
+      <Typography.Text>{labelize(scheme.scheme)}</Typography.Text>
+      {scheme.appliesTo ? (
+        <Typography.Text type="secondary">
+          Applies to {scheme.appliesTo}
+        </Typography.Text>
+      ) : null}
+      {scheme.description ? (
+        <Typography.Text type="secondary">{scheme.description}</Typography.Text>
+      ) : null}
+      {scheme.source ? (
+        <Typography.Text type="secondary">
+          Source: <SourceLink source={scheme.source} />
+        </Typography.Text>
       ) : null}
     </Flex>
   );
@@ -372,89 +320,127 @@ function relationshipLabel(relationship: Relationship, currentEntityId: string) 
   return `${labelize(relationship.type)} (${direction})`;
 }
 
-function firstSentences(text: string, maxSentences = 2): string {
-  const sentences = text
-    .replace(/\s+/g, " ")
-    .trim()
-    .match(/[^.!?]+[.!?]+|[^.!?]+$/g);
-
-  return (sentences ?? [text]).slice(0, maxSentences).join(" ").trim();
+function sourceId(source: SourceRef | null) {
+  return source?.id ?? null;
 }
 
-function itemNoun(entity: Entity, profileRole: string | null | undefined): string {
-  if (entity.kind === "country") {
-    return "country";
-  }
-  if (entity.kind === "organization") {
-    return entity.subtype ? labelize(entity.subtype).toLowerCase() : "organization";
-  }
-  return profileRole ? labelize(profileRole).toLowerCase() : "system";
-}
-
-function itemOverview({
+function RawSystemDump({
   entity,
-  primaryUrl,
-  profileRole,
-  sourceLinks,
-  sourceById,
+  relationships,
+  system,
 }: {
   entity: Entity;
-  primaryUrl: string | null | undefined;
-  profileRole: string | null | undefined;
-  sourceLinks: EntitySource[];
-  sourceById: Record<string, Source>;
-}): ItemOverview {
-  const candidates = sourceLinks.flatMap<ItemOverview>((sourceLink) => {
-    const source = sourceById[sourceLink.sourceId];
-    if (!source) {
-      return [];
-    }
-
-    const sourceDescriptions: ItemOverview[] = [];
-    if (sourceLink.excerpt) {
-      sourceDescriptions.push({
-        sourceTitle: source.title,
-        sourceUrl: source.url,
-        text: firstSentences(sourceLink.excerpt),
-      });
-    }
-    if (source.note) {
-      sourceDescriptions.push({
-        sourceTitle: source.title,
-        sourceUrl: source.url,
-        text: firstSentences(source.note),
-      });
-    }
-    return sourceDescriptions;
-  });
-
-  const bestCandidate = candidates.sort((left, right) => {
-    const leftScore = left.text.length + (left.sourceUrl ? 40 : 0);
-    const rightScore = right.text.length + (right.sourceUrl ? 40 : 0);
-    return rightScore - leftScore;
-  })[0];
-
-  if (bestCandidate) {
-    return bestCandidate;
-  }
-
-  if (entity.description) {
-    return {
-      sourceTitle: null,
-      sourceUrl: primaryUrl ?? null,
-      text: firstSentences(entity.description),
-    };
-  }
-
-  const noun = itemNoun(entity, profileRole);
-  return {
-    sourceTitle: primaryUrl ? "Primary link" : null,
-    sourceUrl: primaryUrl ?? null,
-    text: `${entity.name} is recorded as a ${noun} in the CHM Network. Open the sections below for evidence, data access, identifiers, and connections that explain how it fits into the network.`,
+  relationships: Relationship[];
+  system: SystemNode;
+}) {
+  const rawDump = {
+    entities: {
+      id: entity.id,
+      kind: entity.kind,
+      name: entity.name,
+      parent_entity_id: entity.parentEntityId,
+      country_code: entity.countryCode,
+      institution_type: entity.subtype,
+      properties: entity.properties,
+      created_at: entity.createdAt,
+      updated_at: entity.updatedAt,
+    },
+    system_profiles: {
+      system_id: system.id,
+      primary_url: system.primaryUrl,
+      short_description: system.shortDescription,
+      long_description: system.longDescription,
+      aliases: system.aliases,
+      role: system.role,
+      discipline_family: system.disciplineFamily,
+      geographic_scope: system.geographicScope,
+    },
+    system_ryu: system.ryu,
+    system_data_descriptors: system.data.descriptors.map((descriptor) => ({
+      id: descriptor.id,
+      system_id: system.id,
+      category: descriptor.category,
+      label: descriptor.label,
+      description: descriptor.description,
+      source_id: sourceId(descriptor.source),
+      source: descriptor.source,
+    })),
+    system_access_paths: system.access.map((path) => ({
+      id: path.id,
+      system_id: system.id,
+      access_type: path.type,
+      method: path.method,
+      label: path.label,
+      url: path.url,
+      description: path.description,
+      source_id: path.source.id,
+      source: path.source,
+    })),
+    system_gallery_items: system.gallery.map((item) => ({
+      id: item.id,
+      system_id: system.id,
+      item_type: item.type,
+      url: item.url,
+      thumbnail_url: item.thumbnailUrl,
+      title: item.title,
+      caption: item.caption,
+      source_id: item.source.id,
+      source: item.source,
+      sort_order: item.sortOrder,
+    })),
+    system_metrics: [
+      system.data.recordCount,
+      system.data.storageSize,
+      ...system.usage,
+    ].filter((metric): metric is SourcedMetric => Boolean(metric)).map((metric) => ({
+      id: metric.id,
+      system_id: system.id,
+      metric_key: metric.key,
+      value_numeric: metric.value,
+      unit: metric.unit,
+      description: metric.description,
+      observed_at: metric.observedAt,
+      source_id: metric.source.id,
+      source: metric.source,
+    })),
+    system_identifier_schemes: system.identifiers.map((scheme) => ({
+      id: scheme.id,
+      system_id: system.id,
+      scheme: scheme.scheme,
+      applies_to: scheme.appliesTo,
+      description: scheme.description,
+      source_id: sourceId(scheme.source),
+      source: scheme.source,
+    })),
+    relationships: relationships.map((relationship) => ({
+      id: relationship.id,
+      source_entity_id: relationship.sourceEntityId,
+      target_entity_id: relationship.targetEntityId,
+      type: relationship.type,
+      note: relationship.note,
+      properties: relationship.properties,
+      created_at: relationship.createdAt,
+      updated_at: relationship.updatedAt,
+    })),
   };
+
+  return (
+    <pre className="entity-raw-dump">
+      {JSON.stringify(rawDump, null, 2)}
+    </pre>
+  );
 }
 
-export function EntityDetailsPanel() {
+export function EntityDetailsPanel({
+  extraActions,
+  onClose,
+  showCloseButton = true,
+}: {
+  extraActions?: ReactNode;
+  onClose?: () => void;
+  showCloseButton?: boolean;
+}) {
+  const [activeDetailTab, setActiveDetailTab] = useState<DetailTabKey>("user");
   const graph = useGraphStore((state) => state.graph);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const resetSelection = useGraphStore((state) => state.resetSelection);
@@ -471,321 +457,220 @@ export function EntityDetailsPanel() {
   const relationships = relationshipIds.map(
     (relationshipId) => graph.relationshipById[relationshipId],
   );
-  const sourceLinks = graph.entitySourcesByEntityId[entity.id] ?? [];
-  const sources = sourceLinks
-    .map((sourceLink) => graph.sourceById[sourceLink.sourceId])
-    .filter((source): source is Source => Boolean(source));
+  const system = graph.systemNodeById[entity.id];
+  const isSystem = entity.kind === "system" && Boolean(system);
+  const title = isSystem ? (
+    <Flex className="entity-details-header-title" align="center" gap={12}>
+      <span className="entity-details-title-text">{entity.name}</span>
+      <Tabs
+        activeKey={activeDetailTab}
+        className="entity-details-header-tabs"
+        items={[
+          {
+            key: "user",
+            label: "User view",
+            children: null,
+          },
+          {
+            key: "raw",
+            label: "Raw fields",
+            children: null,
+          },
+        ]}
+        onChange={(key) => setActiveDetailTab(key as DetailTabKey)}
+      />
+    </Flex>
+  ) : (
+    entity.name
+  );
+  const userView = (
+    <Flex vertical gap={16}>
+      {isSystem && system ? <SystemIntro system={system} /> : null}
 
-  const profile = graph.systemProfileBySystemId[entity.id];
-  const claims = graph.systemDataClaimsBySystemId[entity.id] ?? [];
-  const accessPaths = graph.systemAccessPathsBySystemId[entity.id] ?? [];
-  const submissionPaths = graph.systemSubmissionPathsBySystemId[entity.id] ?? [];
-  const identifierSchemes =
-    graph.systemIdentifierSchemesBySystemId[entity.id] ?? [];
-  const operatorRelationship = relationships.find(
-    (relationship) => relationship.type === "operates",
+      <DetailSection title="Profile">
+        <div className="entity-detail-grid">
+          <InlineField label="Entity type">
+            <Tag bordered={false}>{labelize(entity.kind)}</Tag>
+          </InlineField>
+          {isSystem && system ? (
+            <>
+              <InlineField label="Role">
+                {system.role ? labelize(system.role) : <EmptyValue />}
+              </InlineField>
+              <InlineField label="Operator country">
+                {system.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
+              </InlineField>
+              <InlineField label="Discipline">
+                {system.disciplineFamily ? (
+                  labelize(system.disciplineFamily)
+                ) : (
+                  <EmptyValue />
+                )}
+              </InlineField>
+              <InlineField label="Geographic scope">
+                {system.geographicScope ? (
+                  labelize(system.geographicScope)
+                ) : (
+                  <EmptyValue />
+                )}
+              </InlineField>
+              <InlineField label="Part of">
+                {system.parentSystemId
+                  ? graph.entityById[system.parentSystemId]?.name ?? system.parentSystemId
+                  : <EmptyValue />}
+              </InlineField>
+              <InlineField label="Aliases">
+                {system.aliases.length > 0 ? system.aliases.join(", ") : <EmptyValue />}
+              </InlineField>
+            </>
+          ) : (
+            <>
+              <InlineField label="Country">
+                {entity.countryCode ?? <EmptyValue />}
+              </InlineField>
+              {entity.kind === "organization" ? (
+                <InlineField label="Subtype">
+                  {entity.subtype ?? <EmptyValue />}
+                </InlineField>
+              ) : null}
+            </>
+          )}
+        </div>
+      </DetailSection>
+
+      {isSystem && system ? (
+        <>
+          <DetailSection title="Data">
+            <div className="entity-detail-grid">
+              <InlineField label="Data types">
+                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "type")} />
+              </InlineField>
+              <InlineField label="Formats">
+                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "format")} />
+              </InlineField>
+              <InlineField label="Standards">
+                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "standard")} />
+              </InlineField>
+              <InlineField label="Records">
+                <MetricValue metric={system.data.recordCount} />
+              </InlineField>
+              <InlineField label="Database size">
+                <MetricValue metric={system.data.storageSize} />
+              </InlineField>
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Access">
+            <List<SystemAccessPath>
+              className="entity-detail-list"
+              dataSource={system.access}
+              locale={{ emptyText: "No access path recorded" }}
+              renderItem={(path) => (
+                <List.Item><AccessDescription path={path} /></List.Item>
+              )}
+              size="small"
+            />
+          </DetailSection>
+
+          {system.ryu.routes.length > 0 ? (
+            <DetailSection title="Ryu">
+              <List<SystemRyuRoute>
+                className="entity-detail-list"
+                dataSource={system.ryu.routes}
+                renderItem={(route) => (
+                  <List.Item><RyuRouteDescription route={route} /></List.Item>
+                )}
+                size="small"
+              />
+            </DetailSection>
+          ) : null}
+
+          <DetailSection title="Identifiers">
+            <List<SystemIdentifierScheme>
+              className="entity-detail-list"
+              dataSource={system.identifiers}
+              locale={{ emptyText: "No identifier scheme recorded" }}
+              renderItem={(scheme) => (
+                <List.Item><IdentifierDescription scheme={scheme} /></List.Item>
+              )}
+              size="small"
+            />
+          </DetailSection>
+
+          <DetailSection title="Usage">
+            <List<SourcedMetric>
+              className="entity-detail-list"
+              dataSource={system.usage}
+              locale={{ emptyText: "No usage metric recorded" }}
+              renderItem={(metric) => (
+                <List.Item>
+                  <Flex vertical gap={2}>
+                    <Typography.Text>{labelize(metric.key)}</Typography.Text>
+                    <MetricValue metric={metric} />
+                  </Flex>
+                </List.Item>
+              )}
+              size="small"
+            />
+          </DetailSection>
+        </>
+      ) : null}
+
+      <DetailSection title="Connections">
+        <List<Relationship>
+          className="entity-detail-list"
+          dataSource={relationships}
+          locale={{ emptyText: "No relationship recorded" }}
+          renderItem={(relationship) => {
+            const otherEntityId =
+              relationship.sourceEntityId === entity.id
+                ? relationship.targetEntityId
+                : relationship.sourceEntityId;
+            const otherEntity = graph.entityById[otherEntityId];
+            return (
+              <List.Item>
+                <Flex vertical gap={2}>
+                  <Typography.Text>{otherEntity?.name ?? otherEntityId}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {relationshipLabel(relationship, entity.id)}
+                  </Typography.Text>
+                </Flex>
+              </List.Item>
+            );
+          }}
+          size="small"
+        />
+      </DetailSection>
+    </Flex>
   );
-  const operator = operatorRelationship
-    ? graph.entityById[operatorRelationship.sourceEntityId]
-    : null;
-  const parentRelationship = relationships.find(
-    (relationship) =>
-      relationship.type === "part_of" && relationship.sourceEntityId === entity.id,
-  );
-  const parentSystem = parentRelationship
-    ? graph.entityById[parentRelationship.targetEntityId]
-    : null;
-  const isSystem = entity.kind === "system";
-  const propertyDownloadLinks = downloadLinksFromProperties(entity.properties);
-  const downloadLinks = [
-    ...downloadLinksFromAccessPaths(accessPaths),
-    ...propertyDownloadLinks,
-  ];
-  const propertyDataTypes = propertyValues(entity.properties, dataTypeKeyPattern);
-  const resolutionItems = resolutionItemsForEntity(entity, claims);
-  const hasEntityDataAccess =
-    !isSystem &&
-    (downloadLinks.length > 0 ||
-      propertyDataTypes.length > 0 ||
-      resolutionItems.length > 0);
-  const description = itemOverview({
-    entity,
-    primaryUrl: profile?.primaryUrl,
-    profileRole: profile?.role,
-    sourceById: graph.sourceById,
-    sourceLinks,
-  });
 
   return (
     <Card
-      className={`entity-details-panel is-${entity.kind}`}
+      className="entity-details-panel"
       size="small"
-      title={entity.name}
+      title={title}
       extra={
-        <Button
-          aria-label="Close entity details"
-          icon={<CloseOutlined />}
-          size="small"
-          type="text"
-          onClick={resetSelection}
-        />
+        extraActions ??
+        (showCloseButton ? (
+          <Button
+            aria-label="Close entity details"
+            icon={<CloseOutlined />}
+            size="small"
+            type="text"
+            onClick={onClose ?? resetSelection}
+          />
+        ) : null)
       }
     >
-      <Flex vertical gap={16}>
-        <div className="entity-detail-summary">
-          <Typography.Text className="entity-detail-summary-eyebrow">
-            Item overview
-          </Typography.Text>
-          <Typography.Paragraph className="entity-detail-summary-copy">
-            {description.text}
-          </Typography.Paragraph>
-          {description.sourceTitle || description.sourceUrl ? (
-            <Typography.Text className="entity-detail-summary-source">
-              Source:{" "}
-              {description.sourceUrl ? (
-                <Typography.Link
-                  href={description.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {description.sourceTitle ?? description.sourceUrl}
-                </Typography.Link>
-              ) : (
-                description.sourceTitle
-              )}
-            </Typography.Text>
-          ) : null}
-        </div>
-
-        <DetailSection title="Profile">
-          <div className="entity-detail-grid">
-            <InlineField label="Entity type">
-              <Tag bordered={false}>{labelize(entity.kind)}</Tag>
-            </InlineField>
-            <InlineField label="Status">
-              <Tag color={entity.status === "active" ? "green" : "default"}>
-                {entity.status}
-              </Tag>
-            </InlineField>
-            <InlineField label="Confidence">
-              {confidence(entity.confidence)}
-            </InlineField>
-            {isSystem ? (
-              <>
-                <InlineField label="Role">
-                  {profile?.role ? labelize(profile.role) : <EmptyValue />}
-                </InlineField>
-                <InlineField label="Operator">
-                  {operator?.name ?? <EmptyValue />}
-                </InlineField>
-                <InlineField label="Operator country">
-                  {operator?.countryCode ?? entity.countryCode ?? <EmptyValue />}
-                </InlineField>
-                <InlineField label="Discipline">
-                  {profile?.disciplineFamily ? (
-                    labelize(profile.disciplineFamily)
-                  ) : (
-                    <EmptyValue />
-                  )}
-                </InlineField>
-                <InlineField label="Geographic scope">
-                  {profile?.geographicScope ? (
-                    labelize(profile.geographicScope)
-                  ) : (
-                    <EmptyValue />
-                  )}
-                </InlineField>
-                <InlineField label="Part of">
-                  {parentSystem?.name ?? <EmptyValue />}
-                </InlineField>
-                <InlineField label="Aliases">
-                  {profile?.aliases ?? <EmptyValue />}
-                </InlineField>
-              </>
-            ) : (
-              <>
-                <InlineField label="Country">
-                  {entity.countryCode ?? <EmptyValue />}
-                </InlineField>
-                {entity.kind === "organization" ? (
-                  <InlineField label="Subtype">
-                    {entity.subtype ?? <EmptyValue />}
-                  </InlineField>
-                ) : null}
-              </>
-            )}
-          </div>
-          {profile?.primaryUrl ? (
-            <Typography.Link href={profile.primaryUrl} target="_blank" rel="noreferrer">
-              {profile.primaryUrl}
-            </Typography.Link>
-          ) : null}
-        </DetailSection>
-
-        {isSystem ? (
-          <>
-            <DetailSection title="Data">
-              <div className="entity-detail-grid">
-                <InlineField label="Data types">
-                  <ClaimTags claims={claimList(claims, "data_type")} />
-                </InlineField>
-                <InlineField label="Data formats">
-                  <ClaimTags claims={claimList(claims, "data_format")} />
-                </InlineField>
-                {propertyDataTypes.length > 0 ? (
-                  <InlineField label="Recorded data fields">
-                    <DetailTags items={propertyDataTypes} />
-                  </InlineField>
-                ) : null}
-                <InlineField label="Download links">
-                  <DownloadLinks links={downloadLinks} />
-                </InlineField>
-                <InlineField label="Data resolutions">
-                  <DetailList items={resolutionItems} />
-                </InlineField>
-                <InlineField label="Standards">
-                  <ClaimTags claims={claimList(claims, "standard")} />
-                </InlineField>
-              </div>
-              {profile?.dataSummary ? (
-                <Typography.Paragraph className="entity-detail-note">
-                  {profile.dataSummary}
-                </Typography.Paragraph>
-              ) : null}
-            </DetailSection>
-
-            <DetailSection title="Access">
-              {profile?.accessSummary ? (
-                <Typography.Paragraph className="entity-detail-note">
-                  {profile.accessSummary}
-                </Typography.Paragraph>
-              ) : null}
-              <List
-                className="entity-detail-list"
-                dataSource={accessPaths}
-                locale={{ emptyText: "No access path recorded" }}
-                renderItem={(path) => (
-                  <List.Item>{pathDescription(path)}</List.Item>
-                )}
-                size="small"
-              />
-            </DetailSection>
-
-            <DetailSection title="Submission">
-              {profile?.submissionSummary ? (
-                <Typography.Paragraph className="entity-detail-note">
-                  {profile.submissionSummary}
-                </Typography.Paragraph>
-              ) : null}
-              <List
-                className="entity-detail-list"
-                dataSource={submissionPaths}
-                locale={{ emptyText: "No submission path recorded" }}
-                renderItem={(path) => (
-                  <List.Item>{pathDescription(path)}</List.Item>
-                )}
-                size="small"
-              />
-            </DetailSection>
-
-            <DetailSection title="Identifiers">
-              <List<SystemIdentifierScheme>
-                className="entity-detail-list"
-                dataSource={identifierSchemes}
-                locale={{ emptyText: "No identifier scheme recorded" }}
-                renderItem={(scheme) => (
-                  <List.Item>
-                    <Flex vertical gap={2}>
-                      <Typography.Text>{labelize(scheme.scheme)}</Typography.Text>
-                      {scheme.appliesTo ? (
-                        <Typography.Text type="secondary">
-                          Applies to {scheme.appliesTo}
-                        </Typography.Text>
-                      ) : null}
-                      {scheme.note ? (
-                        <Typography.Text type="secondary">{scheme.note}</Typography.Text>
-                      ) : null}
-                    </Flex>
-                  </List.Item>
-                )}
-                size="small"
-              />
-            </DetailSection>
-          </>
-        ) : null}
-
-        {hasEntityDataAccess ? (
-          <DetailSection title="Data access">
-            <div className="entity-detail-grid">
-              {downloadLinks.length > 0 ? (
-                <InlineField label="Download links">
-                  <DownloadLinks links={downloadLinks} />
-                </InlineField>
-              ) : null}
-              {propertyDataTypes.length > 0 ? (
-                <InlineField label="Data types">
-                  <DetailTags items={propertyDataTypes} />
-                </InlineField>
-              ) : null}
-              {resolutionItems.length > 0 ? (
-                <InlineField label="Data resolutions">
-                  <DetailList items={resolutionItems} />
-                </InlineField>
-              ) : null}
-            </div>
-          </DetailSection>
-        ) : null}
-
-        <DetailSection title="Evidence">
-          <List<Source>
-            className="entity-detail-list"
-            dataSource={sources}
-            locale={{ emptyText: "No source recorded" }}
-            renderItem={(source) => (
-              <List.Item>
-                <Flex vertical gap={2}>
-                  <Typography.Text>{source.title}</Typography.Text>
-                  <Typography.Text type="secondary">
-                    {[source.publisher, source.sourceType].filter(Boolean).join(" · ")}
-                  </Typography.Text>
-                  {source.url ? (
-                    <Typography.Link href={source.url} target="_blank" rel="noreferrer">
-                      {source.url}
-                    </Typography.Link>
-                  ) : null}
-                </Flex>
-              </List.Item>
-            )}
-            size="small"
-          />
-        </DetailSection>
-
-        <DetailSection title="Connections">
-          <List<Relationship>
-            className="entity-detail-list"
-            dataSource={relationships}
-            locale={{ emptyText: "No relationship recorded" }}
-            renderItem={(relationship) => {
-              const otherEntityId =
-                relationship.sourceEntityId === entity.id
-                  ? relationship.targetEntityId
-                  : relationship.sourceEntityId;
-              const otherEntity = graph.entityById[otherEntityId];
-              return (
-                <List.Item>
-                  <Flex vertical gap={2}>
-                    <Typography.Text>{otherEntity?.name ?? otherEntityId}</Typography.Text>
-                    <Typography.Text type="secondary">
-                      {relationshipLabel(relationship, entity.id)}
-                    </Typography.Text>
-                  </Flex>
-                </List.Item>
-              );
-            }}
-            size="small"
-          />
-        </DetailSection>
-      </Flex>
+      {isSystem && system && activeDetailTab === "raw" ? (
+        <RawSystemDump
+          entity={entity}
+          relationships={relationships}
+          system={system}
+        />
+      ) : (
+        userView
+      )}
     </Card>
   );
 }

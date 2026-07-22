@@ -14,7 +14,6 @@ import {
   Flex,
   Form,
   Input,
-  InputNumber,
   List,
   Popconfirm,
   Select,
@@ -26,12 +25,9 @@ import type {
   Entity,
   EntityInput,
   EntityKind,
-  EntitySourceInput,
   Relationship,
   RelationshipInput,
-  RelationshipSourceInput,
   SourceInput,
-  Status,
 } from "../../../../shared/domain";
 import {
   createEntity,
@@ -54,13 +50,6 @@ type MessageState = {
   text: string;
 };
 
-type SourceLinkDraft = {
-  sourceId: string;
-  claimType: string;
-  excerpt: string;
-  confidenceOverride: number | null;
-};
-
 type PropertyDraft = {
   key: string;
   value: string;
@@ -69,26 +58,18 @@ type PropertyDraft = {
 type EntityDraft = {
   kind: EntityKind;
   name: string;
-  slug: string;
   parentEntityId: string;
   countryCode: string;
   subtype: string;
-  status: Status;
-  confidence: number;
-  description: string;
   properties: PropertyDraft[];
-  sources: SourceLinkDraft[];
 };
 
 type RelationshipDraft = {
   sourceEntityId: string;
   targetEntityId: string;
   type: Relationship["type"];
-  status: Status;
-  confidence: number;
   note: string;
   properties: PropertyDraft[];
-  sources: SourceLinkDraft[];
 };
 
 type SourceDraft = {
@@ -102,7 +83,6 @@ type SourceDraft = {
   note: string;
 };
 
-const statusOptions = ["active", "planned", "speculative", "deprecated"] as const;
 const entityKindOptions = ["country", "organization", "system"] as const;
 const relationshipTypeOptions = [
   "governs",
@@ -112,36 +92,21 @@ const relationshipTypeOptions = [
   "syncs_to",
 ] as const;
 
-const defaultLink = (sourceId = ""): SourceLinkDraft => ({
-  sourceId,
-  claimType: "supports_claim",
-  excerpt: "",
-  confidenceOverride: null,
-});
-
 const blankEntityDraft = (): EntityDraft => ({
   kind: "organization",
   name: "",
-  slug: "",
   parentEntityId: "",
   countryCode: "",
   subtype: "",
-  status: "active",
-  confidence: 0.8,
-  description: "",
   properties: [],
-  sources: [],
 });
 
 const blankRelationshipDraft = (): RelationshipDraft => ({
   sourceEntityId: "",
   targetEntityId: "",
   type: "publishes_to",
-  status: "active",
-  confidence: 0.8,
   note: "",
   properties: [],
-  sources: [],
 });
 
 const blankSourceDraft = (): SourceDraft => ({
@@ -193,67 +158,24 @@ function toPropertiesObject(drafts: PropertyDraft[], label: string): Record<stri
   return properties;
 }
 
-function toSourceLinks(draft: SourceLinkDraft[]): EntitySourceInput[] {
-  return draft
-    .filter((link) => link.sourceId)
-    .map((link) => ({
-      sourceId: link.sourceId,
-      claimType: link.claimType.trim() || "supports_claim",
-      excerpt: link.excerpt.trim() || null,
-      confidenceOverride: link.confidenceOverride ?? null,
-    }));
-}
-
-function toRelationshipSourceLinks(draft: SourceLinkDraft[]): RelationshipSourceInput[] {
-  return draft
-    .filter((link) => link.sourceId)
-    .map((link) => ({
-      sourceId: link.sourceId,
-      claimType: link.claimType.trim() || "supports_claim",
-      excerpt: link.excerpt.trim() || null,
-      confidenceOverride: link.confidenceOverride ?? null,
-    }));
-}
-
-function entityToDraft(entity: Entity, sources: EntitySourceInput[]): EntityDraft {
+function entityToDraft(entity: Entity): EntityDraft {
   return {
     kind: entity.kind,
     name: entity.name,
-    slug: entity.slug ?? "",
     parentEntityId: entity.parentEntityId ?? "",
     countryCode: entity.countryCode ?? "",
     subtype: entity.subtype ?? "",
-    status: entity.status,
-    confidence: entity.confidence,
-    description: entity.description ?? "",
     properties: toPropertyDrafts(entity.properties ?? {}),
-    sources: sources.map((source) => ({
-      sourceId: source.sourceId,
-      claimType: source.claimType,
-      excerpt: source.excerpt ?? "",
-      confidenceOverride: source.confidenceOverride ?? null,
-    })),
   };
 }
 
-function relationshipToDraft(
-  relationship: Relationship,
-  sources: RelationshipSourceInput[],
-): RelationshipDraft {
+function relationshipToDraft(relationship: Relationship): RelationshipDraft {
   return {
     sourceEntityId: relationship.sourceEntityId,
     targetEntityId: relationship.targetEntityId,
     type: relationship.type,
-    status: relationship.status,
-    confidence: relationship.confidence,
     note: relationship.note ?? "",
     properties: toPropertyDrafts(relationship.properties ?? {}),
-    sources: sources.map((source) => ({
-      sourceId: source.sourceId,
-      claimType: source.claimType,
-      excerpt: source.excerpt ?? "",
-      confidenceOverride: source.confidenceOverride ?? null,
-    })),
   };
 }
 
@@ -276,17 +198,6 @@ function sourceToDraft(source: {
     publishedAt: source.publishedAt ?? "",
     accessedAt: source.accessedAt ?? "",
     note: source.note ?? "",
-  };
-}
-
-function confidenceRule(label: string) {
-  return {
-    validator(_: unknown, value: number | null | undefined) {
-      if (value == null || (value >= 0 && value <= 1)) {
-        return Promise.resolve();
-      }
-      return Promise.reject(new Error(`${label} must be between 0 and 1`));
-    },
   };
 }
 
@@ -345,17 +256,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
 
     setMode("entity");
     setIsEditing(false);
-    entityForm.setFieldsValue(
-      entityToDraft(
-        entity,
-        (graph.entitySourcesByEntityId[selectedEntityId] ?? []).map((source) => ({
-          sourceId: source.sourceId,
-          claimType: source.claimType,
-          excerpt: source.excerpt,
-          confidenceOverride: source.confidenceOverride,
-        })),
-      ),
-    );
+    entityForm.setFieldsValue(entityToDraft(entity));
     setMessage(null);
   }, [entityForm, graph, selectedEntityId]);
 
@@ -371,19 +272,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
 
     setMode("relationship");
     setIsEditing(false);
-    relationshipForm.setFieldsValue(
-      relationshipToDraft(
-        relationship,
-        (graph.relationshipSourcesByRelationshipId[selectedRelationshipId] ?? []).map(
-          (source) => ({
-            sourceId: source.sourceId,
-            claimType: source.claimType,
-            excerpt: source.excerpt,
-            confidenceOverride: source.confidenceOverride,
-          }),
-        ),
-      ),
-    );
+    relationshipForm.setFieldsValue(relationshipToDraft(relationship));
     setMessage(null);
   }, [graph, relationshipForm, selectedRelationshipId]);
 
@@ -420,24 +309,11 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   const relationshipProperties = viewingRelationship
     ? toPropertyDrafts(viewingRelationship.properties ?? {})
     : [];
-  const entitySources = viewingEntity
-    ? graph.entitySourcesByEntityId[viewingEntity.id] ?? []
-    : [];
-  const relationshipSources = viewingRelationship
-    ? graph.relationshipSourcesByRelationshipId[viewingRelationship.id] ?? []
-    : [];
   const hasSelection = Boolean(viewingEntity || viewingRelationship || viewingSource);
 
   async function refreshGraph() {
     const payload = await fetchBootstrap();
     setBootstrap(payload);
-  }
-
-  function openSourceEditor(sourceId: string) {
-    setSourceEditorId(sourceId);
-    setMode("source");
-    setIsEditing(!readOnly);
-    setMessage(null);
   }
 
   function beginEdit() {
@@ -446,43 +322,16 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   }
 
   function cancelEdit() {
-    const currentGraph = graph;
-    if (!currentGraph) {
-      return;
-    }
-
     setIsEditing(false);
     setMessage(null);
 
     if (viewingEntity) {
-      entityForm.setFieldsValue(
-        entityToDraft(
-          viewingEntity,
-          (currentGraph.entitySourcesByEntityId[viewingEntity.id] ?? []).map((source) => ({
-            sourceId: source.sourceId,
-            claimType: source.claimType,
-            excerpt: source.excerpt,
-            confidenceOverride: source.confidenceOverride,
-          })),
-        ),
-      );
+      entityForm.setFieldsValue(entityToDraft(viewingEntity));
       return;
     }
 
     if (viewingRelationship) {
-      relationshipForm.setFieldsValue(
-        relationshipToDraft(
-          viewingRelationship,
-          (currentGraph.relationshipSourcesByRelationshipId[viewingRelationship.id] ?? []).map(
-            (source) => ({
-              sourceId: source.sourceId,
-              claimType: source.claimType,
-              excerpt: source.excerpt,
-              confidenceOverride: source.confidenceOverride,
-            }),
-          ),
-        ),
-      );
+      relationshipForm.setFieldsValue(relationshipToDraft(viewingRelationship));
       return;
     }
 
@@ -516,6 +365,16 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     setMessage(null);
   }
 
+  function startSourceEditor() {
+    setMode("source");
+    setIsEditing(!readOnly);
+    setSourceEditorId(null);
+    setSelectedEntityId(null);
+    setSelectedRelationshipId(null);
+    sourceForm.setFieldsValue(blankSourceDraft());
+    setMessage(null);
+  }
+
   async function handleSave() {
     setSaving(true);
     setMessage(null);
@@ -526,15 +385,10 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
         const payload: EntityInput = {
           kind: values.kind,
           name: values.name.trim(),
-          slug: values.slug.trim() || null,
           parentEntityId: values.kind === "organization" ? values.parentEntityId || null : null,
           countryCode: values.countryCode.trim().toUpperCase() || null,
           subtype: values.subtype.trim() || null,
-          status: values.status,
-          confidence: values.confidence,
-          description: values.description.trim() || null,
           properties: toPropertiesObject(values.properties ?? [], "entity"),
-          sources: toSourceLinks(values.sources ?? []),
         };
 
         const entity = selectedEntityId
@@ -551,11 +405,8 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
           sourceEntityId: values.sourceEntityId,
           targetEntityId: values.targetEntityId,
           type: values.type,
-          status: values.status,
-          confidence: values.confidence,
           note: values.note.trim() || null,
           properties: toPropertiesObject(values.properties ?? [], "relationship"),
-          sources: toRelationshipSourceLinks(values.sources ?? []),
         };
 
         const relationship = selectedRelationshipId
@@ -677,6 +528,9 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
               <Button size="small" onClick={startNewRelationship}>
                 New edge
               </Button>
+              <Button size="small" onClick={startSourceEditor}>
+                Source
+              </Button>
             </>
           ) : null}
         </Space>
@@ -722,93 +576,11 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                 viewingEntity.subtype
                   ? { key: "subtype", label: "Subtype", children: viewingEntity.subtype }
                   : null,
-                viewingEntity.slug
-                  ? { key: "slug", label: "Slug", children: viewingEntity.slug }
-                  : null,
-                { key: "status", label: "Status", children: viewingEntity.status },
-                { key: "confidence", label: "Confidence", children: viewingEntity.confidence },
               ].filter(Boolean) as NonNullable<
                 Parameters<typeof Descriptions>[0]["items"]
               >}
             />
-            {viewingEntity.description ? (
-              <Typography.Paragraph className="summary-copy">
-                {viewingEntity.description}
-              </Typography.Paragraph>
-            ) : null}
-            <Collapse
-              size="small"
-              items={[
-                {
-                  key: "properties",
-                  label: `Properties (${entityProperties.length})`,
-                  children:
-                    entityProperties.length > 0 ? (
-                      <List
-                        size="small"
-                        dataSource={entityProperties}
-                        renderItem={(property) => (
-                          <List.Item>
-                            <Flex vertical gap={2}>
-                              <Typography.Text strong>{property.key}</Typography.Text>
-                              <Typography.Text type="secondary">
-                                {property.value}
-                              </Typography.Text>
-                            </Flex>
-                          </List.Item>
-                        )}
-                      />
-                    ) : (
-                      <Typography.Text type="secondary">
-                        No properties for this node.
-                      </Typography.Text>
-                    ),
-                },
-                {
-                  key: "sources",
-                  label: `Sources (${entitySources.length})`,
-                  children:
-                    entitySources.length > 0 ? (
-                      <List
-                        size="small"
-                        dataSource={entitySources}
-                        renderItem={(source) => (
-                          <List.Item
-                            actions={[
-                              <Button
-                                key="open"
-                                size="small"
-                                type="link"
-                                onClick={() => openSourceEditor(source.sourceId)}
-                              >
-                                {readOnly ? "View source" : "Edit source"}
-                              </Button>,
-                            ]}
-                          >
-                            <Flex vertical gap={2}>
-                              <Typography.Text strong>
-                                {graph.sourceById[source.sourceId]?.title ?? source.sourceId}
-                              </Typography.Text>
-                              <Typography.Text type="secondary">
-                                {source.claimType}
-                              </Typography.Text>
-                              {source.excerpt ? (
-                                <Typography.Text type="secondary">
-                                  {source.excerpt}
-                                </Typography.Text>
-                              ) : null}
-                            </Flex>
-                          </List.Item>
-                        )}
-                      />
-                    ) : (
-                      <Typography.Text type="secondary">
-                        No provenance links for this node.
-                      </Typography.Text>
-                    ),
-                },
-              ]}
-            />
+            <PropertyList properties={entityProperties} emptyText="No properties for this node." />
           </Flex>
         ) : null}
 
@@ -834,12 +606,6 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                     viewingRelationship.targetEntityId,
                 },
                 { key: "type", label: "Type", children: viewingRelationship.type },
-                { key: "status", label: "Status", children: viewingRelationship.status },
-                {
-                  key: "confidence",
-                  label: "Confidence",
-                  children: viewingRelationship.confidence,
-                },
               ]}
             />
             {viewingRelationship.note ? (
@@ -847,79 +613,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                 {viewingRelationship.note}
               </Typography.Paragraph>
             ) : null}
-            <Collapse
-              size="small"
-              items={[
-                {
-                  key: "properties",
-                  label: `Properties (${relationshipProperties.length})`,
-                  children:
-                    relationshipProperties.length > 0 ? (
-                      <List
-                        size="small"
-                        dataSource={relationshipProperties}
-                        renderItem={(property) => (
-                          <List.Item>
-                            <Flex vertical gap={2}>
-                              <Typography.Text strong>{property.key}</Typography.Text>
-                              <Typography.Text type="secondary">
-                                {property.value}
-                              </Typography.Text>
-                            </Flex>
-                          </List.Item>
-                        )}
-                      />
-                    ) : (
-                      <Typography.Text type="secondary">
-                        No properties for this edge.
-                      </Typography.Text>
-                    ),
-                },
-                {
-                  key: "sources",
-                  label: `Sources (${relationshipSources.length})`,
-                  children:
-                    relationshipSources.length > 0 ? (
-                      <List
-                        size="small"
-                        dataSource={relationshipSources}
-                        renderItem={(source) => (
-                          <List.Item
-                            actions={[
-                              <Button
-                                key="open"
-                                size="small"
-                                type="link"
-                                onClick={() => openSourceEditor(source.sourceId)}
-                              >
-                                {readOnly ? "View source" : "Edit source"}
-                              </Button>,
-                            ]}
-                          >
-                            <Flex vertical gap={2}>
-                              <Typography.Text strong>
-                                {graph.sourceById[source.sourceId]?.title ?? source.sourceId}
-                              </Typography.Text>
-                              <Typography.Text type="secondary">
-                                {source.claimType}
-                              </Typography.Text>
-                              {source.excerpt ? (
-                                <Typography.Text type="secondary">
-                                  {source.excerpt}
-                                </Typography.Text>
-                              ) : null}
-                            </Flex>
-                          </List.Item>
-                        )}
-                      />
-                    ) : (
-                      <Typography.Text type="secondary">
-                        No provenance links for this edge.
-                      </Typography.Text>
-                    ),
-                },
-              ]}
-            />
+            <PropertyList properties={relationshipProperties} emptyText="No properties for this edge." />
           </Flex>
         ) : null}
 
@@ -964,9 +658,6 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
             >
               <Input />
             </Form.Item>
-            <Form.Item label="Slug" name="slug">
-              <Input />
-            </Form.Item>
             {entityKind === "organization" ? (
               <Form.Item label="Parent" name="parentEntityId">
                 <Select
@@ -981,119 +672,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
             <Form.Item label="Subtype" name="subtype">
               <Input />
             </Form.Item>
-            <Flex gap={12}>
-              <Form.Item className="half-width" label="Status" name="status" rules={[{ required: true }]}>
-                <Select
-                  options={statusOptions.map((status) => ({ label: status, value: status }))}
-                />
-              </Form.Item>
-              <Form.Item
-                className="half-width"
-                label="Confidence"
-                name="confidence"
-                rules={[{ required: true }, confidenceRule("Entity confidence")]}
-              >
-                <InputNumber className="full-width" min={0} max={1} step={0.05} />
-              </Form.Item>
-            </Flex>
-            <Form.Item label="Description" name="description">
-              <Input.TextArea rows={3} />
-            </Form.Item>
-            <Collapse
-              size="small"
-              items={[
-                {
-                  key: "properties",
-                  label: "Properties",
-                  children: (
-                    <Form.List name="properties">
-                      {(fields, { add, remove }) => (
-                        <Flex vertical gap={10}>
-                          <Button
-                            size="small"
-                            type="dashed"
-                            icon={<PlusOutlined />}
-                            onClick={() => add({ key: "", value: "" })}
-                          >
-                            Add property
-                          </Button>
-                          {fields.length === 0 ? (
-                            <Typography.Text type="secondary">
-                              No properties for this node.
-                            </Typography.Text>
-                          ) : null}
-                          {fields.map((field) => (
-                            <Card key={field.key} size="small" className="editor-subcard">
-                              <Form.Item
-                                label="Key"
-                                name={[field.name, "key"]}
-                                style={{ marginBottom: 10 }}
-                              >
-                                <Input />
-                              </Form.Item>
-                              <Form.Item label="Value" name={[field.name, "value"]}>
-                                <Input.TextArea rows={2} />
-                              </Form.Item>
-                              <Button danger size="small" type="text" onClick={() => remove(field.name)}>
-                                Remove
-                              </Button>
-                            </Card>
-                          ))}
-                        </Flex>
-                      )}
-                    </Form.List>
-                  ),
-                },
-                {
-                  key: "sources",
-                  label: "Sources",
-                  children: (
-                    <Form.List name="sources">
-                      {(fields, { add, remove }) => (
-                        <Flex vertical gap={10}>
-                          <Button
-                            size="small"
-                            type="dashed"
-                            icon={<PlusOutlined />}
-                            onClick={() => add(defaultLink(sourceOptions[0]?.value ?? ""))}
-                          >
-                            Add source
-                          </Button>
-                          {fields.map((field) => (
-                            <Card key={field.key} size="small" className="editor-subcard">
-                              <Form.Item
-                                label="Source"
-                                name={[field.name, "sourceId"]}
-                                rules={[{ required: true, message: "Select a source." }]}
-                                style={{ marginBottom: 10 }}
-                              >
-                                <Select allowClear options={sourceOptions} />
-                              </Form.Item>
-                              <Form.Item label="Claim type" name={[field.name, "claimType"]}>
-                                <Input />
-                              </Form.Item>
-                              <Form.Item label="Excerpt" name={[field.name, "excerpt"]}>
-                                <Input.TextArea rows={2} />
-                              </Form.Item>
-                              <Form.Item
-                                label="Confidence override"
-                                name={[field.name, "confidenceOverride"]}
-                                rules={[confidenceRule("Source confidence")]}
-                              >
-                                <InputNumber className="full-width" min={0} max={1} step={0.05} />
-                              </Form.Item>
-                              <Button danger size="small" type="text" onClick={() => remove(field.name)}>
-                                Remove
-                              </Button>
-                            </Card>
-                          ))}
-                        </Flex>
-                      )}
-                    </Form.List>
-                  ),
-                },
-              ]}
-            />
+            <PropertyEditor name="properties" emptyText="No properties for this node." />
           </Form>
         ) : null}
 
@@ -1121,119 +700,10 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                 }))}
               />
             </Form.Item>
-            <Flex gap={12}>
-              <Form.Item className="half-width" label="Status" name="status" rules={[{ required: true }]}>
-                <Select
-                  options={statusOptions.map((status) => ({ label: status, value: status }))}
-                />
-              </Form.Item>
-              <Form.Item
-                className="half-width"
-                label="Confidence"
-                name="confidence"
-                rules={[{ required: true }, confidenceRule("Relationship confidence")]}
-              >
-                <InputNumber className="full-width" min={0} max={1} step={0.05} />
-              </Form.Item>
-            </Flex>
             <Form.Item label="Note" name="note">
               <Input.TextArea rows={3} />
             </Form.Item>
-            <Collapse
-              size="small"
-              items={[
-                {
-                  key: "properties",
-                  label: "Properties",
-                  children: (
-                    <Form.List name="properties">
-                      {(fields, { add, remove }) => (
-                        <Flex vertical gap={10}>
-                          <Button
-                            size="small"
-                            type="dashed"
-                            icon={<PlusOutlined />}
-                            onClick={() => add({ key: "", value: "" })}
-                          >
-                            Add property
-                          </Button>
-                          {fields.length === 0 ? (
-                            <Typography.Text type="secondary">
-                              No properties for this edge.
-                            </Typography.Text>
-                          ) : null}
-                          {fields.map((field) => (
-                            <Card key={field.key} size="small" className="editor-subcard">
-                              <Form.Item
-                                label="Key"
-                                name={[field.name, "key"]}
-                                style={{ marginBottom: 10 }}
-                              >
-                                <Input />
-                              </Form.Item>
-                              <Form.Item label="Value" name={[field.name, "value"]}>
-                                <Input.TextArea rows={2} />
-                              </Form.Item>
-                              <Button danger size="small" type="text" onClick={() => remove(field.name)}>
-                                Remove
-                              </Button>
-                            </Card>
-                          ))}
-                        </Flex>
-                      )}
-                    </Form.List>
-                  ),
-                },
-                {
-                  key: "sources",
-                  label: "Sources",
-                  children: (
-                    <Form.List name="sources">
-                      {(fields, { add, remove }) => (
-                        <Flex vertical gap={10}>
-                          <Button
-                            size="small"
-                            type="dashed"
-                            icon={<PlusOutlined />}
-                            onClick={() => add(defaultLink(sourceOptions[0]?.value ?? ""))}
-                          >
-                            Add source
-                          </Button>
-                          {fields.map((field) => (
-                            <Card key={field.key} size="small" className="editor-subcard">
-                              <Form.Item
-                                label="Source"
-                                name={[field.name, "sourceId"]}
-                                rules={[{ required: true, message: "Select a source." }]}
-                                style={{ marginBottom: 10 }}
-                              >
-                                <Select allowClear options={sourceOptions} />
-                              </Form.Item>
-                              <Form.Item label="Claim type" name={[field.name, "claimType"]}>
-                                <Input />
-                              </Form.Item>
-                              <Form.Item label="Excerpt" name={[field.name, "excerpt"]}>
-                                <Input.TextArea rows={2} />
-                              </Form.Item>
-                              <Form.Item
-                                label="Confidence override"
-                                name={[field.name, "confidenceOverride"]}
-                                rules={[confidenceRule("Source confidence")]}
-                              >
-                                <InputNumber className="full-width" min={0} max={1} step={0.05} />
-                              </Form.Item>
-                              <Button danger size="small" type="text" onClick={() => remove(field.name)}>
-                                Remove
-                              </Button>
-                            </Card>
-                          ))}
-                        </Flex>
-                      )}
-                    </Form.List>
-                  ),
-                },
-              ]}
-            />
+            <PropertyEditor name="properties" emptyText="No properties for this edge." />
           </Form>
         ) : null}
 
@@ -1312,5 +782,100 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
         ) : null}
       </Flex>
     </Card>
+  );
+}
+
+function PropertyList({
+  properties,
+  emptyText,
+}: {
+  properties: PropertyDraft[];
+  emptyText: string;
+}) {
+  return (
+    <Collapse
+      size="small"
+      items={[
+        {
+          key: "properties",
+          label: `Properties (${properties.length})`,
+          children:
+            properties.length > 0 ? (
+              <List
+                size="small"
+                dataSource={properties}
+                renderItem={(property) => (
+                  <List.Item>
+                    <Flex vertical gap={2}>
+                      <Typography.Text strong>{property.key}</Typography.Text>
+                      <Typography.Text type="secondary">
+                        {property.value}
+                      </Typography.Text>
+                    </Flex>
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Typography.Text type="secondary">{emptyText}</Typography.Text>
+            ),
+        },
+      ]}
+    />
+  );
+}
+
+function PropertyEditor({
+  name,
+  emptyText,
+}: {
+  name: string;
+  emptyText: string;
+}) {
+  return (
+    <Collapse
+      size="small"
+      items={[
+        {
+          key: "properties",
+          label: "Properties",
+          children: (
+            <Form.List name={name}>
+              {(fields, { add, remove }) => (
+                <Flex vertical gap={10}>
+                  <Button
+                    size="small"
+                    type="dashed"
+                    icon={<PlusOutlined />}
+                    onClick={() => add({ key: "", value: "" })}
+                  >
+                    Add property
+                  </Button>
+                  {fields.length === 0 ? (
+                    <Typography.Text type="secondary">{emptyText}</Typography.Text>
+                  ) : null}
+                  {fields.map((field) => (
+                    <Card key={field.key} size="small" className="editor-subcard">
+                      <Form.Item
+                        label="Key"
+                        name={[field.name, "key"]}
+                        style={{ marginBottom: 10 }}
+                      >
+                        <Input />
+                      </Form.Item>
+                      <Form.Item label="Value" name={[field.name, "value"]}>
+                        <Input.TextArea rows={2} />
+                      </Form.Item>
+                      <Button danger size="small" type="text" onClick={() => remove(field.name)}>
+                        Remove
+                      </Button>
+                    </Card>
+                  ))}
+                </Flex>
+              )}
+            </Form.List>
+          ),
+        },
+      ]}
+    />
   );
 }

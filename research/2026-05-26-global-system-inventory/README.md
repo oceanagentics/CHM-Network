@@ -25,7 +25,7 @@ It includes global, regional, and cross-domain systems that materially recur in 
 ## How To Read The Files
 
 - `systems.csv` records the systems in this research batch.
-- `system_links.csv` contains only evidence-backed relationships.
+- `system_links.csv` contains source-backed workflow relationships.
 - `sources.csv` is the provenance table for both systems and links.
 - `exclusions_and_notes.md` records deferred systems and normalization decisions.
 

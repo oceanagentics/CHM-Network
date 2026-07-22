@@ -7,6 +7,7 @@ import { projectCytoscapeGraph } from "../graph/layout";
 import { projectGraph } from "../graph/projection";
 import { useCytoscapeController } from "../graph/useCytoscapeController";
 import type { GraphDisplayMode } from "../graph/cytoscapeStyles";
+import { resolveGraphSearch } from "../search";
 import { useGraphStore } from "../state/graphStore";
 
 interface GraphCanvasProps {
@@ -20,10 +21,16 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
+  const searchQuery = useGraphStore((state) => state.searchQuery);
+  const searchFilters = useGraphStore((state) => state.searchFilters);
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const structuralFocusEntityId =
     viewMode === "governance" ? null : focusEntityId;
+  const resolvedSearch = useMemo(
+    () => (graph ? resolveGraphSearch(graph, { query: searchQuery, filters: searchFilters }) : null),
+    [graph, searchFilters, searchQuery],
+  );
 
   const projection = useMemo(() => {
     if (!graph) {
@@ -35,8 +42,11 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
       viewMode,
       countryDisplayMode,
       focusEntityId: structuralFocusEntityId,
+      searchEntityIds: resolvedSearch?.active
+        ? resolvedSearch.matchingEntityIds
+        : null,
     });
-  }, [countryDisplayMode, graph, structuralFocusEntityId, viewMode]);
+  }, [countryDisplayMode, graph, resolvedSearch, structuralFocusEntityId, viewMode]);
 
   const cytoscapeProjection = useMemo(() => {
     if (!projection) {
