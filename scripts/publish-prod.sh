@@ -93,18 +93,20 @@ process.stdin.on("data", (chunk) => {
 process.stdin.on("end", () => {
   const payload = JSON.parse(input);
   if (
-    !Array.isArray(payload.entities) ||
-    !Array.isArray(payload.relationships) ||
+    !Array.isArray(payload.nodes) ||
+    !Array.isArray(payload.edges) ||
     !Array.isArray(payload.sources) ||
+    !Array.isArray(payload.ryuRoutes) ||
     !Array.isArray(payload.savedViews)
   ) {
     throw new Error("bootstrap.public.json is missing expected arrays");
   }
 
   console.log(
-    `Published ${payload.entities.length} entities, ` +
-      `${payload.relationships.length} relationships, ` +
+    `Published ${payload.nodes.length} nodes, ` +
+      `${payload.edges.length} edges, ` +
       `${payload.sources.length} sources, ` +
+      `${payload.ryuRoutes.length} Ryu routes, ` +
       `${payload.savedViews.length} saved views.`,
   );
 });
