@@ -1,15 +1,14 @@
 /**
- * Structural projection turns scoped graph data into visible nodes, edges, and containers.
+ * Structural projection turns scoped graph data into visible nodes and edges.
  */
-import type { Entity, Relationship, ViewMode } from "../../../../shared/domain";
+import type { GraphEdge, GraphNode, ViewMode } from "../../../../shared/domain";
 import type { CountryDisplayMode } from "../state/graphStore";
 import { buildLabel, getLayoutBand, getNodeDimensions, type NodeGeometry } from "./geometry";
-import { collectDescendants, type IndexedGraph } from "./indexGraph";
+import type { IndexedGraph } from "./indexGraph";
 import {
   getCountryIds,
   getGovernanceIds,
   getTechnicalIds,
-  includeAncestorChains,
 } from "./scope";
 
 export interface ProjectionInput {
@@ -26,15 +25,14 @@ export interface GraphProjectionNode extends NodeGeometry {
   id: string;
   label: string;
   simpleLabel: string;
-  kind: Entity["kind"];
+  kind: GraphNode["kind"];
   subtype: string | null;
   countryCode: string | null;
   governanceBlock: GovernanceBlock;
   layoutBand: number;
-  parentId?: string;
 }
 
-export type GraphProjectionEdgeType = Relationship["type"] | "hierarchy";
+export type GraphProjectionEdgeType = GraphEdge["kind"];
 
 export interface GraphProjectionEdge {
   id: string;
@@ -55,22 +53,22 @@ const governanceInternationalBandByKind = {
   country: 5,
   organization: 4,
   system: 3,
-} satisfies Record<Entity["kind"], number>;
+} satisfies Record<GraphNode["kind"], number>;
 
 function getProjectionLayoutBand(
-  entity: Entity,
+  node: GraphNode,
   viewMode: ViewMode,
   governanceInternationalIds: Set<string>,
 ): number {
-  if (viewMode === "governance" && governanceInternationalIds.has(entity.id)) {
-    return governanceInternationalBandByKind[entity.kind];
+  if (viewMode === "governance" && governanceInternationalIds.has(node.id)) {
+    return governanceInternationalBandByKind[node.kind];
   }
 
-  return getLayoutBand(entity.kind);
+  return getLayoutBand(node.kind);
 }
 
 function getGovernanceBlock(
-  entityId: string,
+  nodeId: string,
   viewMode: ViewMode,
   governanceInternationalIds: Set<string>,
 ): GovernanceBlock {
@@ -78,121 +76,31 @@ function getGovernanceBlock(
     return null;
   }
 
-  return governanceInternationalIds.has(entityId) ? "international" : "national";
+  return governanceInternationalIds.has(nodeId) ? "international" : "national";
 }
 
 function buildProjectionNode(
-  entity: Entity,
+  node: GraphNode,
   governanceBlock: GovernanceBlock,
   layoutBand: number,
 ): GraphProjectionNode {
-  const label = buildLabel(entity);
+  const label = buildLabel(node);
 
   return {
-    id: entity.id,
+    id: node.id,
     label,
-    simpleLabel: entity.name,
-    kind: entity.kind,
-    subtype: entity.subtype,
-    countryCode: entity.countryCode,
+    simpleLabel: node.name,
+    kind: node.kind,
+    subtype: node.subtype,
+    countryCode: node.countryCode,
     governanceBlock,
     layoutBand,
-    ...getNodeDimensions(entity.kind, label),
+    ...getNodeDimensions(node.kind, label),
   };
 }
 
-function getCountryContainerByCode(
-  graph: IndexedGraph,
-  viewMode: ViewMode,
-  countryDisplayMode: CountryDisplayMode,
-): Record<string, string> {
-  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
-    return {};
-  }
-
-  return Object.fromEntries(
-    graph.entities
-      .filter((entity) => entity.kind === "country" && entity.countryCode)
-      .map((entity) => [entity.countryCode as string, entity.id]),
-  );
-}
-
-function includeCountryContainers(
-  graph: IndexedGraph,
-  seedIds: Set<string>,
-  countryContainerByCode: Record<string, string>,
-  viewMode: ViewMode,
-  countryDisplayMode: CountryDisplayMode,
-): Set<string> {
-  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
-    return seedIds;
-  }
-
-  const ids = new Set(seedIds);
-  for (const entityId of seedIds) {
-    const entity = graph.entityById[entityId];
-    if (!entity?.countryCode || entity.kind === "country") {
-      continue;
-    }
-
-    const countryContainerId = countryContainerByCode[entity.countryCode];
-    if (countryContainerId) {
-      ids.add(countryContainerId);
-    }
-  }
-
-  return ids;
-}
-
-function canUseHierarchyParentAsVisualContainer(
-  entity: Entity,
-  parent: Entity,
-  viewMode: ViewMode,
-  countryDisplayMode: CountryDisplayMode,
-): boolean {
-  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
-    return true;
-  }
-
-  if (!entity.countryCode || !parent.countryCode) {
-    return true;
-  }
-
-  return entity.countryCode === parent.countryCode;
-}
-
-function getNodeParentId(
-  graph: IndexedGraph,
-  entity: Entity,
-  visibleIds: Set<string>,
-  countryContainerByCode: Record<string, string>,
-  viewMode: ViewMode,
-  countryDisplayMode: CountryDisplayMode,
-): string | undefined {
-  if (entity.parentEntityId && visibleIds.has(entity.parentEntityId)) {
-    const parent = graph.entityById[entity.parentEntityId];
-    if (
-      parent &&
-      canUseHierarchyParentAsVisualContainer(entity, parent, viewMode, countryDisplayMode)
-    ) {
-      return entity.parentEntityId;
-    }
-  }
-
-  if (
-    entity.countryCode &&
-    entity.kind !== "country" &&
-    countryContainerByCode[entity.countryCode] &&
-    entity.id !== countryContainerByCode[entity.countryCode]
-  ) {
-    return countryContainerByCode[entity.countryCode];
-  }
-
-  return undefined;
-}
-
-function edgeLabel(type: GraphProjectionEdgeType): string {
-  switch (type) {
+function edgeLabel(kind: GraphProjectionEdgeType): string {
+  switch (kind) {
     case "governs":
       return "governs";
     case "operates":
@@ -203,49 +111,26 @@ function edgeLabel(type: GraphProjectionEdgeType): string {
       return "publishes to";
     case "syncs_to":
       return "syncs to";
-    case "hierarchy":
-      return "part of";
   }
-}
-
-function shouldHideEdgeInEngulfMode(
-  relationship: Relationship,
-  nodeParentIdById: Record<string, string | undefined>,
-  viewMode: ViewMode,
-  countryDisplayMode: CountryDisplayMode,
-): boolean {
-  if (viewMode === "technical" || countryDisplayMode !== "engulf") {
-    return false;
-  }
-
-  if (relationship.type !== "governs") {
-    return false;
-  }
-
-  return nodeParentIdById[relationship.targetEntityId] === relationship.sourceEntityId;
 }
 
 export function projectGraph(input: ProjectionInput): GraphProjection {
   const {
     graph,
     viewMode,
-    countryDisplayMode,
     focusEntityId,
     searchEntityIds = null,
   } = input;
 
-  const defaultCountry = graph.entities.find((entity) => entity.kind === "country")?.id ?? null;
-  const defaultSystem = graph.entities.find((entity) => entity.kind === "system")?.id ?? null;
+  const defaultCountry = graph.nodes.find((node) => node.kind === "country")?.id ?? null;
+  const defaultSystem = graph.nodes.find((node) => node.kind === "system")?.id ?? null;
   const effectiveFocusEntityId =
     focusEntityId ?? (viewMode === "technical" ? defaultSystem : defaultCountry);
-  const countryContainerByCode = getCountryContainerByCode(
-    graph,
-    viewMode,
-    countryDisplayMode,
-  );
 
   let includedIds = new Set<string>();
-  if (viewMode === "governance") {
+  if (searchEntityIds) {
+    includedIds = new Set(searchEntityIds);
+  } else if (viewMode === "governance") {
     includedIds = getGovernanceIds(graph);
   } else if (viewMode === "country" && effectiveFocusEntityId) {
     includedIds = getCountryIds(graph, effectiveFocusEntityId);
@@ -253,101 +138,40 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
     includedIds = getTechnicalIds(graph, effectiveFocusEntityId);
   }
 
-  if (searchEntityIds) {
-    includedIds = new Set(
-      [...includedIds].filter((entityId) => searchEntityIds.has(entityId)),
-    );
-  }
-
-  includedIds = includeCountryContainers(
-    graph,
-    includeAncestorChains(graph, includedIds),
-    countryContainerByCode,
-    viewMode,
-    countryDisplayMode,
-  );
-
-  const includedEntities = graph.entities.filter((entity) => includedIds.has(entity.id));
-  const visibleIds = new Set(includedEntities.map((entity) => entity.id));
+  const includedNodes = graph.nodes.filter((node) => includedIds.has(node.id));
+  const visibleIds = new Set(includedNodes.map((node) => node.id));
   const governanceInternationalIds = new Set<string>();
 
   if (viewMode === "governance") {
-    for (const entity of includedEntities) {
-      if (entity.countryCode === "INT") {
-        governanceInternationalIds.add(entity.id);
-      }
-    }
-
-    if (graph.entityById["country-int"]) {
-      for (const entityId of collectDescendants(graph, "country-int")) {
-        if (visibleIds.has(entityId)) {
-          governanceInternationalIds.add(entityId);
-        }
+    for (const node of includedNodes) {
+      if (node.countryCode === "INT") {
+        governanceInternationalIds.add(node.id);
       }
     }
   }
 
-  const nodes = includedEntities.map((entity) => {
-    const parentId = getNodeParentId(
-      graph,
-      entity,
-      visibleIds,
-      countryContainerByCode,
-      viewMode,
-      countryDisplayMode,
-    );
+  const nodes = includedNodes.map((node) =>
+    buildProjectionNode(
+      node,
+      getGovernanceBlock(node.id, viewMode, governanceInternationalIds),
+      getProjectionLayoutBand(node, viewMode, governanceInternationalIds),
+    ),
+  );
 
-    return {
-      ...buildProjectionNode(
-        entity,
-        getGovernanceBlock(entity.id, viewMode, governanceInternationalIds),
-        getProjectionLayoutBand(entity, viewMode, governanceInternationalIds),
-      ),
-      parentId,
-    };
-  });
-
-  const nodeParentIdById = Object.fromEntries(
-    nodes.map((node) => [node.id, node.parentId]),
-  ) as Record<string, string | undefined>;
-
-  const edges: GraphProjectionEdge[] = graph.relationships
+  const edges: GraphProjectionEdge[] = graph.edges
     .filter(
-      (relationship) =>
-        !shouldHideEdgeInEngulfMode(
-          relationship,
-          nodeParentIdById,
-          viewMode,
-          countryDisplayMode,
-        ) &&
-        visibleIds.has(relationship.sourceEntityId) &&
-        visibleIds.has(relationship.targetEntityId),
+      (edge) =>
+        visibleIds.has(edge.sourceNodeId) &&
+        visibleIds.has(edge.targetNodeId),
     )
-    .map((relationship) => ({
-      id: relationship.id,
-      source: relationship.sourceEntityId,
-      target: relationship.targetEntityId,
-      type: relationship.type,
-      label: edgeLabel(relationship.type),
+    .map((edge) => ({
+      id: edge.id,
+      source: edge.sourceNodeId,
+      target: edge.targetNodeId,
+      type: edge.kind,
+      label: edgeLabel(edge.kind),
       isDerivedHierarchy: false,
     }));
-
-  edges.push(
-    ...includedEntities
-      .filter(
-        (entity) =>
-          entity.parentEntityId != null &&
-          visibleIds.has(entity.parentEntityId),
-      )
-      .map((entity) => ({
-        id: `derived-hierarchy-${entity.id}-${entity.parentEntityId as string}`,
-        source: entity.id,
-        target: entity.parentEntityId as string,
-        type: "hierarchy" as const,
-        label: edgeLabel("hierarchy"),
-        isDerivedHierarchy: true,
-      })),
-  );
 
   return {
     nodes,

@@ -147,7 +147,6 @@ const connectedOrange = "#ff785e";
 
 const linkColorByType = {
   governs: "#c8dfff",
-  hierarchy: "#8fb3db",
   operates: "#9fe3d0",
   part_of: "#8fb3db",
   publishes_to: "#ff6b78",
@@ -1065,7 +1064,7 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
     const linkForce = forceGraph.d3Force("link") as D3ForceLink | undefined;
     linkForce
       ?.distance((link) => {
-        if (link.type === "hierarchy" || link.type === "part_of") {
+        if (link.type === "part_of") {
           return 46;
         }
         if (link.type === "publishes_to" || link.type === "syncs_to") {

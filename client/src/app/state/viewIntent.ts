@@ -10,13 +10,13 @@ export function getDefaultFocusEntityId(
 ): string | null {
   if (viewMode === "technical") {
     return (
-      graph?.entities.find((entity) => entity.kind === "system")?.id ??
+      graph?.nodes.find((entity) => entity.kind === "system")?.id ??
       "system-bismal"
     );
   }
 
   return (
-    graph?.entities.find((entity) => entity.kind === "country")?.id ??
+    graph?.nodes.find((entity) => entity.kind === "country")?.id ??
     "country-jpn"
   );
 }
@@ -30,7 +30,7 @@ export function isFocusAllowedForView(
     return true;
   }
 
-  const entity = graph?.entityById[focusEntityId];
+  const entity = graph?.nodeById[focusEntityId];
   if (!entity) {
     return false;
   }

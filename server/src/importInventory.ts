@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { GraphEdgeKind, GraphNodeKind, NodeDetails } from "../../shared/domain";
 import { getDatabase } from "./db";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +91,32 @@ type LinkRow = {
 function normalizeString(value: string | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(/[;,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function emptyNodeDetails(): NodeDetails {
+  return {
+    aliases: [],
+    operator: null,
+    role: null,
+    disciplineFamily: null,
+    geographicScope: null,
+    gallery: [],
+    data: {
+      descriptors: [],
+      recordCount: null,
+      storageSize: null,
+    },
+    access: [],
+    identifiers: [],
+    usage: [],
+  };
 }
 
 function idPart(value: string): string {
@@ -209,8 +236,8 @@ function main() {
     : defaultInventoryDir;
   const { sources, systems, links } = readInventory(inventoryDir);
   const db = getDatabase();
-  const findImportedEntityById = db.prepare(
-    "SELECT id, kind FROM entities WHERE id = ? LIMIT 1",
+  const findImportedNodeById = db.prepare(
+    "SELECT id, kind FROM nodes WHERE id = ? LIMIT 1",
   );
 
   const sourceIds = new Set(sources.map((row) => row.source_id));
@@ -219,12 +246,12 @@ function main() {
   const resolvedSystemIds = new Map<string, string>();
 
   function resolveExistingSystemId(preferredId: string): string | null {
-    const exact = findImportedEntityById.get(preferredId) as
+    const exact = findImportedNodeById.get(preferredId) as
       | { id: string; kind: string }
       | undefined;
     if (exact) {
       if (exact.kind !== "system") {
-        throw new Error(`entity ${preferredId} exists with unexpected kind ${exact.kind}`);
+        throw new Error(`node ${preferredId} exists with unexpected kind ${exact.kind}`);
       }
       return exact.id;
     }
@@ -234,14 +261,14 @@ function main() {
       return null;
     }
 
-    const aliased = findImportedEntityById.get(aliasId) as
+    const aliased = findImportedNodeById.get(aliasId) as
       | { id: string; kind: string }
       | undefined;
     if (!aliased) {
       return null;
     }
     if (aliased.kind !== "system") {
-      throw new Error(`entity alias ${aliasId} exists with unexpected kind ${aliased.kind}`);
+      throw new Error(`node alias ${aliasId} exists with unexpected kind ${aliased.kind}`);
     }
     return aliased.id;
   }
@@ -285,18 +312,27 @@ function main() {
     }
   }
 
-  const findEntityById = db.prepare(
-    "SELECT id, kind, parent_entity_id FROM entities WHERE id = ?",
+  const findNodeById = db.prepare(
+    "SELECT id, kind FROM nodes WHERE id = ?",
   );
-  const findEntityByName = db.prepare(
-    "SELECT id, kind, parent_entity_id FROM entities WHERE kind = ? AND name = ? LIMIT 1",
+  const findNodeByName = db.prepare(
+    "SELECT id, kind FROM nodes WHERE kind = ? AND name = ? LIMIT 1",
   );
-  const insertEntity = db.prepare(`
-    INSERT INTO entities (
-      id, kind, name, parent_entity_id, country_code, institution_type, properties_json
+  const insertNode = db.prepare(`
+    INSERT INTO nodes (
+      id, kind, name, country_code, subtype, url, summary, details_json, properties_json
     ) VALUES (
-      @id, @kind, @name, @parentEntityId, @countryCode, @institutionType, @propertiesJson
+      @id, @kind, @name, @countryCode, @subtype, @url, @summary, @detailsJson, @propertiesJson
     )
+  `);
+  const updateImportedSystemNode = db.prepare(`
+    UPDATE nodes
+    SET name = @name,
+        country_code = @countryCode,
+        url = @url,
+        summary = @summary,
+        details_json = @detailsJson
+    WHERE id = @id
   `);
   const insertSource = db.prepare(`
     INSERT OR IGNORE INTO sources (
@@ -305,147 +341,157 @@ function main() {
       @id, @title, @sourceType, @url, NULL, @publisher, NULL, @accessedAt, @note
     )
   `);
-  const insertRelationship = db.prepare(`
-    INSERT INTO relationships (
-      id, source_entity_id, target_entity_id, type, note, properties_json
+  const insertEdge = db.prepare(`
+    INSERT INTO edges (
+      id, source_node_id, target_node_id, kind, note, properties_json
     ) VALUES (
-      @id, @sourceEntityId, @targetEntityId, @type, @note, @propertiesJson
+      @id, @sourceNodeId, @targetNodeId, @kind, @note, @propertiesJson
     )
   `);
-  const findRelationshipById = db.prepare(
-    "SELECT id FROM relationships WHERE id = ?",
+  const findEdgeById = db.prepare(
+    "SELECT id FROM edges WHERE id = ?",
   );
-  const findRelationshipByShape = db.prepare(
+  const findEdgeByShape = db.prepare(
     `
       SELECT id
-      FROM relationships
-      WHERE source_entity_id = ?
-        AND target_entity_id = ?
-        AND type = ?
+      FROM edges
+      WHERE source_node_id = ?
+        AND target_node_id = ?
+        AND kind = ?
       LIMIT 1
     `,
   );
-  const updateEntityParentIfMissing = db.prepare(
-    "UPDATE entities SET parent_entity_id = ? WHERE id = ? AND parent_entity_id IS NULL",
-  );
-  const syncEntityParent = db.prepare(
-    "UPDATE entities SET parent_entity_id = ? WHERE id = ?",
-  );
-  const upsertSystemProfile = db.prepare(`
-    INSERT INTO system_profiles (
-      system_id, primary_url, short_description, aliases, role, discipline_family, geographic_scope
-    ) VALUES (
-      @systemId, @primaryUrl, @shortDescription, @aliases, @role, @disciplineFamily, @geographicScope
-    )
-    ON CONFLICT(system_id) DO UPDATE SET
-      primary_url = excluded.primary_url,
-      short_description = excluded.short_description,
-      aliases = excluded.aliases,
-      role = excluded.role,
-      discipline_family = excluded.discipline_family,
-      geographic_scope = excluded.geographic_scope
-  `);
 
-  function resolveEntityId(
+  function resolveNodeId(
     preferredId: string,
-    kind: "country" | "organization" | "system",
+    kind: GraphNodeKind,
     name: string,
   ): string {
-    const exact = findEntityById.get(preferredId) as
+    const exact = findNodeById.get(preferredId) as
       | { id: string; kind: string }
       | undefined;
     if (exact) {
       if (exact.kind !== kind) {
-        throw new Error(`entity ${preferredId} exists with unexpected kind ${exact.kind}`);
+        throw new Error(`node ${preferredId} exists with unexpected kind ${exact.kind}`);
       }
       return exact.id;
     }
 
     const aliasId = entityAliases.get(preferredId);
     if (aliasId) {
-      const aliased = findEntityById.get(aliasId) as
+      const aliased = findNodeById.get(aliasId) as
         | { id: string; kind: string }
         | undefined;
       if (aliased) {
         if (aliased.kind !== kind) {
-          throw new Error(`entity alias ${aliasId} exists with unexpected kind ${aliased.kind}`);
+          throw new Error(`node alias ${aliasId} exists with unexpected kind ${aliased.kind}`);
         }
         return aliased.id;
       }
     }
 
-    const byName = findEntityByName.get(kind, name) as
+    const byName = findNodeByName.get(kind, name) as
       | { id: string; kind: string }
       | undefined;
     return byName?.id ?? preferredId;
   }
 
-  function ensureEntity(params: {
+  function ensureNode(params: {
     preferredId: string;
-    kind: "country" | "organization" | "system";
+    kind: GraphNodeKind;
     name: string;
-    parentEntityId: string | null;
     countryCode: string | null;
-    institutionType: string | null;
+    subtype: string | null;
+    url: string | null;
+    summary: string | null;
+    details: NodeDetails;
     properties: Record<string, unknown>;
   }): string {
-    const actualId = resolveEntityId(params.preferredId, params.kind, params.name);
-    const existing = findEntityById.get(actualId) as
-      | { id: string; kind: string; parent_entity_id: string | null }
+    const actualId = resolveNodeId(params.preferredId, params.kind, params.name);
+    const existing = findNodeById.get(actualId) as
+      | { id: string; kind: string }
       | undefined;
 
     if (!existing) {
-      insertEntity.run({
+      insertNode.run({
         id: actualId,
         kind: params.kind,
         name: params.name,
-        parentEntityId: params.parentEntityId,
         countryCode: params.countryCode,
-        institutionType: params.institutionType,
+        subtype: params.subtype,
+        url: params.url,
+        summary: params.summary,
+        detailsJson: JSON.stringify(params.details),
         propertiesJson: JSON.stringify(params.properties),
       });
       return actualId;
     }
 
-    if (params.kind === "organization" && params.parentEntityId && !existing.parent_entity_id) {
-      updateEntityParentIfMissing.run(params.parentEntityId, actualId);
+    if (existing.kind !== params.kind) {
+      throw new Error(`node ${actualId} exists with unexpected kind ${existing.kind}`);
+    }
+
+    if (params.kind === "system") {
+      updateImportedSystemNode.run({
+        id: actualId,
+        name: params.name,
+        countryCode: params.countryCode,
+        url: params.url,
+        summary: params.summary,
+        detailsJson: JSON.stringify(params.details),
+      });
     }
 
     return actualId;
   }
 
-  function ensureRelationship(params: {
+  function ensureEdge(params: {
     preferredId: string;
-    sourceEntityId: string;
-    targetEntityId: string;
-    type: "governs" | "operates" | "part_of" | "syncs_to";
+    sourceNodeId: string;
+    targetNodeId: string;
+    kind: GraphEdgeKind;
     note: string | null;
     properties: Record<string, unknown>;
   }): string {
-    const exact = findRelationshipById.get(params.preferredId) as { id: string } | undefined;
+    const exact = findEdgeById.get(params.preferredId) as { id: string } | undefined;
     if (exact) {
       return exact.id;
     }
 
-    const byShape = findRelationshipByShape.get(
-      params.sourceEntityId,
-      params.targetEntityId,
-      params.type,
+    const byShape = findEdgeByShape.get(
+      params.sourceNodeId,
+      params.targetNodeId,
+      params.kind,
     ) as { id: string } | undefined;
     if (byShape) {
       return byShape.id;
     }
 
-    insertRelationship.run({
+    insertEdge.run({
       id: params.preferredId,
-      sourceEntityId: params.sourceEntityId,
-      targetEntityId: params.targetEntityId,
-      type: params.type,
+      sourceNodeId: params.sourceNodeId,
+      targetNodeId: params.targetNodeId,
+      kind: params.kind,
       note: params.note,
       propertiesJson: JSON.stringify(params.properties),
     });
 
     return params.preferredId;
+  }
+
+  function systemDetails(system: SystemRow, operatorId: string, countryCode: string): NodeDetails {
+    return {
+      ...emptyNodeDetails(),
+      aliases: splitList(system.aliases),
+      operator: {
+        id: operatorId,
+        name: system.operator_name,
+        countryCode,
+      },
+      role: normalizeString(system.role_class),
+      disciplineFamily: normalizeString(system.discipline_family),
+      geographicScope: normalizeString(system.geographic_scope),
+    };
   }
 
   db.transaction(() => {
@@ -464,59 +510,56 @@ function main() {
     for (const system of systems) {
       const country = resolveCountry(system.operator_country);
       const orgSlug = idPart(system.operator_name);
-      const countryId = ensureEntity({
+      const countryId = ensureNode({
         preferredId: country.id,
         kind: "country",
         name: country.name,
-        parentEntityId: null,
         countryCode: country.code,
-        institutionType: null,
+        subtype: null,
+        url: null,
+        summary: null,
+        details: emptyNodeDetails(),
         properties: {
           pseudoCountry: Boolean(country.pseudoCountry),
         },
       });
-      const orgId = ensureEntity({
+      const orgId = ensureNode({
         preferredId: `org-${orgSlug}`,
         kind: "organization",
         name: system.operator_name,
-        parentEntityId: null,
         countryCode: country.code,
-        institutionType: "system_operator",
+        subtype: "system_operator",
+        url: null,
+        summary: null,
+        details: emptyNodeDetails(),
         properties: {},
       });
-      const systemId = ensureEntity({
+      const systemId = ensureNode({
         preferredId: system.system_id,
         kind: "system",
         name: system.system_name,
-        parentEntityId: null,
         countryCode: country.code,
-        institutionType: null,
+        subtype: null,
+        url: normalizeString(system.canonical_url),
+        summary: normalizeString(system.notes),
+        details: systemDetails(system, orgId, country.code),
         properties: {},
-      });
-      upsertSystemProfile.run({
-        systemId,
-        primaryUrl: normalizeString(system.canonical_url),
-        shortDescription: normalizeString(system.notes),
-        aliases: normalizeString(system.aliases),
-        role: normalizeString(system.role_class),
-        disciplineFamily: normalizeString(system.discipline_family),
-        geographicScope: normalizeString(system.geographic_scope),
       });
       resolvedSystemIds.set(system.system_id, systemId);
 
-      ensureRelationship({
+      ensureEdge({
         preferredId: `rel-${country.code.toLowerCase()}-governs-${orgSlug}`,
-        sourceEntityId: countryId,
-        targetEntityId: orgId,
-        type: "governs",
+        sourceNodeId: countryId,
+        targetNodeId: orgId,
+        kind: "governs",
         note: null,
         properties: {},
       });
-      ensureRelationship({
+      ensureEdge({
         preferredId: `rel-${orgSlug}-operates-${idPart(system.system_name)}`,
-        sourceEntityId: orgId,
-        targetEntityId: systemId,
-        type: "operates",
+        sourceNodeId: orgId,
+        targetNodeId: systemId,
+        kind: "operates",
         note: null,
         properties: {},
       });
@@ -525,39 +568,38 @@ function main() {
     for (const system of systems) {
       const systemId = resolvedSystemIds.get(system.system_id) ?? system.system_id;
       const parentSystemId = normalizeString(system.parent_system_id);
-      const parentEntityId = parentSystemId
+      const parentNodeId = parentSystemId
         ? (resolvedSystemIds.get(parentSystemId) ?? resolveExistingSystemId(parentSystemId))
         : null;
 
-      if (parentEntityId === systemId) {
+      if (parentNodeId === systemId) {
         throw new Error(`system ${system.system_id} cannot parent itself`);
       }
 
-      syncEntityParent.run(null, systemId);
-      if (parentEntityId) {
-        ensureRelationship({
-          preferredId: `rel-${systemId}-part-of-${parentEntityId}`,
-        sourceEntityId: systemId,
-        targetEntityId: parentEntityId,
-        type: "part_of",
-        note: null,
-        properties: {},
-      });
+      if (parentNodeId) {
+        ensureEdge({
+          preferredId: `rel-${systemId}-part-of-${parentNodeId}`,
+          sourceNodeId: systemId,
+          targetNodeId: parentNodeId,
+          kind: "part_of",
+          note: null,
+          properties: {},
+        });
       }
     }
 
     for (const link of links) {
-      ensureRelationship({
+      ensureEdge({
         preferredId: link.link_id,
-        sourceEntityId:
+        sourceNodeId:
           resolvedSystemIds.get(link.source_system_id) ??
           resolveExistingSystemId(link.source_system_id) ??
           link.source_system_id,
-        targetEntityId:
+        targetNodeId:
           resolvedSystemIds.get(link.target_system_id) ??
           resolveExistingSystemId(link.target_system_id) ??
           link.target_system_id,
-        type: "syncs_to",
+        kind: "syncs_to",
         note: normalizeString(link.direction_note),
         properties: {
           originalRelationType: normalizeString(link.relation_type),

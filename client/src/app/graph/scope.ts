@@ -1,7 +1,7 @@
 /**
- * Scope selection decides which entity ids belong in each high-level view.
+ * Scope selection decides which node ids belong in each high-level view.
  */
-import { collectAncestors, collectDescendants, type IndexedGraph } from "./indexGraph";
+import type { IndexedGraph } from "./indexGraph";
 
 export function expandNeighborhood(
   graph: IndexedGraph,
@@ -13,21 +13,21 @@ export function expandNeighborhood(
 
   for (let step = 0; step < depth; step += 1) {
     const next = new Set<string>();
-    for (const entityId of frontier) {
-      const relationshipIds = [
-        ...(graph.outgoingByEntityId[entityId] ?? []),
-        ...(graph.incomingByEntityId[entityId] ?? []),
+    for (const nodeId of frontier) {
+      const edgeIds = [
+        ...(graph.outgoingByNodeId[nodeId] ?? []),
+        ...(graph.incomingByNodeId[nodeId] ?? []),
       ];
 
-      for (const relationshipId of relationshipIds) {
-        const relationship = graph.relationshipById[relationshipId];
-        if (!ids.has(relationship.sourceEntityId)) {
-          ids.add(relationship.sourceEntityId);
-          next.add(relationship.sourceEntityId);
+      for (const edgeId of edgeIds) {
+        const edge = graph.edgeById[edgeId];
+        if (!ids.has(edge.sourceNodeId)) {
+          ids.add(edge.sourceNodeId);
+          next.add(edge.sourceNodeId);
         }
-        if (!ids.has(relationship.targetEntityId)) {
-          ids.add(relationship.targetEntityId);
-          next.add(relationship.targetEntityId);
+        if (!ids.has(edge.targetNodeId)) {
+          ids.add(edge.targetNodeId);
+          next.add(edge.targetNodeId);
         }
       }
     }
@@ -39,37 +39,24 @@ export function expandNeighborhood(
 }
 
 export function getGovernanceIds(graph: IndexedGraph): Set<string> {
-  return new Set(graph.entities.map((entity) => entity.id));
+  return new Set(graph.nodes.map((node) => node.id));
 }
 
-export function getCountryIds(graph: IndexedGraph, focusEntityId: string): Set<string> {
-  const seedIds = collectDescendants(graph, focusEntityId);
-  for (const ancestorId of collectAncestors(graph, focusEntityId)) {
-    seedIds.add(ancestorId);
-  }
+export function getCountryIds(graph: IndexedGraph, focusNodeId: string): Set<string> {
+  const focusNode = graph.nodeById[focusNodeId];
+  const seedIds = new Set<string>(
+    graph.nodes
+      .filter(
+        (node) =>
+          node.id === focusNodeId ||
+          (focusNode?.countryCode && node.countryCode === focusNode.countryCode),
+      )
+      .map((node) => node.id),
+  );
 
   return expandNeighborhood(graph, seedIds, 3);
 }
 
-export function getTechnicalIds(graph: IndexedGraph, focusEntityId: string): Set<string> {
-  const seedIds = new Set<string>([focusEntityId]);
-  for (const ancestorId of collectAncestors(graph, focusEntityId)) {
-    seedIds.add(ancestorId);
-  }
-
-  return expandNeighborhood(graph, seedIds, 3);
-}
-
-export function includeAncestorChains(
-  graph: IndexedGraph,
-  seedIds: Set<string>,
-): Set<string> {
-  const ids = new Set(seedIds);
-  for (const entityId of seedIds) {
-    for (const ancestorId of collectAncestors(graph, entityId)) {
-      ids.add(ancestorId);
-    }
-  }
-
-  return ids;
+export function getTechnicalIds(graph: IndexedGraph, focusNodeId: string): Set<string> {
+  return expandNeighborhood(graph, new Set<string>([focusNodeId]), 3);
 }

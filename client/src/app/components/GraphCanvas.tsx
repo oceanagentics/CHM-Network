@@ -99,7 +99,7 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
       displayMode,
       layoutMode,
       countryDisplayMode,
-      nodes: projection?.nodes.map((node) => `${node.id}:${node.parentId ?? ""}`) ?? [],
+      nodes: projection?.nodes.map((node) => node.id) ?? [],
       edges:
         projection?.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`) ?? [],
     });

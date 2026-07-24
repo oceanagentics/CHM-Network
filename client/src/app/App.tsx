@@ -134,7 +134,7 @@ export function App() {
   const showEntityDetails =
     graph != null &&
     selectedEntityId != null &&
-    graph.entityById[selectedEntityId] != null;
+    graph.nodeById[selectedEntityId] != null;
   const openPaneCount = paneOrder.filter((paneId) => isPaneOpen(paneId)).length;
 
   function isPaneOpen(paneId: PaneId): boolean {

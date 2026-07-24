@@ -4,7 +4,7 @@
  */
 import type cytoscape from "cytoscape";
 
-import type { Entity, ViewMode } from "../../../../shared/domain";
+import type { GraphNode, ViewMode } from "../../../../shared/domain";
 import type { GraphLayout } from "../state/graphStore";
 import type { GraphDisplayMode } from "./cytoscapeStyles";
 import type { GovernanceBlock, GraphProjection, GraphProjectionEdgeType } from "./projection";
@@ -13,7 +13,7 @@ type GraphNodeData = {
   id: string;
   label: string;
   simpleLabel: string;
-  kind: Entity["kind"];
+  kind: GraphNode["kind"];
   subtype?: string | null;
   countryCode?: string | null;
   governanceBlock?: GovernanceBlock;
@@ -21,7 +21,6 @@ type GraphNodeData = {
   width: number;
   height: number;
   textMaxWidth: number;
-  parent?: string;
 };
 
 type GraphEdgeData = {
@@ -139,7 +138,6 @@ function getCytoscapeLayout(
       elk: {
         algorithm: "layered",
         "elk.direction": policy.directionByView[viewMode] === "LR" ? "RIGHT" : "DOWN",
-        "elk.hierarchyHandling": "INCLUDE_CHILDREN",
       },
     } as cytoscape.LayoutOptions;
   }
@@ -152,7 +150,6 @@ function getCytoscapeLayout(
       animate: false,
       elk: {
         algorithm: "mrtree",
-        "elk.hierarchyHandling": "INCLUDE_CHILDREN",
       },
     } as cytoscape.LayoutOptions;
   }
@@ -165,7 +162,6 @@ function getCytoscapeLayout(
       animate: false,
       elk: {
         algorithm: "stress",
-        "elk.hierarchyHandling": "INCLUDE_CHILDREN",
       },
     } as cytoscape.LayoutOptions;
   }
@@ -177,7 +173,6 @@ function getCytoscapeLayout(
     animate: false,
     elk: {
       algorithm: "force",
-      "elk.hierarchyHandling": "INCLUDE_CHILDREN",
     },
   } as cytoscape.LayoutOptions;
 }
@@ -189,10 +184,6 @@ export function projectCytoscapeGraph(
   displayMode: GraphDisplayMode = "diagram",
   policy: DisplayPolicy = displayPolicy,
 ): CytoscapeProjectionOutput {
-  const suppressDerivedHierarchyEdges = layoutMode.startsWith("elk-");
-  const visibleEdges = projection.edges.filter(
-    (edge) => !suppressDerivedHierarchyEdges || !edge.isDerivedHierarchy,
-  );
   const nodeElements: cytoscape.ElementDefinition[] = projection.nodes.map((node) => ({
     data: {
       id: node.id,
@@ -206,11 +197,10 @@ export function projectCytoscapeGraph(
       width: node.width,
       height: node.height,
       textMaxWidth: node.textMaxWidth,
-      parent: displayMode === "node-map" ? undefined : node.parentId,
     } satisfies GraphNodeData,
   }));
 
-  const edgeElements: cytoscape.ElementDefinition[] = visibleEdges.map((edge) => ({
+  const edgeElements: cytoscape.ElementDefinition[] = projection.edges.map((edge) => ({
     data: {
       id: edge.id,
       source: edge.source,

@@ -22,23 +22,23 @@ import {
 } from "antd";
 
 import type {
-  Entity,
-  EntityInput,
-  EntityKind,
-  Relationship,
-  RelationshipInput,
+  GraphEdge,
+  GraphEdgeInput,
+  GraphNode,
+  GraphNodeInput,
+  GraphNodeKind,
   SourceInput,
 } from "../../../../shared/domain";
 import {
-  createEntity,
-  createRelationship,
+  createEdge,
+  createNode,
   createSource,
-  deleteEntity,
-  deleteRelationship,
+  deleteEdge,
+  deleteNode,
   deleteSource,
   fetchBootstrap,
-  updateEntity,
-  updateRelationship,
+  updateEdge,
+  updateNode,
   updateSource,
 } from "../api";
 import { useGraphStore } from "../state/graphStore";
@@ -56,18 +56,17 @@ type PropertyDraft = {
 };
 
 type EntityDraft = {
-  kind: EntityKind;
+  kind: GraphNodeKind;
   name: string;
-  parentEntityId: string;
   countryCode: string;
   subtype: string;
   properties: PropertyDraft[];
 };
 
 type RelationshipDraft = {
-  sourceEntityId: string;
-  targetEntityId: string;
-  type: Relationship["type"];
+  sourceNodeId: string;
+  targetNodeId: string;
+  kind: GraphEdge["kind"];
   note: string;
   properties: PropertyDraft[];
 };
@@ -95,16 +94,15 @@ const relationshipTypeOptions = [
 const blankEntityDraft = (): EntityDraft => ({
   kind: "organization",
   name: "",
-  parentEntityId: "",
   countryCode: "",
   subtype: "",
   properties: [],
 });
 
 const blankRelationshipDraft = (): RelationshipDraft => ({
-  sourceEntityId: "",
-  targetEntityId: "",
-  type: "publishes_to",
+  sourceNodeId: "",
+  targetNodeId: "",
+  kind: "publishes_to",
   note: "",
   properties: [],
 });
@@ -158,22 +156,21 @@ function toPropertiesObject(drafts: PropertyDraft[], label: string): Record<stri
   return properties;
 }
 
-function entityToDraft(entity: Entity): EntityDraft {
+function entityToDraft(entity: GraphNode): EntityDraft {
   return {
     kind: entity.kind,
     name: entity.name,
-    parentEntityId: entity.parentEntityId ?? "",
     countryCode: entity.countryCode ?? "",
     subtype: entity.subtype ?? "",
     properties: toPropertyDrafts(entity.properties ?? {}),
   };
 }
 
-function relationshipToDraft(relationship: Relationship): RelationshipDraft {
+function relationshipToDraft(relationship: GraphEdge): RelationshipDraft {
   return {
-    sourceEntityId: relationship.sourceEntityId,
-    targetEntityId: relationship.targetEntityId,
-    type: relationship.type,
+    sourceNodeId: relationship.sourceNodeId,
+    targetNodeId: relationship.targetNodeId,
+    kind: relationship.kind,
     note: relationship.note ?? "",
     properties: toPropertyDrafts(relationship.properties ?? {}),
   };
@@ -235,21 +232,19 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   const entityOptions = useMemo(
     () =>
       graph
-        ? [...graph.entities]
+        ? [...graph.nodes]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((entity) => ({ label: entity.name, value: entity.id, kind: entity.kind }))
         : [],
     [graph],
   );
 
-  const entityKind = Form.useWatch("kind", entityForm);
-
   useEffect(() => {
     if (!graph || !selectedEntityId) {
       return;
     }
 
-    const entity = graph.entityById[selectedEntityId];
+    const entity = graph.nodeById[selectedEntityId];
     if (!entity) {
       return;
     }
@@ -265,7 +260,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
       return;
     }
 
-    const relationship = graph.relationshipById[selectedRelationshipId];
+    const relationship = graph.edgeById[selectedRelationshipId];
     if (!relationship) {
       return;
     }
@@ -295,9 +290,9 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     return null;
   }
 
-  const selectedEntity = selectedEntityId ? graph.entityById[selectedEntityId] : null;
+  const selectedEntity = selectedEntityId ? graph.nodeById[selectedEntityId] : null;
   const selectedRelationship = selectedRelationshipId
-    ? graph.relationshipById[selectedRelationshipId]
+    ? graph.edgeById[selectedRelationshipId]
     : null;
   const selectedSource = sourceEditorId ? graph.sourceById[sourceEditorId] : null;
 
@@ -382,41 +377,40 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     try {
       if (mode === "entity") {
         const values = await entityForm.validateFields();
-        const payload: EntityInput = {
+        const payload: GraphNodeInput = {
           kind: values.kind,
           name: values.name.trim(),
-          parentEntityId: values.kind === "organization" ? values.parentEntityId || null : null,
           countryCode: values.countryCode.trim().toUpperCase() || null,
           subtype: values.subtype.trim() || null,
           properties: toPropertiesObject(values.properties ?? [], "entity"),
         };
 
         const entity = selectedEntityId
-          ? await updateEntity(selectedEntityId, payload)
-          : await createEntity(payload);
+          ? await updateNode(selectedEntityId, payload)
+          : await createNode(payload);
         await refreshGraph();
         setSelectedEntityId(entity.id);
         setMode("entity");
         setIsEditing(false);
-        setMessage({ kind: "success", text: "Entity saved." });
+        setMessage({ kind: "success", text: "Node saved." });
       } else if (mode === "relationship") {
         const values = await relationshipForm.validateFields();
-        const payload: RelationshipInput = {
-          sourceEntityId: values.sourceEntityId,
-          targetEntityId: values.targetEntityId,
-          type: values.type,
+        const payload: GraphEdgeInput = {
+          sourceNodeId: values.sourceNodeId,
+          targetNodeId: values.targetNodeId,
+          kind: values.kind,
           note: values.note.trim() || null,
           properties: toPropertiesObject(values.properties ?? [], "relationship"),
         };
 
         const relationship = selectedRelationshipId
-          ? await updateRelationship(selectedRelationshipId, payload)
-          : await createRelationship(payload);
+          ? await updateEdge(selectedRelationshipId, payload)
+          : await createEdge(payload);
         await refreshGraph();
         setSelectedRelationshipId(relationship.id);
         setMode("relationship");
         setIsEditing(false);
-        setMessage({ kind: "success", text: "Relationship saved." });
+        setMessage({ kind: "success", text: "Edge saved." });
       } else {
         const values = await sourceForm.validateFields();
         const payload: SourceInput = {
@@ -455,17 +449,17 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
 
     try {
       if (mode === "entity" && selectedEntityId) {
-        await deleteEntity(selectedEntityId);
+        await deleteNode(selectedEntityId);
         await refreshGraph();
         setSelectedEntityId(null);
         entityForm.setFieldsValue(blankEntityDraft());
-        setMessage({ kind: "success", text: "Entity deleted." });
+        setMessage({ kind: "success", text: "Node deleted." });
       } else if (mode === "relationship" && selectedRelationshipId) {
-        await deleteRelationship(selectedRelationshipId);
+        await deleteEdge(selectedRelationshipId);
         await refreshGraph();
         setSelectedRelationshipId(null);
         relationshipForm.setFieldsValue(blankRelationshipDraft());
-        setMessage({ kind: "success", text: "Relationship deleted." });
+        setMessage({ kind: "success", text: "Edge deleted." });
       } else if (mode === "source" && sourceEditorId) {
         await deleteSource(sourceEditorId);
         await refreshGraph();
@@ -487,7 +481,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   const contextMessage = viewingEntity
     ? `${isEditing ? "Editing" : "Viewing"} node: ${viewingEntity.name}`
     : viewingRelationship
-      ? `${isEditing ? "Editing" : "Viewing"} edge: ${viewingRelationship.type}`
+      ? `${isEditing ? "Editing" : "Viewing"} edge: ${viewingRelationship.kind}`
       : viewingSource
         ? `${isEditing ? "Editing" : "Viewing"} source: ${viewingSource.title}`
         : isEditing
@@ -523,7 +517,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
           {!readOnly ? (
             <>
               <Button size="small" icon={<PlusOutlined />} onClick={startNewEntity}>
-                New entity
+                New node
               </Button>
               <Button size="small" onClick={startNewRelationship}>
                 New edge
@@ -561,15 +555,6 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
               size="small"
               items={[
                 { key: "kind", label: "Kind", children: viewingEntity.kind },
-                viewingEntity.parentEntityId
-                  ? {
-                      key: "parent",
-                      label: "Parent",
-                      children:
-                        graph.entityById[viewingEntity.parentEntityId]?.name ??
-                        viewingEntity.parentEntityId,
-                    }
-                  : null,
                 viewingEntity.countryCode
                   ? { key: "country", label: "Country", children: viewingEntity.countryCode }
                   : null,
@@ -595,17 +580,17 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                   key: "source",
                   label: "Source",
                   children:
-                    graph.entityById[viewingRelationship.sourceEntityId]?.name ??
-                    viewingRelationship.sourceEntityId,
+                    graph.nodeById[viewingRelationship.sourceNodeId]?.name ??
+                    viewingRelationship.sourceNodeId,
                 },
                 {
                   key: "target",
                   label: "Target",
                   children:
-                    graph.entityById[viewingRelationship.targetEntityId]?.name ??
-                    viewingRelationship.targetEntityId,
+                    graph.nodeById[viewingRelationship.targetNodeId]?.name ??
+                    viewingRelationship.targetNodeId,
                 },
-                { key: "type", label: "Type", children: viewingRelationship.type },
+                { key: "type", label: "Type", children: viewingRelationship.kind },
               ]}
             />
             {viewingRelationship.note ? (
@@ -658,14 +643,6 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
             >
               <Input />
             </Form.Item>
-            {entityKind === "organization" ? (
-              <Form.Item label="Parent" name="parentEntityId">
-                <Select
-                  allowClear
-                  options={entityOptions.filter((entity) => entity.kind === "organization")}
-                />
-              </Form.Item>
-            ) : null}
             <Form.Item label="Country code" name="countryCode">
               <Input />
             </Form.Item>
@@ -679,20 +656,20 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
         {!readOnly && isEditing && mode === "relationship" ? (
           <Form form={relationshipForm} layout="vertical">
             <Form.Item
-              label="Source entity"
-              name="sourceEntityId"
-              rules={[{ required: true, message: "Select a source entity." }]}
+              label="Source node"
+              name="sourceNodeId"
+              rules={[{ required: true, message: "Select a source node." }]}
             >
               <Select allowClear options={entityOptions} />
             </Form.Item>
             <Form.Item
-              label="Target entity"
-              name="targetEntityId"
-              rules={[{ required: true, message: "Select a target entity." }]}
+              label="Target node"
+              name="targetNodeId"
+              rules={[{ required: true, message: "Select a target node." }]}
             >
               <Select allowClear options={entityOptions} />
             </Form.Item>
-            <Form.Item label="Type" name="type" rules={[{ required: true }]}>
+            <Form.Item label="Type" name="kind" rules={[{ required: true }]}>
               <Select
                 options={relationshipTypeOptions.map((type) => ({
                   label: type,

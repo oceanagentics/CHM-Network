@@ -8,18 +8,10 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 const dbPath = path.join(repoRoot, "data", "chm-network.sqlite");
 const requiredTables = [
-  "entities",
-  "relationships",
+  "nodes",
+  "edges",
   "sources",
-  "tags",
-  "entity_tags",
-  "relationship_tags",
-  "system_profiles",
-  "system_data_descriptors",
-  "system_access_paths",
-  "system_gallery_items",
-  "system_metrics",
-  "system_identifier_schemes",
+  "ryu_routes",
   "saved_views",
 ] as const;
 

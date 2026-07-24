@@ -1,10 +1,10 @@
-import type { Entity } from "../../../../shared/domain";
+import type { GraphNode } from "../../../../shared/domain";
 import type { GraphProjection, GraphProjectionEdge } from "./projection";
 
 export interface GlobeNode {
   id: string;
   label: string;
-  kind: Entity["kind"];
+  kind: GraphNode["kind"];
   countryCode: string | null;
   lat: number;
   lng: number;
@@ -47,11 +47,10 @@ const colorByKind = {
   country: "#f2c94c",
   organization: "#6aa6ff",
   system: "#65c4a4",
-} satisfies Record<Entity["kind"], string>;
+} satisfies Record<GraphNode["kind"], string>;
 
 const colorByLinkType = {
   governs: "#c39b3a",
-  hierarchy: "#8b99aa",
   operates: "#3b66b0",
   part_of: "#8b99aa",
   publishes_to: "#22a37a",
@@ -62,7 +61,7 @@ const altitudeByKind = {
   country: 0.02,
   organization: 0.13,
   system: 0.24,
-} satisfies Record<Entity["kind"], number>;
+} satisfies Record<GraphNode["kind"], number>;
 
 function getFallbackAnchor(index: number, total: number): Anchor {
   const goldenAngle = 137.508;

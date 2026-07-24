@@ -59,11 +59,15 @@ function MatchReasons({ reasons }: { reasons: SearchMatchReason[] }) {
     return null;
   }
 
+  function formatReasonValue(value: string): string {
+    return value.length > 92 ? `${value.slice(0, 89)}...` : value;
+  }
+
   return (
     <Typography.Text type="secondary">
       {reasons
         .slice(0, 2)
-        .map((reason) => `${reason.label}: ${reason.value}`)
+        .map((reason) => `${reason.label}: ${formatReasonValue(reason.value)}`)
         .join(" · ")}
     </Typography.Text>
   );
@@ -128,7 +132,7 @@ export function SystemDirectoryView({
         <Flex vertical gap={2}>
           <Typography.Text strong>{record.entity.name}</Typography.Text>
           <Typography.Text type="secondary">
-            {record.system.shortDescription}
+            {record.system.summary}
           </Typography.Text>
           <MatchReasons reasons={record.matchReasons} />
         </Flex>
@@ -151,14 +155,17 @@ export function SystemDirectoryView({
       title: "Data",
       key: "data",
       render: (_: unknown, record: SystemSearchRecord) => (
-        <CompactTags values={[...record.dataTypes, ...record.dataFormats]} limit={4} />
+        <CompactTags
+          values={[...record.dataTypes, ...record.dataFormats, ...record.dataStandards]}
+          limit={4}
+        />
       ),
     },
     {
       title: "Access",
       key: "access",
       render: (_: unknown, record: SystemSearchRecord) => (
-        <CompactTags values={record.accessMethods} limit={4} />
+        <CompactTags values={record.accessLabels} limit={4} />
       ),
     },
   ];
@@ -193,7 +200,7 @@ export function SystemDirectoryView({
           <Input
             allowClear
             className="systems-search"
-            placeholder="Search nodes, systems, data, access methods, sources"
+            placeholder="Search nodes, data types, access, identifiers, sources"
             prefix={<SearchOutlined />}
             value={query}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -259,10 +266,28 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
+                placeholder="Access types"
+                value={filters.accessTypes}
+                options={filterOptions.accessTypes}
+                onChange={(value) => patchFilters({ accessTypes: value })}
+              />
+              <Select
+                allowClear
+                mode="multiple"
+                maxTagCount="responsive"
                 placeholder="Access methods"
                 value={filters.accessMethods}
                 options={filterOptions.accessMethods}
                 onChange={(value) => patchFilters({ accessMethods: value })}
+              />
+              <Select
+                allowClear
+                mode="multiple"
+                maxTagCount="responsive"
+                placeholder="Identifiers"
+                value={filters.identifierSchemes}
+                options={filterOptions.identifierSchemes}
+                onChange={(value) => patchFilters({ identifierSchemes: value })}
               />
             </div>
           </div>
@@ -292,9 +317,9 @@ export function SystemDirectoryView({
                       </Typography.Text>
                     </Flex>
                   </Flex>
-                  {record.system.shortDescription ? (
+                  {record.system.summary ? (
                     <Typography.Paragraph className="systems-card-description">
-                      {record.system.shortDescription}
+                      {record.system.summary}
                     </Typography.Paragraph>
                   ) : null}
                   <MatchReasons reasons={record.matchReasons} />
@@ -310,7 +335,7 @@ export function SystemDirectoryView({
                   </div>
                   <Flex vertical gap={8}>
                     <CompactTags values={record.dataTypes} />
-                    <CompactTags values={record.accessMethods} />
+                    <CompactTags values={record.accessLabels} />
                   </Flex>
                   <Flex align="center" justify="space-between" gap={8}>
                     <Typography.Text type="secondary">

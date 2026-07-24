@@ -1,9 +1,9 @@
 import type {
-  Entity,
-  EntityInput,
+  GraphEdge,
+  GraphEdgeInput,
   GraphBootstrapPayload,
-  Relationship,
-  RelationshipInput,
+  GraphNode,
+  GraphNodeInput,
   SavedView,
   SavedViewInput,
   Source,
@@ -65,45 +65,45 @@ export function deleteSavedView(id: string): Promise<void> {
   });
 }
 
-export function createEntity(input: EntityInput): Promise<Entity> {
-  return request<Entity>("/api/entities", {
+export function createNode(input: GraphNodeInput): Promise<GraphNode> {
+  return request<GraphNode>("/api/nodes", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
-export function updateEntity(id: string, input: EntityInput): Promise<Entity> {
-  return request<Entity>(`/api/entities/${id}`, {
+export function updateNode(id: string, input: GraphNodeInput): Promise<GraphNode> {
+  return request<GraphNode>(`/api/nodes/${id}`, {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
-export function deleteEntity(id: string): Promise<void> {
-  return request<void>(`/api/entities/${id}`, {
+export function deleteNode(id: string): Promise<void> {
+  return request<void>(`/api/nodes/${id}`, {
     method: "DELETE",
   });
 }
 
-export function createRelationship(input: RelationshipInput): Promise<Relationship> {
-  return request<Relationship>("/api/relationships", {
+export function createEdge(input: GraphEdgeInput): Promise<GraphEdge> {
+  return request<GraphEdge>("/api/edges", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
-export function updateRelationship(
+export function updateEdge(
   id: string,
-  input: RelationshipInput,
-): Promise<Relationship> {
-  return request<Relationship>(`/api/relationships/${id}`, {
+  input: GraphEdgeInput,
+): Promise<GraphEdge> {
+  return request<GraphEdge>(`/api/edges/${id}`, {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
-export function deleteRelationship(id: string): Promise<void> {
-  return request<void>(`/api/relationships/${id}`, {
+export function deleteEdge(id: string): Promise<void> {
+  return request<void>(`/api/edges/${id}`, {
     method: "DELETE",
   });
 }

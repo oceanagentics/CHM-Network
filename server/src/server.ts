@@ -2,8 +2,8 @@ import cors from "cors";
 import express from "express";
 
 import type {
-  EntityInput,
-  RelationshipInput,
+  GraphEdgeInput,
+  GraphNodeInput,
   SavedViewInput,
   SourceInput,
 } from "../../shared/domain";
@@ -40,49 +40,49 @@ app.get("/api/saved-views", (_request, response) => {
   response.json(repository.listSavedViews());
 });
 
-app.post("/api/entities", (request, response) => {
+app.post("/api/nodes", (request, response) => {
   try {
-    response.status(201).json(repository.createEntity(request.body as EntityInput));
+    response.status(201).json(repository.createNode(request.body as GraphNodeInput));
   } catch (error) {
     sendError(response, error);
   }
 });
 
-app.put("/api/entities/:id", (request, response) => {
+app.put("/api/nodes/:id", (request, response) => {
   try {
     response.json(
-      repository.updateEntity(request.params.id, request.body as EntityInput),
+      repository.updateNode(request.params.id, request.body as GraphNodeInput),
     );
   } catch (error) {
     sendError(response, error);
   }
 });
 
-app.delete("/api/entities/:id", (request, response) => {
+app.delete("/api/nodes/:id", (request, response) => {
   try {
-    repository.deleteEntity(request.params.id);
+    repository.deleteNode(request.params.id);
     response.status(204).send();
   } catch (error) {
     sendError(response, error);
   }
 });
 
-app.post("/api/relationships", (request, response) => {
+app.post("/api/edges", (request, response) => {
   try {
     response
       .status(201)
-      .json(repository.createRelationship(request.body as RelationshipInput));
+      .json(repository.createEdge(request.body as GraphEdgeInput));
   } catch (error) {
     sendError(response, error);
   }
 });
 
-app.put("/api/relationships/:id", (request, response) => {
+app.put("/api/edges/:id", (request, response) => {
   try {
     response.json(
-      repository.updateRelationship(
+      repository.updateEdge(
         request.params.id,
-        request.body as RelationshipInput,
+        request.body as GraphEdgeInput,
       ),
     );
   } catch (error) {
@@ -90,9 +90,9 @@ app.put("/api/relationships/:id", (request, response) => {
   }
 });
 
-app.delete("/api/relationships/:id", (request, response) => {
+app.delete("/api/edges/:id", (request, response) => {
   try {
-    repository.deleteRelationship(request.params.id);
+    repository.deleteEdge(request.params.id);
     response.status(204).send();
   } catch (error) {
     sendError(response, error);

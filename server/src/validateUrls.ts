@@ -62,64 +62,84 @@ function sourceUrlRecords(): UrlRecord[] {
   }));
 }
 
-function accessUrlRecords(): UrlRecord[] {
-  const db = getDatabase();
-  const rows = db
-    .prepare(
-      `
-        SELECT id, url, description
-        FROM system_access_paths
-        WHERE url IS NOT NULL AND trim(url) <> ''
-        ORDER BY system_id, id
-      `,
-    )
-    .all() as Array<{ id: string; url: string; description: string | null }>;
-
-  return rows.map((row) => ({
-    tableName: "system_access_paths",
-    recordId: row.id,
-    fieldName: "url",
-    url: row.url,
-    description: row.description,
-  }));
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function galleryUrlRecords(): UrlRecord[] {
+function stringField(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function nodeUrlRecords(): UrlRecord[] {
   const db = getDatabase();
   const rows = db
     .prepare(
       `
-        SELECT id, url, thumbnail_url
-        FROM system_gallery_items
-        WHERE (url IS NOT NULL AND trim(url) <> '')
-           OR (thumbnail_url IS NOT NULL AND trim(thumbnail_url) <> '')
-        ORDER BY system_id, sort_order, id
+        SELECT id, details_json
+        FROM nodes
+        WHERE details_json IS NOT NULL AND trim(details_json) <> ''
+        ORDER BY id
       `,
     )
-    .all() as Array<{ id: string; url: string | null; thumbnail_url: string | null }>;
+    .all() as Array<{ id: string; details_json: string | null }>;
 
-  return rows.flatMap((row) => {
-    const records: UrlRecord[] = [];
-    if (row.url) {
-      records.push({
-        tableName: "system_gallery_items",
-        recordId: row.id,
-        fieldName: "url",
-        url: row.url,
-        description: null,
-      });
+  const records: UrlRecord[] = [];
+  for (const row of rows) {
+    const details = row.details_json ? JSON.parse(row.details_json) as unknown : {};
+    if (!isRecord(details)) {
+      continue;
     }
-    if (row.thumbnail_url) {
-      records.push({
-        tableName: "system_gallery_items",
-        recordId: row.id,
-        fieldName: "thumbnail_url",
-        url: row.thumbnail_url,
-        description: null,
-      });
+
+    const accessPaths = Array.isArray(details.access) ? details.access : [];
+    for (const [index, pathRecord] of accessPaths.entries()) {
+      if (!isRecord(pathRecord)) {
+        continue;
+      }
+
+      const url = stringField(pathRecord.url);
+      if (url) {
+        records.push({
+          tableName: "nodes",
+          recordId: row.id,
+          fieldName: `details.access.${stringField(pathRecord.id) ?? index}.url`,
+          url,
+          description: stringField(pathRecord.description),
+        });
+      }
     }
-    return records;
-  });
+
+    const galleryItems = Array.isArray(details.gallery) ? details.gallery : [];
+    for (const [index, itemRecord] of galleryItems.entries()) {
+      if (!isRecord(itemRecord)) {
+        continue;
+      }
+
+      const itemId = stringField(itemRecord.id) ?? String(index);
+      const url = stringField(itemRecord.url);
+      if (url) {
+        records.push({
+          tableName: "nodes",
+          recordId: row.id,
+          fieldName: `details.gallery.${itemId}.url`,
+          url,
+          description: null,
+        });
+      }
+
+      const thumbnailUrl = stringField(itemRecord.thumbnailUrl);
+      if (thumbnailUrl) {
+        records.push({
+          tableName: "nodes",
+          recordId: row.id,
+          fieldName: `details.gallery.${itemId}.thumbnailUrl`,
+          url: thumbnailUrl,
+          description: null,
+        });
+      }
+    }
+  }
+
+  return records;
 }
 
 function localPathResult(url: string): UrlResult {
@@ -466,8 +486,7 @@ function formatFailure(records: UrlRecord[], result: UrlResult): string {
 async function main() {
   const records = [
     ...sourceUrlRecords(),
-    ...accessUrlRecords(),
-    ...galleryUrlRecords(),
+    ...nodeUrlRecords(),
   ];
   const recordsByUrl = new Map<string, UrlRecord[]>();
 

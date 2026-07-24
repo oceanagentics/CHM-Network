@@ -3,16 +3,15 @@ import { CloseOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { Button, Card, Flex, List, Tabs, Tag, Typography } from "antd";
 
 import type {
-  Entity,
-  Relationship,
+  GraphEdge,
+  GraphNode,
+  RyuRoute,
   SourceRef,
   SourcedMetric,
   SystemAccessPath,
   SystemDataDescriptor,
   SystemGalleryItem,
   SystemIdentifierScheme,
-  SystemNode,
-  SystemRyuRoute,
 } from "../../../../shared/domain";
 import { useGraphStore } from "../state/graphStore";
 
@@ -146,7 +145,7 @@ function AccessDescription({ path }: { path: SystemAccessPath }) {
   );
 }
 
-function RyuRouteDescription({ route }: { route: SystemRyuRoute }) {
+function RyuRouteDescription({ route }: { route: RyuRoute }) {
   return (
     <Flex vertical gap={4}>
       <Flex align="center" gap={6} wrap>
@@ -253,7 +252,7 @@ function Gallery({ items }: { items: SystemGalleryItem[] }) {
   );
 }
 
-function SystemIntro({ system }: { system: SystemNode }) {
+function SystemIntro({ system }: { system: GraphNode }) {
   return (
     <section className="entity-system-intro">
       <Flex className="entity-system-heading" vertical gap={4}>
@@ -261,16 +260,16 @@ function SystemIntro({ system }: { system: SystemNode }) {
           {system.name}
         </Typography.Title>
         <Typography.Text className="entity-system-operator">
-          {system.operator?.name ?? "Operator not recorded"}
+          {system.details.operator?.name ?? "Operator not recorded"}
         </Typography.Text>
-        {system.primaryUrl ? (
+        {system.url ? (
           <Typography.Link
             className="entity-system-url"
-            href={system.primaryUrl}
+            href={system.url}
             target="_blank"
             rel="noreferrer"
           >
-            {system.primaryUrl}
+            {system.url}
           </Typography.Link>
         ) : (
           <Typography.Text className="entity-system-url" type="secondary">
@@ -278,15 +277,15 @@ function SystemIntro({ system }: { system: SystemNode }) {
           </Typography.Text>
         )}
       </Flex>
-      {system.shortDescription ? (
+      {system.summary ? (
         <Typography.Paragraph className="entity-detail-note entity-system-short-description">
-          {system.shortDescription}
+          {system.summary}
         </Typography.Paragraph>
       ) : null}
-      <Gallery items={system.gallery} />
-      {system.longDescription ? (
+      <Gallery items={system.details.gallery} />
+      {system.description ? (
         <Typography.Paragraph className="entity-detail-note entity-system-long-description">
-          {system.longDescription}
+          {system.description}
         </Typography.Paragraph>
       ) : null}
     </section>
@@ -314,109 +313,60 @@ function IdentifierDescription({ scheme }: { scheme: SystemIdentifierScheme }) {
   );
 }
 
-function relationshipLabel(relationship: Relationship, currentEntityId: string) {
+function relationshipLabel(relationship: GraphEdge, currentEntityId: string) {
   const direction =
-    relationship.sourceEntityId === currentEntityId ? "outgoing" : "incoming";
-  return `${labelize(relationship.type)} (${direction})`;
-}
-
-function sourceId(source: SourceRef | null) {
-  return source?.id ?? null;
+    relationship.sourceNodeId === currentEntityId ? "outgoing" : "incoming";
+  return `${labelize(relationship.kind)} (${direction})`;
 }
 
 function RawSystemDump({
   entity,
   relationships,
-  system,
+  ryuRoutes,
 }: {
-  entity: Entity;
-  relationships: Relationship[];
-  system: SystemNode;
+  entity: GraphNode;
+  relationships: GraphEdge[];
+  ryuRoutes: RyuRoute[];
 }) {
   const rawDump = {
-    entities: {
+    nodes: {
       id: entity.id,
       kind: entity.kind,
       name: entity.name,
-      parent_entity_id: entity.parentEntityId,
       country_code: entity.countryCode,
-      institution_type: entity.subtype,
+      subtype: entity.subtype,
+      url: entity.url,
+      summary: entity.summary,
+      description: entity.description,
+      record_depth: entity.recordDepth,
+      review_state: entity.reviewState,
+      review: entity.review,
+      details: entity.details,
       properties: entity.properties,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt,
     },
-    system_profiles: {
-      system_id: system.id,
-      primary_url: system.primaryUrl,
-      short_description: system.shortDescription,
-      long_description: system.longDescription,
-      aliases: system.aliases,
-      role: system.role,
-      discipline_family: system.disciplineFamily,
-      geographic_scope: system.geographicScope,
-    },
-    system_ryu: system.ryu,
-    system_data_descriptors: system.data.descriptors.map((descriptor) => ({
-      id: descriptor.id,
-      system_id: system.id,
-      category: descriptor.category,
-      label: descriptor.label,
-      description: descriptor.description,
-      source_id: sourceId(descriptor.source),
-      source: descriptor.source,
+    ryu_routes: ryuRoutes.map((route) => ({
+      id: route.id,
+      node_id: route.nodeId,
+      status: route.status,
+      mode: route.mode,
+      priority: route.priority,
+      capabilities: route.capabilities,
+      target: route.target,
+      upstream: route.upstream,
+      format: route.format,
+      contract_ref: route.contractRef,
+      caveat: route.caveat,
+      properties: route.properties,
+      created_at: route.createdAt,
+      updated_at: route.updatedAt,
     })),
-    system_access_paths: system.access.map((path) => ({
-      id: path.id,
-      system_id: system.id,
-      access_type: path.type,
-      method: path.method,
-      label: path.label,
-      url: path.url,
-      description: path.description,
-      source_id: path.source.id,
-      source: path.source,
-    })),
-    system_gallery_items: system.gallery.map((item) => ({
-      id: item.id,
-      system_id: system.id,
-      item_type: item.type,
-      url: item.url,
-      thumbnail_url: item.thumbnailUrl,
-      title: item.title,
-      caption: item.caption,
-      source_id: item.source.id,
-      source: item.source,
-      sort_order: item.sortOrder,
-    })),
-    system_metrics: [
-      system.data.recordCount,
-      system.data.storageSize,
-      ...system.usage,
-    ].filter((metric): metric is SourcedMetric => Boolean(metric)).map((metric) => ({
-      id: metric.id,
-      system_id: system.id,
-      metric_key: metric.key,
-      value_numeric: metric.value,
-      unit: metric.unit,
-      description: metric.description,
-      observed_at: metric.observedAt,
-      source_id: metric.source.id,
-      source: metric.source,
-    })),
-    system_identifier_schemes: system.identifiers.map((scheme) => ({
-      id: scheme.id,
-      system_id: system.id,
-      scheme: scheme.scheme,
-      applies_to: scheme.appliesTo,
-      description: scheme.description,
-      source_id: sourceId(scheme.source),
-      source: scheme.source,
-    })),
-    relationships: relationships.map((relationship) => ({
+    edges: relationships.map((relationship) => ({
       id: relationship.id,
-      source_entity_id: relationship.sourceEntityId,
-      target_entity_id: relationship.targetEntityId,
-      type: relationship.type,
+      source_node_id: relationship.sourceNodeId,
+      target_node_id: relationship.targetNodeId,
+      kind: relationship.kind,
       note: relationship.note,
       properties: relationship.properties,
       created_at: relationship.createdAt,
@@ -444,21 +394,27 @@ export function EntityDetailsPanel({
   const graph = useGraphStore((state) => state.graph);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const resetSelection = useGraphStore((state) => state.resetSelection);
-  const entity = selectedEntityId && graph ? graph.entityById[selectedEntityId] : null;
+  const entity = selectedEntityId && graph ? graph.nodeById[selectedEntityId] : null;
 
   if (!graph || !entity) {
     return null;
   }
 
   const relationshipIds = [
-    ...(graph.outgoingByEntityId[entity.id] ?? []),
-    ...(graph.incomingByEntityId[entity.id] ?? []),
+    ...(graph.outgoingByNodeId[entity.id] ?? []),
+    ...(graph.incomingByNodeId[entity.id] ?? []),
   ];
   const relationships = relationshipIds.map(
-    (relationshipId) => graph.relationshipById[relationshipId],
+    (relationshipId) => graph.edgeById[relationshipId],
   );
-  const system = graph.systemNodeById[entity.id];
-  const isSystem = entity.kind === "system" && Boolean(system);
+  const system = entity.kind === "system" ? entity : null;
+  const ryuRoutes = system ? graph.ryuRoutesByNodeId[entity.id] ?? [] : [];
+  const parentSystemId =
+    relationships.find(
+      (relationship) =>
+        relationship.kind === "part_of" && relationship.sourceNodeId === entity.id,
+    )?.targetNodeId ?? null;
+  const isSystem = Boolean(system);
   const title = isSystem ? (
     <Flex className="entity-details-header-title" align="center" gap={12}>
       <span className="entity-details-title-text">{entity.name}</span>
@@ -495,32 +451,32 @@ export function EntityDetailsPanel({
           {isSystem && system ? (
             <>
               <InlineField label="Role">
-                {system.role ? labelize(system.role) : <EmptyValue />}
+                {system.details.role ? labelize(system.details.role) : <EmptyValue />}
               </InlineField>
               <InlineField label="Operator country">
-                {system.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
+                {system.details.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
               </InlineField>
               <InlineField label="Discipline">
-                {system.disciplineFamily ? (
-                  labelize(system.disciplineFamily)
+                {system.details.disciplineFamily ? (
+                  labelize(system.details.disciplineFamily)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
               <InlineField label="Geographic scope">
-                {system.geographicScope ? (
-                  labelize(system.geographicScope)
+                {system.details.geographicScope ? (
+                  labelize(system.details.geographicScope)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
               <InlineField label="Part of">
-                {system.parentSystemId
-                  ? graph.entityById[system.parentSystemId]?.name ?? system.parentSystemId
+                {parentSystemId
+                  ? graph.nodeById[parentSystemId]?.name ?? parentSystemId
                   : <EmptyValue />}
               </InlineField>
               <InlineField label="Aliases">
-                {system.aliases.length > 0 ? system.aliases.join(", ") : <EmptyValue />}
+                {system.details.aliases.length > 0 ? system.details.aliases.join(", ") : <EmptyValue />}
               </InlineField>
             </>
           ) : (
@@ -543,19 +499,19 @@ export function EntityDetailsPanel({
           <DetailSection title="Data">
             <div className="entity-detail-grid">
               <InlineField label="Data types">
-                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "type")} />
+                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "type")} />
               </InlineField>
               <InlineField label="Formats">
-                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "format")} />
+                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "format")} />
               </InlineField>
               <InlineField label="Standards">
-                <DescriptorTags descriptors={descriptorList(system.data.descriptors, "standard")} />
+                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "standard")} />
               </InlineField>
               <InlineField label="Records">
-                <MetricValue metric={system.data.recordCount} />
+                <MetricValue metric={system.details.data.recordCount} />
               </InlineField>
               <InlineField label="Database size">
-                <MetricValue metric={system.data.storageSize} />
+                <MetricValue metric={system.details.data.storageSize} />
               </InlineField>
             </div>
           </DetailSection>
@@ -563,7 +519,7 @@ export function EntityDetailsPanel({
           <DetailSection title="Access">
             <List<SystemAccessPath>
               className="entity-detail-list"
-              dataSource={system.access}
+              dataSource={system.details.access}
               locale={{ emptyText: "No access path recorded" }}
               renderItem={(path) => (
                 <List.Item><AccessDescription path={path} /></List.Item>
@@ -572,11 +528,11 @@ export function EntityDetailsPanel({
             />
           </DetailSection>
 
-          {system.ryu.routes.length > 0 ? (
+          {ryuRoutes.length > 0 ? (
             <DetailSection title="Ryu">
-              <List<SystemRyuRoute>
+              <List<RyuRoute>
                 className="entity-detail-list"
-                dataSource={system.ryu.routes}
+                dataSource={ryuRoutes}
                 renderItem={(route) => (
                   <List.Item><RyuRouteDescription route={route} /></List.Item>
                 )}
@@ -588,7 +544,7 @@ export function EntityDetailsPanel({
           <DetailSection title="Identifiers">
             <List<SystemIdentifierScheme>
               className="entity-detail-list"
-              dataSource={system.identifiers}
+              dataSource={system.details.identifiers}
               locale={{ emptyText: "No identifier scheme recorded" }}
               renderItem={(scheme) => (
                 <List.Item><IdentifierDescription scheme={scheme} /></List.Item>
@@ -600,7 +556,7 @@ export function EntityDetailsPanel({
           <DetailSection title="Usage">
             <List<SourcedMetric>
               className="entity-detail-list"
-              dataSource={system.usage}
+              dataSource={system.details.usage}
               locale={{ emptyText: "No usage metric recorded" }}
               renderItem={(metric) => (
                 <List.Item>
@@ -617,16 +573,16 @@ export function EntityDetailsPanel({
       ) : null}
 
       <DetailSection title="Connections">
-        <List<Relationship>
+        <List<GraphEdge>
           className="entity-detail-list"
           dataSource={relationships}
           locale={{ emptyText: "No relationship recorded" }}
           renderItem={(relationship) => {
             const otherEntityId =
-              relationship.sourceEntityId === entity.id
-                ? relationship.targetEntityId
-                : relationship.sourceEntityId;
-            const otherEntity = graph.entityById[otherEntityId];
+              relationship.sourceNodeId === entity.id
+                ? relationship.targetNodeId
+                : relationship.sourceNodeId;
+            const otherEntity = graph.nodeById[otherEntityId];
             return (
               <List.Item>
                 <Flex vertical gap={2}>
@@ -666,7 +622,7 @@ export function EntityDetailsPanel({
         <RawSystemDump
           entity={entity}
           relationships={relationships}
-          system={system}
+          ryuRoutes={ryuRoutes}
         />
       ) : (
         userView

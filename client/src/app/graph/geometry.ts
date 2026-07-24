@@ -1,7 +1,7 @@
 /**
  * Geometry defines intrinsic node labels, box sizes, and stable layout hints.
  */
-import type { Entity } from "../../../../shared/domain";
+import type { GraphNode } from "../../../../shared/domain";
 
 export interface NodeGeometry {
   width: number;
@@ -13,7 +13,7 @@ const bandByKind = {
   country: 0,
   organization: 1,
   system: 2,
-} satisfies Record<Entity["kind"], number>;
+} satisfies Record<GraphNode["kind"], number>;
 
 function stylizeCharacters(
   value: string,
@@ -58,12 +58,12 @@ function italicSansDisplayText(value: string): string {
   });
 }
 
-export function buildLabel(entity: Entity): string {
-  const typeLabel = entity.subtype ?? entity.kind;
-  return `${boldSansDisplayText(entity.name)}\n${italicSansDisplayText(typeLabel)}`;
+export function buildLabel(node: GraphNode): string {
+  const typeLabel = node.subtype ?? node.kind;
+  return `${boldSansDisplayText(node.name)}\n${italicSansDisplayText(typeLabel)}`;
 }
 
-export function getNodeDimensions(kind: Entity["kind"], label: string): NodeGeometry {
+export function getNodeDimensions(kind: GraphNode["kind"], label: string): NodeGeometry {
   const baseDimensions =
     kind === "country"
       ? { width: 156, height: 96 }
@@ -84,6 +84,6 @@ export function getNodeDimensions(kind: Entity["kind"], label: string): NodeGeom
   return { width, height, textMaxWidth };
 }
 
-export function getLayoutBand(kind: Entity["kind"]): number {
+export function getLayoutBand(kind: GraphNode["kind"]): number {
   return bandByKind[kind];
 }

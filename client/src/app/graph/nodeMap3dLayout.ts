@@ -49,14 +49,13 @@ function getFlatNodeSize(kind: GraphProjection["nodes"][number]["kind"]) {
 function shouldUseEdgeForFlatTree(edge: GraphProjectionEdge): boolean {
   return (
     edge.type === "governs" ||
-    edge.type === "hierarchy" ||
     edge.type === "operates" ||
     edge.type === "part_of"
   );
 }
 
 function getFlatTreeEndpoints(edge: GraphProjectionEdge): [string, string] {
-  if (edge.type === "hierarchy" || edge.type === "part_of") {
+  if (edge.type === "part_of") {
     return [edge.target, edge.source];
   }
 

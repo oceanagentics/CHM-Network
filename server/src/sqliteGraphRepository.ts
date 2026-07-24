@@ -2,119 +2,100 @@ import type Database from "better-sqlite3";
 import crypto from "node:crypto";
 
 import type {
-  Entity,
-  EntityInput,
-  EntityKind,
-  EntityTag,
   GraphBootstrapPayload,
-  Relationship,
-  RelationshipInput,
-  RelationshipTag,
+  GraphEdge,
+  GraphEdgeInput,
+  GraphEdgeKind,
+  GraphNode,
+  GraphNodeInput,
+  GraphNodeKind,
+  NodeDetails,
+  RecordDepth,
+  ReviewState,
+  RyuRoute,
   SavedView,
   SavedViewInput,
   Source,
   SourceInput,
-  SourceRef,
-  SourcedMetric,
-  SystemAccessPath,
-  SystemDataDescriptor,
-  SystemGalleryItem,
-  SystemIdentifierScheme,
-  SystemNode,
-  SystemRyu,
-  Tag,
 } from "../../shared/domain";
 
 type JsonValue = Record<string, unknown>;
 
-type RawEntity = {
+type RawNode = {
   id: string;
-  kind: EntityKind;
+  kind: GraphNodeKind;
   name: string;
-  parent_entity_id: string | null;
   country_code: string | null;
-  institution_type: string | null;
+  subtype: string | null;
+  url: string | null;
+  summary: string | null;
+  description: string | null;
+  record_depth: RecordDepth;
+  review_state: ReviewState;
+  review_json: string | null;
+  details_json: string | null;
   properties_json: string | null;
   created_at: string;
   updated_at: string;
 };
 
-type RawRelationship = {
+type RawEdge = {
   id: string;
-  source_entity_id: string;
-  target_entity_id: string;
-  type: Relationship["type"];
+  source_node_id: string;
+  target_node_id: string;
+  kind: GraphEdgeKind;
   note: string | null;
   properties_json: string | null;
   created_at: string;
   updated_at: string;
 };
 
-type RawSystemProfile = {
-  system_id: string;
-  primary_url: string | null;
-  short_description: string | null;
-  long_description: string | null;
-  aliases: string | null;
-  role: string | null;
-  discipline_family: string | null;
-  geographic_scope: string | null;
-};
-
-type RawSystemDataDescriptor = {
+type RawRyuRoute = {
   id: string;
-  system_id: string;
-  category: SystemDataDescriptor["category"];
-  label: string;
-  description: string | null;
-  source_id: string | null;
+  node_id: string;
+  status: string;
+  mode: string;
+  priority: number;
+  capabilities_json: string | null;
+  target: string | null;
+  upstream: string | null;
+  format: string | null;
+  contract_ref: string | null;
+  caveat: string | null;
+  properties_json: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-type RawSystemAccessPath = {
-  id: string;
-  system_id: string;
-  access_type: SystemAccessPath["type"];
-  method: string;
-  label: string;
-  url: string;
-  description: string;
-  source_id: string;
-};
+const nodeKinds = ["country", "organization", "system"] as const;
+const edgeKinds = ["governs", "operates", "part_of", "publishes_to", "syncs_to"] as const;
+const recordDepths = ["stub", "thin", "rich"] as const;
+const reviewStates = [
+  "unreviewed",
+  "agent_researched",
+  "needs_human_review",
+  "human_reviewed",
+  "needs_revision",
+] as const;
 
-type RawSystemGalleryItem = {
-  id: string;
-  system_id: string;
-  item_type: SystemGalleryItem["type"];
-  url: string;
-  thumbnail_url: string | null;
-  title: string | null;
-  caption: string | null;
-  source_id: string;
-  sort_order: number;
-};
-
-type RawSystemMetric = {
-  id: string;
-  system_id: string;
-  metric_key: string;
-  value_numeric: number;
-  unit: string;
-  description: string | null;
-  observed_at: string | null;
-  source_id: string;
-};
-
-type RawSystemIdentifierScheme = {
-  id: string;
-  system_id: string;
-  scheme: string;
-  applies_to: string | null;
-  description: string | null;
-  source_id: string | null;
-};
-
-const entityKinds = ["country", "organization", "system"] as const;
-const relationshipTypes = ["governs", "operates", "part_of", "publishes_to", "syncs_to"] as const;
+function emptyNodeDetails(): NodeDetails {
+  return {
+    aliases: [],
+    operator: null,
+    role: null,
+    disciplineFamily: null,
+    geographicScope: null,
+    gallery: [],
+    data: {
+      descriptors: [],
+      recordCount: null,
+      storageSize: null,
+    },
+    access: [],
+    identifiers: [],
+    usage: [],
+  };
+}
 
 function parseJson(value: string | null): JsonValue {
   if (!value) {
@@ -126,6 +107,17 @@ function parseJson(value: string | null): JsonValue {
 
 function stringifyJson(value: Record<string, unknown>): string {
   return JSON.stringify(value ?? {});
+}
+
+function parseStringArray(value: string | null): string[] {
+  const parsed = value ? JSON.parse(value) : [];
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .map((item) => normalizeString(item))
+    .filter((item): item is string => Boolean(item));
 }
 
 function normalizeString(value: unknown): string | null {
@@ -141,83 +133,92 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function normalizeStringList(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
+function normalizeDetails(value: unknown): NodeDetails {
+  const base = emptyNodeDetails();
+  if (!isRecord(value)) {
+    return base;
   }
 
-  return value
-    .map((item) => normalizeString(item))
-    .filter((item): item is string => Boolean(item));
-}
-
-function normalizeRyu(value: unknown): SystemRyu {
-  if (!isRecord(value) || !Array.isArray(value.routes)) {
-    return { routes: [] };
-  }
-
-  const routes = value.routes.flatMap((route, index) => {
-    if (!isRecord(route)) {
-      return [];
-    }
-
-    const id = normalizeString(route.id);
-    const mode = normalizeString(route.mode);
-    if (!id || !mode) {
-      return [];
-    }
-
-    const priority = typeof route.priority === "number" && Number.isFinite(route.priority)
-      ? route.priority
-      : index + 1;
-
-    return [{
-      id,
-      status: normalizeString(route.status) ?? "active",
-      mode,
-      priority,
-      capabilities: normalizeStringList(route.capabilities),
-      target: normalizeString(route.target),
-      upstream: normalizeString(route.upstream),
-      format: normalizeString(route.format),
-      contractRef: normalizeString(route.contractRef),
-      caveat: normalizeString(route.caveat),
-    }];
-  });
+  const data = isRecord(value.data) ? value.data : {};
 
   return {
-    routes: routes.sort((left, right) => left.priority - right.priority),
+    aliases: Array.isArray(value.aliases) ? value.aliases.filter(isString) : [],
+    operator: isRecord(value.operator)
+      ? {
+          id: String(value.operator.id ?? ""),
+          name: String(value.operator.name ?? ""),
+          countryCode: normalizeString(value.operator.countryCode),
+        }
+      : null,
+    role: normalizeString(value.role),
+    disciplineFamily: normalizeString(value.disciplineFamily),
+    geographicScope: normalizeString(value.geographicScope),
+    gallery: Array.isArray(value.gallery) ? value.gallery as NodeDetails["gallery"] : [],
+    data: {
+      descriptors: Array.isArray(data.descriptors)
+        ? data.descriptors as NodeDetails["data"]["descriptors"]
+        : [],
+      recordCount: isRecord(data.recordCount)
+        ? data.recordCount as unknown as NodeDetails["data"]["recordCount"]
+        : null,
+      storageSize: isRecord(data.storageSize)
+        ? data.storageSize as unknown as NodeDetails["data"]["storageSize"]
+        : null,
+    },
+    access: Array.isArray(value.access) ? value.access as NodeDetails["access"] : [],
+    identifiers: Array.isArray(value.identifiers)
+      ? value.identifiers as NodeDetails["identifiers"]
+      : [],
+    usage: Array.isArray(value.usage) ? value.usage as NodeDetails["usage"] : [],
   };
 }
 
-function isEntityKind(value: unknown): value is EntityKind {
-  return typeof value === "string" && entityKinds.includes(value as EntityKind);
+function isString(value: unknown): value is string {
+  return typeof value === "string";
 }
 
-function isRelationshipType(value: unknown): value is Relationship["type"] {
-  return typeof value === "string" && relationshipTypes.includes(value as Relationship["type"]);
+function isNodeKind(value: unknown): value is GraphNodeKind {
+  return typeof value === "string" && nodeKinds.includes(value as GraphNodeKind);
 }
 
-function mapEntity(row: RawEntity): Entity {
+function isEdgeKind(value: unknown): value is GraphEdgeKind {
+  return typeof value === "string" && edgeKinds.includes(value as GraphEdgeKind);
+}
+
+function isRecordDepth(value: unknown): value is RecordDepth {
+  return typeof value === "string" && recordDepths.includes(value as RecordDepth);
+}
+
+function isReviewState(value: unknown): value is ReviewState {
+  return typeof value === "string" && reviewStates.includes(value as ReviewState);
+}
+
+function mapNode(row: RawNode): GraphNode {
   return {
     id: row.id,
     kind: row.kind,
     name: row.name,
-    parentEntityId: row.parent_entity_id,
     countryCode: row.country_code,
-    subtype: row.kind === "organization" ? row.institution_type : null,
+    subtype: row.subtype,
+    url: row.url,
+    summary: row.summary,
+    description: row.description,
+    recordDepth: row.record_depth,
+    reviewState: row.review_state,
+    review: parseJson(row.review_json),
+    details: normalizeDetails(parseJson(row.details_json)),
     properties: parseJson(row.properties_json),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function mapRelationship(row: RawRelationship): Relationship {
+function mapEdge(row: RawEdge): GraphEdge {
   return {
     id: row.id,
-    sourceEntityId: row.source_entity_id,
-    targetEntityId: row.target_entity_id,
-    type: row.type,
+    sourceNodeId: row.source_node_id,
+    targetNodeId: row.target_node_id,
+    kind: row.kind,
     note: row.note,
     properties: parseJson(row.properties_json),
     createdAt: row.created_at,
@@ -239,17 +240,22 @@ function mapSource(row: Record<string, unknown>): Source {
   };
 }
 
-function mapEntityTag(row: Record<string, unknown>): EntityTag {
+function mapRyuRoute(row: RawRyuRoute): RyuRoute {
   return {
-    entityId: String(row.entity_id),
-    tagId: String(row.tag_id),
-  };
-}
-
-function mapRelationshipTag(row: Record<string, unknown>): RelationshipTag {
-  return {
-    relationshipId: String(row.relationship_id),
-    tagId: String(row.tag_id),
+    id: row.id,
+    nodeId: row.node_id,
+    status: row.status,
+    mode: row.mode,
+    priority: Number(row.priority),
+    capabilities: parseStringArray(row.capabilities_json),
+    target: row.target,
+    upstream: row.upstream,
+    format: row.format,
+    contractRef: row.contract_ref,
+    caveat: row.caveat,
+    properties: parseJson(row.properties_json),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -266,47 +272,7 @@ function mapSavedView(row: Record<string, unknown>): SavedView {
   };
 }
 
-function splitAliases(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split(/[;,]/)
-    .map((alias) => alias.trim())
-    .filter(Boolean);
-}
-
-function optionalSourceRef(
-  sourceById: Record<string, Source>,
-  sourceId: string | null,
-): SourceRef | null {
-  if (!sourceId) {
-    return null;
-  }
-
-  const source = sourceById[sourceId];
-  if (!source?.url) {
-    return null;
-  }
-
-  return {
-    id: source.id,
-    title: source.title,
-    url: source.url,
-  };
-}
-
-function requiredSourceRef(sourceById: Record<string, Source>, sourceId: string): SourceRef {
-  const source = optionalSourceRef(sourceById, sourceId);
-  if (!source) {
-    throw new Error(`source ${sourceId} needs a URL before it can support a sourced field`);
-  }
-
-  return source;
-}
-
-function filterSavedViews(savedViews: SavedView[], entityIds: Set<string>): SavedView[] {
+function filterSavedViews(savedViews: SavedView[], nodeIds: Set<string>): SavedView[] {
   return savedViews.filter((savedView) => {
     const filter = savedView.filter as { focusEntityId?: string | null };
     const scopeIsViewMode =
@@ -315,8 +281,8 @@ function filterSavedViews(savedViews: SavedView[], entityIds: Set<string>): Save
       savedView.scope === "technical";
 
     return (
-      (scopeIsViewMode || entityIds.has(savedView.scope)) &&
-      (!filter.focusEntityId || entityIds.has(filter.focusEntityId))
+      (scopeIsViewMode || nodeIds.has(savedView.scope)) &&
+      (!filter.focusEntityId || nodeIds.has(filter.focusEntityId))
     );
   });
 }
@@ -325,216 +291,43 @@ function createId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
-function groupBySystemId<T extends { system_id: string }>(rows: T[]): Record<string, T[]> {
-  const grouped: Record<string, T[]> = {};
-  for (const row of rows) {
-    grouped[row.system_id] ??= [];
-    grouped[row.system_id].push(row);
-  }
-  return grouped;
-}
-
-function mapMetric(
-  row: RawSystemMetric,
-  sourceById: Record<string, Source>,
-): SourcedMetric {
-  return {
-    id: row.id,
-    key: row.metric_key,
-    value: Number(row.value_numeric),
-    unit: row.unit,
-    description: row.description,
-    observedAt: row.observed_at,
-    source: requiredSourceRef(sourceById, row.source_id),
-  };
-}
-
-function buildSystemNodes(input: {
-  entities: Entity[];
-  relationships: Relationship[];
-  sources: Source[];
-  profiles: RawSystemProfile[];
-  descriptors: RawSystemDataDescriptor[];
-  accessPaths: RawSystemAccessPath[];
-  galleryItems: RawSystemGalleryItem[];
-  metrics: RawSystemMetric[];
-  identifierSchemes: RawSystemIdentifierScheme[];
-}): SystemNode[] {
-  const entityById = Object.fromEntries(input.entities.map((entity) => [entity.id, entity]));
-  const sourceById = Object.fromEntries(input.sources.map((source) => [source.id, source]));
-  const profileBySystemId = Object.fromEntries(
-    input.profiles.map((profile) => [profile.system_id, profile]),
-  );
-  const descriptorsBySystemId = groupBySystemId(input.descriptors);
-  const accessBySystemId = groupBySystemId(input.accessPaths);
-  const galleryBySystemId = groupBySystemId(input.galleryItems);
-  const metricsBySystemId = groupBySystemId(input.metrics);
-  const identifiersBySystemId = groupBySystemId(input.identifierSchemes);
-
-  return input.entities
-    .filter((entity) => entity.kind === "system")
-    .map((entity) => {
-      const profile = profileBySystemId[entity.id];
-      const operatorRelationship = input.relationships.find(
-        (relationship) =>
-          relationship.type === "operates" && relationship.targetEntityId === entity.id,
-      );
-      const operator = operatorRelationship
-        ? entityById[operatorRelationship.sourceEntityId]
-        : null;
-      const parentRelationship = input.relationships.find(
-        (relationship) =>
-          relationship.type === "part_of" && relationship.sourceEntityId === entity.id,
-      );
-      const metrics = (metricsBySystemId[entity.id] ?? []).map((metric) =>
-        mapMetric(metric, sourceById),
-      );
-      const metricByKey = Object.fromEntries(metrics.map((metric) => [metric.key, metric]));
-
-      return {
-        id: entity.id,
-        kind: "system",
-        name: entity.name,
-        countryCode: entity.countryCode,
-        parentSystemId: parentRelationship?.targetEntityId ?? null,
-        operator: operator
-          ? {
-              id: operator.id,
-              name: operator.name,
-              countryCode: operator.countryCode,
-            }
-          : null,
-        primaryUrl: profile?.primary_url ?? null,
-        shortDescription: profile?.short_description ?? null,
-        longDescription: profile?.long_description ?? null,
-        aliases: splitAliases(profile?.aliases ?? null),
-        role: profile?.role ?? null,
-        disciplineFamily: profile?.discipline_family ?? null,
-        geographicScope: profile?.geographic_scope ?? null,
-        gallery: (galleryBySystemId[entity.id] ?? []).map((item) => ({
-          id: item.id,
-          type: item.item_type,
-          url: item.url,
-          thumbnailUrl: item.thumbnail_url,
-          title: item.title,
-          caption: item.caption,
-          source: requiredSourceRef(sourceById, item.source_id),
-          sortOrder: Number(item.sort_order),
-        })),
-        data: {
-          descriptors: (descriptorsBySystemId[entity.id] ?? []).map((descriptor) => ({
-            id: descriptor.id,
-            category: descriptor.category,
-            label: descriptor.label,
-            description: descriptor.description,
-            source: optionalSourceRef(sourceById, descriptor.source_id),
-          })),
-          recordCount: metricByKey.record_count ?? null,
-          storageSize: metricByKey.storage_size_bytes ?? null,
-        },
-        access: (accessBySystemId[entity.id] ?? []).map((path) => ({
-          id: path.id,
-          type: path.access_type,
-          method: path.method,
-          label: path.label,
-          url: path.url,
-          description: path.description,
-          source: requiredSourceRef(sourceById, path.source_id),
-        })),
-        identifiers: (identifiersBySystemId[entity.id] ?? []).map((scheme) => ({
-          id: scheme.id,
-          scheme: scheme.scheme,
-          appliesTo: scheme.applies_to,
-          description: scheme.description,
-          source: optionalSourceRef(sourceById, scheme.source_id),
-        })),
-        usage: metrics.filter(
-          (metric) => metric.key !== "record_count" && metric.key !== "storage_size_bytes",
-        ),
-        ryu: normalizeRyu(entity.properties.ryu),
-        createdAt: entity.createdAt,
-        updatedAt: entity.updatedAt,
-      } satisfies SystemNode;
-    })
-    .sort((left, right) => left.name.localeCompare(right.name));
-}
-
 export class SqliteGraphRepository {
   constructor(private readonly db: Database.Database) {}
 
   getBootstrap(): GraphBootstrapPayload {
-    const entities = (this.db
-      .prepare("SELECT * FROM entities ORDER BY name")
-      .all() as RawEntity[]).map((entity) => mapEntity(entity));
-    const relationships = (this.db
-      .prepare("SELECT * FROM relationships ORDER BY id")
-      .all() as RawRelationship[]).map((relationship) => mapRelationship(relationship));
+    const nodes = (this.db
+      .prepare("SELECT * FROM nodes ORDER BY name")
+      .all() as RawNode[]).map((node) => mapNode(node));
+    const edges = (this.db
+      .prepare("SELECT * FROM edges ORDER BY id")
+      .all() as RawEdge[]).map((edge) => mapEdge(edge));
     const sources = this.db
       .prepare("SELECT * FROM sources ORDER BY title")
       .all()
       .map((row) => mapSource(row as Record<string, unknown>));
-    const tags = this.db
-      .prepare("SELECT * FROM tags ORDER BY category, name")
-      .all() as Tag[];
-    const entityTags = this.db
-      .prepare("SELECT * FROM entity_tags ORDER BY entity_id, tag_id")
-      .all()
-      .map((row) => mapEntityTag(row as Record<string, unknown>));
-    const relationshipTags = this.db
-      .prepare("SELECT * FROM relationship_tags ORDER BY relationship_id, tag_id")
-      .all()
-      .map((row) => mapRelationshipTag(row as Record<string, unknown>));
-    const profiles = this.db
-      .prepare("SELECT * FROM system_profiles ORDER BY system_id")
-      .all() as RawSystemProfile[];
-    const descriptors = this.db
-      .prepare("SELECT * FROM system_data_descriptors ORDER BY system_id, category, label")
-      .all() as RawSystemDataDescriptor[];
-    const accessPaths = this.db
-      .prepare("SELECT * FROM system_access_paths ORDER BY system_id, access_type, method, label")
-      .all() as RawSystemAccessPath[];
-    const galleryItems = this.db
-      .prepare("SELECT * FROM system_gallery_items ORDER BY system_id, sort_order, title")
-      .all() as RawSystemGalleryItem[];
-    const metrics = this.db
-      .prepare("SELECT * FROM system_metrics ORDER BY system_id, metric_key, id")
-      .all() as RawSystemMetric[];
-    const identifierSchemes = this.db
-      .prepare("SELECT * FROM system_identifier_schemes ORDER BY system_id, scheme")
-      .all() as RawSystemIdentifierScheme[];
+    const ryuRoutes = (this.db
+      .prepare("SELECT * FROM ryu_routes ORDER BY node_id, priority, id")
+      .all() as RawRyuRoute[]).map((route) => mapRyuRoute(route));
     const savedViews = filterSavedViews(
       this.listSavedViews(),
-      new Set(entities.map((entity) => entity.id)),
+      new Set(nodes.map((node) => node.id)),
     );
 
     return {
-      entities,
-      relationships,
+      nodes,
+      edges,
       sources,
-      tags,
-      entityTags,
-      relationshipTags,
-      systemNodes: buildSystemNodes({
-        entities,
-        relationships,
-        sources,
-        profiles,
-        descriptors,
-        accessPaths,
-        galleryItems,
-        metrics,
-        identifierSchemes,
-      }),
+      ryuRoutes,
       savedViews,
     };
   }
 
-  createEntity(input: EntityInput): Entity {
-    const entity = this.validateEntityInput(input);
+  createNode(input: GraphNodeInput): GraphNode {
+    const node = this.validateNodeInput(input);
     const id = createId(
-      entity.kind === "country"
+      node.kind === "country"
         ? "country"
-        : entity.kind === "organization"
+        : node.kind === "organization"
           ? "org"
           : "system",
     );
@@ -542,82 +335,90 @@ export class SqliteGraphRepository {
     this.db
       .prepare(
         `
-        INSERT INTO entities (
-          id, kind, name, parent_entity_id, country_code, institution_type, properties_json
+        INSERT INTO nodes (
+          id, kind, name, country_code, subtype, url, summary, description,
+          record_depth, review_state, review_json, details_json, properties_json
         ) VALUES (
-          @id, @kind, @name, @parentEntityId, @countryCode, @institutionType, @propertiesJson
+          @id, @kind, @name, @countryCode, @subtype, @url, @summary, @description,
+          @recordDepth, @reviewState, @reviewJson, @detailsJson, @propertiesJson
         )
       `,
       )
-      .run(this.entityParams(id, entity));
+      .run(this.nodeParams(id, node));
 
-    return this.getEntity(id);
+    return this.getNode(id);
   }
 
-  updateEntity(id: string, input: EntityInput): Entity {
-    this.getEntity(id);
-    const entity = this.validateEntityInput(input, id);
+  updateNode(id: string, input: GraphNodeInput): GraphNode {
+    const existing = this.getNode(id);
+    const node = this.validateNodeInput(input, existing);
 
     this.db
       .prepare(
         `
-        UPDATE entities
+        UPDATE nodes
         SET kind = @kind,
             name = @name,
-            parent_entity_id = @parentEntityId,
             country_code = @countryCode,
-            institution_type = @institutionType,
+            subtype = @subtype,
+            url = @url,
+            summary = @summary,
+            description = @description,
+            record_depth = @recordDepth,
+            review_state = @reviewState,
+            review_json = @reviewJson,
+            details_json = @detailsJson,
             properties_json = @propertiesJson
         WHERE id = @id
       `,
       )
-      .run(this.entityParams(id, entity));
+      .run(this.nodeParams(id, node));
 
-    return this.getEntity(id);
+    return this.getNode(id);
   }
 
-  deleteEntity(id: string): void {
-    this.getEntity(id);
-    this.db.prepare("DELETE FROM entities WHERE id = ?").run(id);
+  deleteNode(id: string): void {
+    this.getNode(id);
+    this.db.prepare("DELETE FROM nodes WHERE id = ?").run(id);
   }
 
-  createRelationship(input: RelationshipInput): Relationship {
-    const relationship = this.validateRelationshipInput(input);
-    const id = createId("rel");
+  createEdge(input: GraphEdgeInput): GraphEdge {
+    const edge = this.validateEdgeInput(input);
+    const id = createId("edge");
 
     this.db
       .prepare(
         `
-        INSERT INTO relationships (
-          id, source_entity_id, target_entity_id, type, note, properties_json
+        INSERT INTO edges (
+          id, source_node_id, target_node_id, kind, note, properties_json
         ) VALUES (
-          @id, @sourceEntityId, @targetEntityId, @type, @note, @propertiesJson
+          @id, @sourceNodeId, @targetNodeId, @kind, @note, @propertiesJson
         )
       `,
       )
       .run({
         id,
-        sourceEntityId: relationship.sourceEntityId,
-        targetEntityId: relationship.targetEntityId,
-        type: relationship.type,
-        note: relationship.note,
-        propertiesJson: stringifyJson(relationship.properties),
+        sourceNodeId: edge.sourceNodeId,
+        targetNodeId: edge.targetNodeId,
+        kind: edge.kind,
+        note: edge.note,
+        propertiesJson: stringifyJson(edge.properties ?? {}),
       });
 
-    return this.getRelationship(id);
+    return this.getEdge(id);
   }
 
-  updateRelationship(id: string, input: RelationshipInput): Relationship {
-    this.getRelationship(id);
-    const relationship = this.validateRelationshipInput(input, id);
+  updateEdge(id: string, input: GraphEdgeInput): GraphEdge {
+    this.getEdge(id);
+    const edge = this.validateEdgeInput(input, id);
 
     this.db
       .prepare(
         `
-        UPDATE relationships
-        SET source_entity_id = @sourceEntityId,
-            target_entity_id = @targetEntityId,
-            type = @type,
+        UPDATE edges
+        SET source_node_id = @sourceNodeId,
+            target_node_id = @targetNodeId,
+            kind = @kind,
             note = @note,
             properties_json = @propertiesJson
         WHERE id = @id
@@ -625,19 +426,19 @@ export class SqliteGraphRepository {
       )
       .run({
         id,
-        sourceEntityId: relationship.sourceEntityId,
-        targetEntityId: relationship.targetEntityId,
-        type: relationship.type,
-        note: relationship.note,
-        propertiesJson: stringifyJson(relationship.properties),
+        sourceNodeId: edge.sourceNodeId,
+        targetNodeId: edge.targetNodeId,
+        kind: edge.kind,
+        note: edge.note,
+        propertiesJson: stringifyJson(edge.properties ?? {}),
       });
 
-    return this.getRelationship(id);
+    return this.getEdge(id);
   }
 
-  deleteRelationship(id: string): void {
-    this.getRelationship(id);
-    this.db.prepare("DELETE FROM relationships WHERE id = ?").run(id);
+  deleteEdge(id: string): void {
+    this.getEdge(id);
+    this.db.prepare("DELETE FROM edges WHERE id = ?").run(id);
   }
 
   createSource(input: SourceInput): Source {
@@ -749,114 +550,112 @@ export class SqliteGraphRepository {
     this.db.prepare("DELETE FROM saved_views WHERE id = ?").run(id);
   }
 
-  private entityParams(id: string, input: EntityInput) {
-    const properties = { ...input.properties };
-    delete properties.subtype;
+  private nodeParams(id: string, input: GraphNodeInput) {
+    const details = input.details ?? emptyNodeDetails();
 
     return {
       id,
       kind: input.kind,
       name: input.name,
-      parentEntityId: input.kind === "organization" ? input.parentEntityId : null,
-      countryCode: input.countryCode,
-      institutionType: input.kind === "organization" ? input.subtype : null,
-      propertiesJson: stringifyJson(properties),
+      countryCode: input.countryCode ?? null,
+      subtype: input.kind === "organization" ? input.subtype ?? null : null,
+      url: input.url ?? null,
+      summary: input.summary ?? null,
+      description: input.description ?? null,
+      recordDepth: input.recordDepth ?? "stub",
+      reviewState: input.reviewState ?? "unreviewed",
+      reviewJson: stringifyJson(input.review ?? {}),
+      detailsJson: stringifyJson(details as unknown as Record<string, unknown>),
+      propertiesJson: stringifyJson(input.properties ?? {}),
     };
   }
 
-  private validateEntityInput(input: EntityInput, entityId?: string): EntityInput {
-    if (!isEntityKind(input.kind)) {
-      throw new Error("invalid entity kind");
+  private validateNodeInput(input: GraphNodeInput, existing?: GraphNode): GraphNodeInput {
+    if (!isNodeKind(input.kind)) {
+      throw new Error("invalid node kind");
     }
     if (!input.name?.trim()) {
       throw new Error("name is required");
     }
 
-    const parentEntityId = normalizeString(input.parentEntityId);
-    if (input.kind !== "organization" && parentEntityId) {
-      throw new Error("only organizations may have a parent");
-    }
-
-    if (input.kind === "organization" && parentEntityId) {
-      const parent = this.getEntity(parentEntityId);
-      if (parent.kind !== "organization") {
-        throw new Error("organization parent must be an organization");
-      }
-      if (entityId && parent.id === entityId) {
-        throw new Error("entity cannot be its own parent");
-      }
-    }
-
     return {
       kind: input.kind,
       name: input.name.trim(),
-      parentEntityId,
       countryCode: normalizeString(input.countryCode),
       subtype: normalizeString(input.subtype),
-      properties: input.properties ?? {},
+      url: input.url === undefined ? existing?.url ?? null : normalizeString(input.url),
+      summary: input.summary === undefined
+        ? existing?.summary ?? null
+        : normalizeString(input.summary),
+      description: input.description === undefined
+        ? existing?.description ?? null
+        : normalizeString(input.description),
+      recordDepth: isRecordDepth(input.recordDepth)
+        ? input.recordDepth
+        : existing?.recordDepth ?? "stub",
+      reviewState: isReviewState(input.reviewState)
+        ? input.reviewState
+        : existing?.reviewState ?? "unreviewed",
+      review: isRecord(input.review) ? input.review : existing?.review ?? {},
+      details: input.details ?? existing?.details ?? emptyNodeDetails(),
+      properties: input.properties ?? existing?.properties ?? {},
     };
   }
 
-  private validateRelationshipInput(
-    input: RelationshipInput,
-    relationshipId?: string,
-  ): RelationshipInput {
-    if (!isRelationshipType(input.type)) {
-      throw new Error("invalid relationship type");
+  private validateEdgeInput(
+    input: GraphEdgeInput,
+    edgeId?: string,
+  ): GraphEdgeInput {
+    if (!isEdgeKind(input.kind)) {
+      throw new Error("invalid edge kind");
     }
-    if (!input.sourceEntityId || !input.targetEntityId) {
+    if (!input.sourceNodeId || !input.targetNodeId) {
       throw new Error("source and target are required");
     }
-    if (input.sourceEntityId === input.targetEntityId) {
-      throw new Error("relationship endpoints must differ");
+    if (input.sourceNodeId === input.targetNodeId) {
+      throw new Error("edge endpoints must differ");
     }
 
-    const source = this.getEntity(input.sourceEntityId);
-    const target = this.getEntity(input.targetEntityId);
+    const source = this.getNode(input.sourceNodeId);
+    const target = this.getNode(input.targetNodeId);
 
-    if (input.type === "governs" && (source.kind !== "country" || target.kind !== "organization")) {
+    if (input.kind === "governs" && (source.kind !== "country" || target.kind !== "organization")) {
       throw new Error("governs must connect country to organization");
     }
     if (
-      (input.type === "operates" || input.type === "publishes_to") &&
+      (input.kind === "operates" || input.kind === "publishes_to") &&
       (source.kind !== "organization" || target.kind !== "system")
     ) {
-      throw new Error(`${input.type} must connect organization to system`);
+      throw new Error(`${input.kind} must connect organization to system`);
     }
     if (
-      input.type === "part_of" &&
+      (input.kind === "part_of" || input.kind === "syncs_to") &&
       (source.kind !== "system" || target.kind !== "system")
     ) {
-      throw new Error("part_of must connect system to system");
-    }
-    if (
-      input.type === "syncs_to" &&
-      (source.kind !== "system" || target.kind !== "system")
-    ) {
-      throw new Error("syncs_to must connect system to system");
+      throw new Error(`${input.kind} must connect system to system`);
     }
 
-    if (input.type === "governs") {
-      const existing = relationshipId
+    if (input.kind === "governs") {
+      const existing = edgeId
         ? this.db
             .prepare(
-              "SELECT id FROM relationships WHERE target_entity_id = ? AND type = 'governs' AND id <> ? LIMIT 1",
+              "SELECT id FROM edges WHERE target_node_id = ? AND kind = 'governs' AND id <> ? LIMIT 1",
             )
-            .get(input.targetEntityId, relationshipId)
+            .get(input.targetNodeId, edgeId)
         : this.db
             .prepare(
-              "SELECT id FROM relationships WHERE target_entity_id = ? AND type = 'governs' LIMIT 1",
+              "SELECT id FROM edges WHERE target_node_id = ? AND kind = 'governs' LIMIT 1",
             )
-            .get(input.targetEntityId);
+            .get(input.targetNodeId);
       if (existing) {
-        throw new Error("organization may only have one governs relationship");
+        throw new Error("organization may only have one governs edge");
       }
     }
 
     return {
-      sourceEntityId: input.sourceEntityId,
-      targetEntityId: input.targetEntityId,
-      type: input.type,
+      sourceNodeId: input.sourceNodeId,
+      targetNodeId: input.targetNodeId,
+      kind: input.kind,
       note: normalizeString(input.note),
       properties: input.properties ?? {},
     };
@@ -882,24 +681,24 @@ export class SqliteGraphRepository {
     };
   }
 
-  private getEntity(id: string): Entity {
-    const row = this.db.prepare("SELECT * FROM entities WHERE id = ?").get(id) as RawEntity | undefined;
+  private getNode(id: string): GraphNode {
+    const row = this.db.prepare("SELECT * FROM nodes WHERE id = ?").get(id) as RawNode | undefined;
     if (!row) {
-      throw new Error(`entity not found: ${id}`);
+      throw new Error(`node not found: ${id}`);
     }
 
-    return mapEntity(row);
+    return mapNode(row);
   }
 
-  private getRelationship(id: string): Relationship {
+  private getEdge(id: string): GraphEdge {
     const row = this.db
-      .prepare("SELECT * FROM relationships WHERE id = ?")
-      .get(id) as RawRelationship | undefined;
+      .prepare("SELECT * FROM edges WHERE id = ?")
+      .get(id) as RawEdge | undefined;
     if (!row) {
-      throw new Error(`relationship not found: ${id}`);
+      throw new Error(`edge not found: ${id}`);
     }
 
-    return mapRelationship(row);
+    return mapEdge(row);
   }
 
   private getSource(id: string): Source {

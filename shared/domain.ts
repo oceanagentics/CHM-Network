@@ -1,9 +1,9 @@
-export type EntityKind =
+export type GraphNodeKind =
   | "country"
   | "organization"
   | "system";
 
-export type RelationshipType =
+export type GraphEdgeKind =
   | "governs"
   | "operates"
   | "part_of"
@@ -12,28 +12,14 @@ export type RelationshipType =
 
 export type ViewMode = "governance" | "country" | "technical";
 
-export interface Entity {
-  id: string;
-  kind: EntityKind;
-  name: string;
-  parentEntityId: string | null;
-  countryCode: string | null;
-  subtype: string | null;
-  properties: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-}
+export type RecordDepth = "stub" | "thin" | "rich";
 
-export interface Relationship {
-  id: string;
-  sourceEntityId: string;
-  targetEntityId: string;
-  type: RelationshipType;
-  note: string | null;
-  properties: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ReviewState =
+  | "unreviewed"
+  | "agent_researched"
+  | "needs_human_review"
+  | "human_reviewed"
+  | "needs_revision";
 
 export interface Source {
   id: string;
@@ -51,22 +37,6 @@ export interface SourceRef {
   id: string;
   title: string;
   url: string;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  category: string;
-}
-
-export interface EntityTag {
-  entityId: string;
-  tagId: string;
-}
-
-export interface RelationshipTag {
-  relationshipId: string;
-  tagId: string;
 }
 
 export interface SystemOperatorRef {
@@ -137,8 +107,57 @@ export interface SystemIdentifierScheme {
   source: SourceRef | null;
 }
 
-export interface SystemRyuRoute {
+export interface NodeDataDetails {
+  descriptors: SystemDataDescriptor[];
+  recordCount: SourcedMetric | null;
+  storageSize: SourcedMetric | null;
+}
+
+export interface NodeDetails {
+  aliases: string[];
+  operator: SystemOperatorRef | null;
+  role: string | null;
+  disciplineFamily: string | null;
+  geographicScope: string | null;
+  gallery: SystemGalleryItem[];
+  data: NodeDataDetails;
+  access: SystemAccessPath[];
+  identifiers: SystemIdentifierScheme[];
+  usage: SourcedMetric[];
+}
+
+export interface GraphNode {
   id: string;
+  kind: GraphNodeKind;
+  name: string;
+  countryCode: string | null;
+  subtype: string | null;
+  url: string | null;
+  summary: string | null;
+  description: string | null;
+  recordDepth: RecordDepth;
+  reviewState: ReviewState;
+  review: Record<string, unknown>;
+  details: NodeDetails;
+  properties: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GraphEdge {
+  id: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  kind: GraphEdgeKind;
+  note: string | null;
+  properties: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RyuRoute {
+  id: string;
+  nodeId: string;
   status: string;
   mode: string;
   priority: number;
@@ -148,36 +167,7 @@ export interface SystemRyuRoute {
   format: string | null;
   contractRef: string | null;
   caveat: string | null;
-}
-
-export interface SystemRyu {
-  routes: SystemRyuRoute[];
-}
-
-export interface SystemNode {
-  id: string;
-  kind: "system";
-  name: string;
-  countryCode: string | null;
-  parentSystemId: string | null;
-  operator: SystemOperatorRef | null;
-  primaryUrl: string | null;
-  shortDescription: string | null;
-  longDescription: string | null;
-  aliases: string[];
-  role: string | null;
-  disciplineFamily: string | null;
-  geographicScope: string | null;
-  gallery: SystemGalleryItem[];
-  data: {
-    descriptors: SystemDataDescriptor[];
-    recordCount: SourcedMetric | null;
-    storageSize: SourcedMetric | null;
-  };
-  access: SystemAccessPath[];
-  identifiers: SystemIdentifierScheme[];
-  usage: SourcedMetric[];
-  ryu: SystemRyu;
+  properties: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -194,13 +184,10 @@ export interface SavedView {
 }
 
 export interface GraphBootstrapPayload {
-  entities: Entity[];
-  relationships: Relationship[];
+  nodes: GraphNode[];
+  edges: GraphEdge[];
   sources: Source[];
-  tags: Tag[];
-  entityTags: EntityTag[];
-  relationshipTags: RelationshipTag[];
-  systemNodes: SystemNode[];
+  ryuRoutes: RyuRoute[];
   savedViews: SavedView[];
 }
 
@@ -212,21 +199,27 @@ export interface SavedViewInput {
   style: Record<string, unknown>;
 }
 
-export interface EntityInput {
-  kind: EntityKind;
+export interface GraphNodeInput {
+  kind: GraphNodeKind;
   name: string;
-  parentEntityId: string | null;
-  countryCode: string | null;
-  subtype: string | null;
-  properties: Record<string, unknown>;
+  countryCode?: string | null;
+  subtype?: string | null;
+  url?: string | null;
+  summary?: string | null;
+  description?: string | null;
+  recordDepth?: RecordDepth;
+  reviewState?: ReviewState;
+  review?: Record<string, unknown>;
+  details?: NodeDetails;
+  properties?: Record<string, unknown>;
 }
 
-export interface RelationshipInput {
-  sourceEntityId: string;
-  targetEntityId: string;
-  type: RelationshipType;
-  note: string | null;
-  properties: Record<string, unknown>;
+export interface GraphEdgeInput {
+  sourceNodeId: string;
+  targetNodeId: string;
+  kind: GraphEdgeKind;
+  note?: string | null;
+  properties?: Record<string, unknown>;
 }
 
 export interface SourceInput {
