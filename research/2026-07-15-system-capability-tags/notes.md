@@ -2,7 +2,7 @@
 
 Date: 2026-07-15
 
-Scope: all current `system` entities in `data/chm-network.sqlite`.
+Scope: all current `system` entities in `data/ryu.sqlite`.
 
 Destination tables:
 

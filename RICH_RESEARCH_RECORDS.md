@@ -1,10 +1,10 @@
-# Rich Research Records For Ryu / CHM Network
+# Rich Research Records For Ryu
 
-Use this guide when researching and backfilling rich database records for Ryu, the CHM Network graph. The goal is a record that helps a researcher quickly understand what a database is for, what data it contains, how large it is, how to access or contribute to it, who manages it, and which machine routes Ryu can use.
+Use this guide when researching and backfilling rich database records for Ryu. The goal is a record that helps a researcher quickly understand what a database is for, what data it contains, how large it is, how to access or contribute to it, who manages it, and which machine routes Ryu can use.
 
 ## Source Of Truth
 
-- Treat `data/chm-network.sqlite` as the canonical editable graph.
+- Treat `data/ryu.sqlite` as the canonical editable graph.
 - Do not create a parallel registry, merged CSV, seed file, or alternate bootstrap as a new source of truth.
 - After DB edits, regenerate the public bootstrap with `npm --workspace server run export:public`.
 - If UI-facing data changed, verify with `npm run build:public`.
@@ -219,7 +219,7 @@ Do not delete unrelated rows for other systems. Do not change existing user or a
 Run these checks before finishing:
 
 ```sh
-sqlite3 data/chm-network.sqlite "PRAGMA foreign_key_check;"
+sqlite3 data/ryu.sqlite "PRAGMA foreign_key_check;"
 npm --workspace server run export:public
 npm run build:public
 ```
@@ -227,13 +227,13 @@ npm run build:public
 For the target system, also check:
 
 ```sh
-sqlite3 -json data/chm-network.sqlite \
+sqlite3 -json data/ryu.sqlite \
   "SELECT id, url, summary, description, record_depth, review_state, details_json FROM nodes WHERE id='<system-id>';"
 
-sqlite3 -header -column data/chm-network.sqlite \
+sqlite3 -header -column data/ryu.sqlite \
   "SELECT kind, source_node_id, target_node_id, note FROM edges WHERE source_node_id='<system-id>' OR target_node_id='<system-id>' ORDER BY kind;"
 
-sqlite3 -header -column data/chm-network.sqlite \
+sqlite3 -header -column data/ryu.sqlite \
   "SELECT id, status, mode, priority, format, contract_ref FROM ryu_routes WHERE node_id='<system-id>' ORDER BY priority;"
 ```
 

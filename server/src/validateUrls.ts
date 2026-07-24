@@ -29,7 +29,7 @@ const publicDir = path.join(repoRoot, "client", "public");
 const timeoutMs = 15_000;
 const sampleBytes = 64 * 1024;
 const userAgent =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 CHM-Network-URL-Validator/1.0";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 Ryu-URL-Validator/1.0";
 const execFileAsync = promisify(execFile);
 
 function isLocalPublicPath(url: string): boolean {

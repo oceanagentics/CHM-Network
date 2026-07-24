@@ -31,7 +31,7 @@ It includes global, regional, and cross-domain systems that materially recur in 
 
 ## Import Model
 
-The live SQLite database in `data/chm-network.sqlite` is the source of truth.
+The live SQLite database in `data/ryu.sqlite` is the source of truth.
 
 This folder is the first research import batch, not a permanent central CSV registry. Later research jobs can import separately into the same database.
 

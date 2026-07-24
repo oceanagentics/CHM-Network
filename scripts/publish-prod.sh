@@ -30,10 +30,10 @@ scp_opts=(
 )
 
 release_id="$(date -u +%Y%m%dT%H%M%SZ)-$(git -C "$repo_root" rev-parse --short HEAD)"
-remote_archive="$deploy_home/chm-network-release-$release_id.tar.gz"
+remote_archive="$deploy_home/ryu-release-$release_id.tar.gz"
 
-tmp_dir="$(mktemp -d -t chm-network-publish)"
-archive_path="$tmp_dir/chm-network-release.tar.gz"
+tmp_dir="$(mktemp -d -t ryu-publish)"
+archive_path="$tmp_dir/ryu-release.tar.gz"
 cleanup() {
   rm -rf "$tmp_dir"
 }

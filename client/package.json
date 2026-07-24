@@ -1,5 +1,5 @@
 {
-  "name": "chm-network-client",
+  "name": "ryu-client",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,5 +1,5 @@
 {
-  "name": "chm-network",
+  "name": "ryu",
   "private": true,
   "workspaces": [
     "client",

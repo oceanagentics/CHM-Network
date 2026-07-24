@@ -28,7 +28,7 @@ This next-wave depth pass is intended to cover:
 
 ## Import Model
 
-The live SQLite database in `data/chm-network.sqlite` is the source of truth.
+The live SQLite database in `data/ryu.sqlite` is the source of truth.
 
 This folder is an incremental research job that can be imported directly into that database.
 

@@ -4,7 +4,7 @@ import type {
   PointerEvent,
   ReactNode,
 } from "react";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowsAltOutlined,
   CloseOutlined,
@@ -66,12 +66,51 @@ const paneLabels: Record<PaneId, string> = {
   details: "Details",
 };
 
+const nodeRouteParam = "node";
+
 function clampPaneWidth(paneId: ResizablePaneId, width: number): number {
   const size = paneSize[paneId];
   return Math.min(size.maxWidth, Math.max(size.minWidth, width));
 }
 
+function routedNodeId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return new URLSearchParams(window.location.search).get(nodeRouteParam);
+}
+
+function nodeRouteUrl(nodeId: string | null): string {
+  const url = new URL(window.location.href);
+  if (nodeId) {
+    url.searchParams.set(nodeRouteParam, nodeId);
+  } else {
+    url.searchParams.delete(nodeRouteParam);
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function updateNodeRoute(nodeId: string | null, replace = false) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const nextUrl = nodeRouteUrl(nodeId);
+  if (
+    nextUrl ===
+    `${window.location.pathname}${window.location.search}${window.location.hash}`
+  ) {
+    return;
+  }
+
+  const method = replace ? "replaceState" : "pushState";
+  window.history[method](null, "", nextUrl);
+}
+
 export function App() {
+  const applyingNodeRoute = useRef(false);
   const [nodeMap3dArrangement, setNodeMap3dArrangement] =
     useState<NodeMap3dArrangement>("current");
   const [openPanes, setOpenPanes] = useState<PaneOpenState>({
@@ -93,6 +132,7 @@ export function App() {
   const setDisplayMode = useGraphStore((state) => state.setDisplayMode);
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
+  const setSelectedEntityId = useGraphStore((state) => state.setSelectedEntityId);
   const resetSelection = useGraphStore((state) => state.resetSelection);
 
   useEffect(() => {
@@ -130,6 +170,57 @@ export function App() {
     setFocusEntityId,
     setViewMode,
   ]);
+
+  useEffect(() => {
+    if (!graph) {
+      return;
+    }
+
+    function applyNodeRoute(resetWhenEmpty = false) {
+      const nodeId = routedNodeId();
+      if (nodeId && graph?.nodeById[nodeId]) {
+        applyingNodeRoute.current = true;
+        setSelectedEntityId(nodeId);
+        return;
+      }
+
+      if (nodeId) {
+        applyingNodeRoute.current = true;
+        resetSelection();
+        updateNodeRoute(null, true);
+      } else if (resetWhenEmpty) {
+        applyingNodeRoute.current = true;
+        resetSelection();
+      }
+    }
+
+    applyNodeRoute();
+    const handlePopState = () => applyNodeRoute(true);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [graph, resetSelection, setSelectedEntityId]);
+
+  useEffect(() => {
+    if (!graph) {
+      return;
+    }
+
+    const validSelectedEntityId =
+      selectedEntityId && graph.nodeById[selectedEntityId]
+        ? selectedEntityId
+        : null;
+
+    if (applyingNodeRoute.current) {
+      if (routedNodeId() === validSelectedEntityId) {
+        applyingNodeRoute.current = false;
+      }
+      return;
+    }
+
+    if (routedNodeId() !== validSelectedEntityId) {
+      updateNodeRoute(validSelectedEntityId);
+    }
+  }, [graph, selectedEntityId]);
 
   const showEntityDetails =
     graph != null &&

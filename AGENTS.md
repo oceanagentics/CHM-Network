@@ -1,14 +1,14 @@
-# CHM Network Agent Notes
+# Ryu Agent Notes
 
 ## Canonical Graph Data
-- Treat `data/chm-network.sqlite` as the canonical graph during active editing.
+- Treat `data/ryu.sqlite` as the canonical graph during active editing.
 - Treat the live app DB as the only graph source of truth; do not keep alternate bootstrap or seed graph sources in the repo.
 - Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
 
 ## Research Import Workflow
 - Each research job may live in its own dated folder under `research/`.
 - A research job should include `systems.csv`, `system_links.csv`, `sources.csv`, and optional notes.
-- Import research jobs directly into `data/chm-network.sqlite` with `npm --workspace server run import:inventory -- <research-folder>`.
+- Import research jobs directly into `data/ryu.sqlite` with `npm --workspace server run import:inventory -- <research-folder>`.
 - Research jobs may reference parent systems or workflow targets that were already imported by earlier jobs.
 - Do not create or maintain a separate merged central CSV registry.
 
@@ -84,7 +84,7 @@
 - When capture is blocked, report the blocker and target URL back to the human so they can provide access, clear the session, or supply screenshots.
 
 ## Startup Behavior
-- On startup, the server opens `data/chm-network.sqlite` and validates that the required app tables exist.
+- On startup, the server opens `data/ryu.sqlite` and validates that the required app tables exist.
 - If the DB file is missing or invalid, the server fails fast instead of creating or reseeding an alternate graph.
 
 ## GCP Environment
@@ -99,7 +99,7 @@
 - The VM's external IP is currently ephemeral. If the instance is stopped and started, the IP may change until a static IP is attached.
 
 ## Public Publishing
-- Use the dedicated Compute Engine key at `~/.ssh/CHM-Network` for CHM Network VM access.
+- Use the dedicated Compute Engine key at `~/.ssh/CHM-Network` for Ryu production VM access.
 - Publish the public site with `npm run publish:prod`.
 - The public build uses `client/.env.public` and reads from `/bootstrap.public.json` instead of the live API.
 - The export step writes the sanitized bootstrap file to `client/public/bootstrap.public.json`.

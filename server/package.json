@@ -1,5 +1,5 @@
 {
-  "name": "chm-network-server",
+  "name": "ryu-server",
   "private": true,
   "type": "module",
   "scripts": {

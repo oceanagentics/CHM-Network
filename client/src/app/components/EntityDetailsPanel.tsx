@@ -1,6 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { CloseOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Card, Flex, List, Tabs, Tag, Typography } from "antd";
+import {
+  CloseOutlined,
+  InfoCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
+import { Button, Card, Flex, List, Tabs, Tag, Tooltip, Typography } from "antd";
 
 import type {
   GraphEdge,
@@ -21,6 +26,23 @@ function labelize(value: string): string {
   return value
     .replaceAll("_", " ")
     .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function tagColor(value: string): string | undefined {
+  if (value === "rich" || value === "human_reviewed") {
+    return "green";
+  }
+  if (value === "thin" || value === "agent_researched") {
+    return "blue";
+  }
+  if (value === "needs_human_review") {
+    return "orange";
+  }
+  if (value === "needs_revision") {
+    return "red";
+  }
+
+  return undefined;
 }
 
 function InlineField({
@@ -58,10 +80,41 @@ function DetailSection({
 }
 
 function SourceLink({ source }: { source: SourceRef }) {
+  const fullSource = useGraphStore((state) => state.graph?.sourceById[source.id]);
+  const sourceUrl = fullSource?.url ?? source.url;
+  const tooltip = fullSource ? (
+    <Flex className="source-record-tooltip" vertical gap={2}>
+      <Typography.Text strong>{fullSource.title}</Typography.Text>
+      <Typography.Text>ID: {fullSource.id}</Typography.Text>
+      <Typography.Text>Type: {labelize(fullSource.sourceType)}</Typography.Text>
+      {fullSource.publisher ? (
+        <Typography.Text>Publisher: {fullSource.publisher}</Typography.Text>
+      ) : null}
+      {fullSource.publishedAt ? (
+        <Typography.Text>Published: {fullSource.publishedAt}</Typography.Text>
+      ) : null}
+      {fullSource.accessedAt ? (
+        <Typography.Text>Accessed: {fullSource.accessedAt}</Typography.Text>
+      ) : null}
+      {fullSource.url ? <Typography.Text>URL: {fullSource.url}</Typography.Text> : null}
+      {fullSource.localPath ? (
+        <Typography.Text>Local path: {fullSource.localPath}</Typography.Text>
+      ) : null}
+      {fullSource.note ? <Typography.Text>{fullSource.note}</Typography.Text> : null}
+    </Flex>
+  ) : (
+    `Source record ${source.id} is not loaded.`
+  );
+
   return (
-    <Typography.Link href={source.url} target="_blank" rel="noreferrer">
-      {source.title}
-    </Typography.Link>
+    <span className="source-record-link">
+      <Typography.Link href={sourceUrl} target="_blank" rel="noreferrer">
+        {source.title}
+      </Typography.Link>
+      <Tooltip title={tooltip}>
+        <InfoCircleOutlined className="source-record-info-icon" />
+      </Tooltip>
+    </span>
   );
 }
 
@@ -447,6 +500,16 @@ export function EntityDetailsPanel({
         <div className="entity-detail-grid">
           <InlineField label="Entity type">
             <Tag bordered={false}>{labelize(entity.kind)}</Tag>
+          </InlineField>
+          <InlineField label="Record depth">
+            <Tag bordered={false} color={tagColor(entity.recordDepth)}>
+              {labelize(entity.recordDepth)}
+            </Tag>
+          </InlineField>
+          <InlineField label="Review state">
+            <Tag bordered={false} color={tagColor(entity.reviewState)}>
+              {labelize(entity.reviewState)}
+            </Tag>
           </InlineField>
           {isSystem && system ? (
             <>

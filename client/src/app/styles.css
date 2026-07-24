@@ -688,6 +688,28 @@ body {
   overflow-wrap: anywhere;
 }
 
+.source-record-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.source-record-info-icon {
+  flex: 0 0 auto;
+  color: #69798c;
+  font-size: 12px;
+}
+
+.source-record-tooltip {
+  max-width: 320px;
+}
+
+.source-record-tooltip .ant-typography {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+
 .entity-detail-note {
   margin-bottom: 0;
   color: #3c4b60;
