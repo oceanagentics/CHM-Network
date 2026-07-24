@@ -5,6 +5,12 @@
 - Treat the live app DB as the only graph source of truth; do not keep alternate bootstrap or seed graph sources in the repo.
 - Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
 
+## Documentation
+- Follow `documentation/RICH_RESEARCH_RECORDS.md` for standing rich research and record-backfill instructions.
+- Use `documentation/mvp.md` as the current Deeptime/Ryu MCP portal working plan.
+- Use `documentation/osusources.md` as the current Oregon/OSU source plan.
+- Treat `documentation/mvp.md` and `documentation/osusources.md` as active project plans for today's Deeptime/Ryu work, not permanent modeling policy.
+
 ## Research Import Workflow
 - Each research job may live in its own dated folder under `research/`.
 - A research job should include `systems.csv`, `system_links.csv`, `sources.csv`, and optional notes.
@@ -72,11 +78,18 @@
 - Treat `ryu_routes` as the first-class operational route index for agents.
 - Keep `nodes.details_json.access` descriptive and evidence-facing; use `ryu_routes` to decide how an agent should actually retrieve data.
 - Use `ryu_routes` only for machine access routes; human lookup, web UI, manual request, researcher-library, and raw-source context stays in `nodes.details_json.access`.
-- For node/system research and rich record backfills, follow `RICH_RESEARCH_RECORDS.md` for the full `ryu` shape and research rules.
+- For node/system research and rich record backfills, follow `documentation/RICH_RESEARCH_RECORDS.md` for the full `ryu` shape and research rules.
 - Keep `ryu_routes` compact: route id, status, mode, priority, capabilities, target, upstream, format, contract_ref, and caveat.
 - Do not store MCP/API tool contracts inline; `contract_ref` points to the relevant MCP, API, or service contract.
 - Treat `status='planned'` as non-live; do not use that route for runtime access unless the requested work is planning or implementation.
 - Prefer the lowest-priority route that matches the needed capability. No `ryu_routes` rows means no approved operational route is recorded yet.
+
+## Ryu MCP Portal
+- Ryu should act as a system discovery and routing portal, not one universal marine-data API.
+- The portal surface should expose stable discovery tools such as `list_systems`, `search_systems`, and `get_system`.
+- Portal responses should return enough system, source, capability, route, connector, auth, delivery-format, and caveat metadata for clients such as Deeptime to decide which systems to query and how.
+- System-specific APIs or MCP connectors own source-specific tools for sending, receiving, retrieving, and transforming data.
+- Keep connector references in route metadata or route properties; keep detailed connector/API contracts in referenced docs or connector packages.
 
 ## Rich Record Screenshots
 - For rich record gallery screenshots, use the Codex in-app Browser as the preferred capture path before standalone headless browser tools.

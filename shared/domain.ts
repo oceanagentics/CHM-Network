@@ -172,6 +172,76 @@ export interface RyuRoute {
   updatedAt: string;
 }
 
+export interface RyuPortalSource {
+  ryuSourceId: string;
+  title: string;
+  sourceType: string;
+  provider: string | null;
+  originalUrl: string | null;
+  localPath: string | null;
+  citation: string | null;
+  license: string | null;
+  updateCadence: string | null;
+  accessedAt: string | null;
+  caveats: string[];
+}
+
+export interface RyuPortalRoute {
+  routeId: string;
+  status: string;
+  mode: string;
+  priority: number;
+  connectorRef: string | null;
+  connectorTarget: string | null;
+  upstream: string | null;
+  supportedTools: string[];
+  capabilities: string[];
+  deliveryFormats: string[];
+  auth: {
+    required: boolean;
+  };
+  contractRef: string | null;
+  caveats: string[];
+  properties: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RyuSystemOperator {
+  id: string;
+  name: string;
+  countryCode: string | null;
+}
+
+export interface RyuSystemRecord {
+  ryuSystemId: string;
+  name: string;
+  operator: RyuSystemOperator | null;
+  summary: string | null;
+  description: string | null;
+  url: string | null;
+  domains: string[];
+  geographies: string[];
+  capabilities: string[];
+  routes: RyuPortalRoute[];
+  sources: RyuPortalSource[];
+  caveats: string[];
+  recordDepth: RecordDepth;
+  reviewState: ReviewState;
+  updatedAt: string;
+}
+
+export interface RyuSystemQuery {
+  query?: string;
+  domains?: string[];
+  geographies?: string[];
+  capabilities?: string[];
+  deliveryFormats?: string[];
+  routeStatus?: string[];
+  includeRoutes?: boolean;
+  includeSources?: boolean;
+}
+
 export interface SavedView {
   id: string;
   name: string;

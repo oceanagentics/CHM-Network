@@ -4,6 +4,7 @@ import express from "express";
 import type {
   GraphEdgeInput,
   GraphNodeInput,
+  RyuSystemQuery,
   SavedViewInput,
   SourceInput,
 } from "../../shared/domain";
@@ -21,6 +22,45 @@ function sendError(response: express.Response, error: unknown) {
   response.status(status).json({ error: message });
 }
 
+function readStringList(value: unknown): string[] | undefined {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => readStringList(item) ?? []);
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const values = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return values.length > 0 ? values : undefined;
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  if (value === "true" || value === true) {
+    return true;
+  }
+  if (value === "false" || value === false) {
+    return false;
+  }
+
+  return undefined;
+}
+
+function readSystemQuery(input: Record<string, unknown>): RyuSystemQuery {
+  return {
+    query: typeof input.query === "string" ? input.query : undefined,
+    domains: readStringList(input.domains),
+    geographies: readStringList(input.geographies),
+    capabilities: readStringList(input.capabilities),
+    deliveryFormats: readStringList(input.deliveryFormats),
+    routeStatus: readStringList(input.routeStatus),
+    includeRoutes: readBoolean(input.includeRoutes),
+    includeSources: readBoolean(input.includeSources),
+  };
+}
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -34,6 +74,26 @@ app.get("/api/health", (_request, response) => {
 
 app.get("/api/graph/bootstrap", (_request, response) => {
   response.json(repository.getBootstrap());
+});
+
+app.get("/api/ryu/systems", (request, response) => {
+  response.json(repository.listPortalSystems(readSystemQuery(request.query)));
+});
+
+app.get("/api/ryu/systems/search", (request, response) => {
+  response.json(repository.searchPortalSystems(readSystemQuery(request.query)));
+});
+
+app.post("/api/ryu/systems/search", (request, response) => {
+  response.json(repository.searchPortalSystems(readSystemQuery(request.body)));
+});
+
+app.get("/api/ryu/systems/:id", (request, response) => {
+  try {
+    response.json(repository.getPortalSystem(request.params.id, readSystemQuery(request.query)));
+  } catch (error) {
+    sendError(response, error);
+  }
 });
 
 app.get("/api/saved-views", (_request, response) => {
