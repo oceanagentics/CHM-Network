@@ -4002,6 +4002,167 @@
       "updatedAt": "2026-07-24T13:21:17.240Z"
     },
     {
+      "id": "org-gebco",
+      "kind": "organization",
+      "name": "GEBCO",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "url": "https://www.gebco.net/",
+      "summary": "International bathymetry program providing global ocean depth data products and web services.",
+      "description": "GEBCO provides global gridded bathymetry products and web map services useful as ocean relief context in Ryu.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [
+          "General Bathymetric Chart of the Oceans"
+        ],
+        "operator": null,
+        "role": null,
+        "disciplineFamily": null,
+        "geographicScope": null,
+        "gallery": [],
+        "data": {
+          "descriptors": [],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-gebco-wms"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:08:49.289Z"
+    },
+    {
+      "id": "system-gebco-web-services",
+      "kind": "system",
+      "name": "GEBCO Web Services",
+      "countryCode": "INT",
+      "subtype": "bathymetry_service",
+      "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service",
+      "summary": "GEBCO WMS raster service for global bathymetry and ocean relief context.",
+      "description": "GEBCO Web Services expose GEBCO grid map layers through WMS. For Ryu MVP-0, the service should be registered as an ocean relief and bathymetry underlay behind Oregon marine data.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [
+          "GEBCO WMS"
+        ],
+        "operator": {
+          "id": "org-gebco",
+          "name": "GEBCO",
+          "countryCode": "INT"
+        },
+        "role": "bathymetry_basemap",
+        "disciplineFamily": "bathymetry",
+        "geographicScope": "global ocean",
+        "gallery": [],
+        "data": {
+          "descriptors": [
+            {
+              "id": "system-gebco-web-services-format-wms",
+              "category": "format",
+              "label": "OGC WMS",
+              "description": "Geo-referenced raster map images for bathymetry and ocean relief context.",
+              "source": {
+                "id": "src-gebco-wms",
+                "title": "GEBCO Web Map Service",
+                "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service"
+              }
+            },
+            {
+              "id": "system-gebco-web-services-type-bathymetry",
+              "category": "type",
+              "label": "Bathymetry grid visualization",
+              "description": "GEBCO grid layers available as shaded relief, flat map, and type identifier map imagery.",
+              "source": {
+                "id": "src-gebco-wms",
+                "title": "GEBCO Web Map Service",
+                "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service"
+              }
+            },
+            {
+              "id": "system-gebco-web-services-use-context",
+              "category": "use",
+              "label": "Ocean relief underlay",
+              "description": "Visual context layer for interpreting Oregon marine boundaries, ecology, and fisheries overlays.",
+              "source": {
+                "id": "src-gebco-wms",
+                "title": "GEBCO Web Map Service",
+                "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service"
+              }
+            }
+          ],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [
+          {
+            "id": "system-gebco-web-services-access-wms",
+            "type": "service",
+            "method": "wms",
+            "label": "GEBCO WMS endpoint",
+            "url": "https://wms.gebco.net/mapserv?",
+            "description": "WMS endpoint for GEBCO grid map layers.",
+            "source": {
+              "id": "src-gebco-wms",
+              "title": "GEBCO Web Map Service",
+              "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service"
+            }
+          },
+          {
+            "id": "system-gebco-web-services-access-docs",
+            "type": "documentation",
+            "method": "web",
+            "label": "GEBCO WMS documentation",
+            "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service",
+            "description": "Documentation for supported WMS requests, available layers, acknowledgements, and disclaimers.",
+            "source": {
+              "id": "src-gebco-wms",
+              "title": "GEBCO Web Map Service",
+              "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service"
+            }
+          }
+        ],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-gebco-wms"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:28:07.681Z"
+    },
+    {
       "id": "org-geome-collaboration",
       "kind": "organization",
       "name": "GEOME collaboration",
@@ -7084,6 +7245,182 @@
       "updatedAt": "2026-07-24T13:21:17.240Z"
     },
     {
+      "id": "system-oregon-dlcd-coastal-gis",
+      "kind": "system",
+      "name": "Oregon DLCD Coastal GIS",
+      "countryCode": "USA",
+      "subtype": "boundary_context",
+      "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx",
+      "summary": "Oregon coastal planning GIS downloads and services for coastal zone, shoreline, territorial sea, rocky habitat, and planning boundaries.",
+      "description": "Oregon DLCD and OCMP publish coastal GIS datasets and web services. For Ryu MVP-0, this node covers the Oregon coastal boundary/context package, including the Territorial Sea Plan MapServer as a machine-access route rather than a separate node.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [
+          "Oregon OCMP Coastal GIS",
+          "Oregon Territorial Sea Plan GIS"
+        ],
+        "operator": {
+          "id": "org-oregon-dlcd",
+          "name": "Oregon Department of Land Conservation and Development",
+          "countryCode": "USA"
+        },
+        "role": "management_boundary_context",
+        "disciplineFamily": "coastal_planning",
+        "geographicScope": "Oregon coast and territorial sea",
+        "gallery": [],
+        "data": {
+          "descriptors": [
+            {
+              "id": "system-oregon-dlcd-coastal-gis-type-coastal-zone",
+              "category": "type",
+              "label": "Coastal zone and shoreline boundaries",
+              "description": "DLCD coastal management downloads include coastal zone, territorial sea boundary, ocean renewable energy GLD, and mean high water shoreline datasets.",
+              "source": {
+                "id": "src-dlcd-maps-data-tools",
+                "title": "Oregon DLCD Maps, Data and Tools",
+                "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx"
+              }
+            },
+            {
+              "id": "system-oregon-dlcd-coastal-gis-format-arcgis-rest",
+              "category": "format",
+              "label": "ArcGIS REST MapServer",
+              "description": "Territorial Sea Plan service supports map export, query, and layer inspection through ArcGIS REST.",
+              "source": {
+                "id": "src-dlcd-territorial-sea-mapserver",
+                "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+                "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer"
+              }
+            },
+            {
+              "id": "system-oregon-dlcd-coastal-gis-format-geojson-pbf",
+              "category": "format",
+              "label": "GeoJSON and PBF query output",
+              "description": "Territorial Sea Plan MapServer lists JSON, GeoJSON, and PBF as supported query formats.",
+              "source": {
+                "id": "src-dlcd-territorial-sea-mapserver",
+                "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+                "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer"
+              }
+            },
+            {
+              "id": "system-oregon-dlcd-coastal-gis-type-rocky-habitat",
+              "category": "type",
+              "label": "Rocky habitat and renewable energy planning areas",
+              "description": "Territorial Sea Plan layers include Part V renewable energy areas and Part III rocky habitat managed areas.",
+              "source": {
+                "id": "src-dlcd-territorial-sea-mapserver",
+                "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+                "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer"
+              }
+            }
+          ],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [
+          {
+            "id": "system-oregon-dlcd-coastal-gis-access-downloads",
+            "type": "download",
+            "method": "gis_downloads",
+            "label": "DLCD coastal management GIS downloads",
+            "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx",
+            "description": "Official DLCD page linking Oregon coastal zone, territorial sea boundary, ocean renewable energy, and shoreline downloads.",
+            "source": {
+              "id": "src-dlcd-maps-data-tools",
+              "title": "Oregon DLCD Maps, Data and Tools",
+              "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx"
+            }
+          },
+          {
+            "id": "system-oregon-dlcd-coastal-gis-access-tsp-mapserver",
+            "type": "service",
+            "method": "arcgis_rest",
+            "label": "Territorial Sea Plan MapServer",
+            "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer",
+            "description": "ArcGIS REST service for Territorial Sea Plan renewable energy and rocky habitat managed area layers.",
+            "source": {
+              "id": "src-dlcd-territorial-sea-mapserver",
+              "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+              "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer"
+            }
+          }
+        ],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-dlcd-maps-data-tools",
+          "src-dlcd-territorial-sea-mapserver"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:28:07.681Z"
+    },
+    {
+      "id": "org-oregon-dlcd",
+      "kind": "organization",
+      "name": "Oregon Department of Land Conservation and Development",
+      "countryCode": "USA",
+      "subtype": "system_operator",
+      "url": "https://www.oregon.gov/lcd/",
+      "summary": "Oregon state land use and coastal management agency publishing coastal planning GIS data.",
+      "description": "Oregon DLCD and the Oregon Coastal Management Program publish coastal GIS datasets and web services used for Oregon coastal zone, territorial sea, shoreline, rocky habitat, and planning context.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [
+          "Oregon DLCD",
+          "OCMP"
+        ],
+        "operator": null,
+        "role": null,
+        "disciplineFamily": null,
+        "geographicScope": null,
+        "gallery": [],
+        "data": {
+          "descriptors": [],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-dlcd-maps-data-tools",
+          "src-dlcd-territorial-sea-mapserver"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:08:49.289Z"
+    },
+    {
       "id": "system-pangaea",
       "kind": "system",
       "name": "PANGAEA",
@@ -7227,6 +7564,167 @@
       "properties": {},
       "createdAt": "2026-05-26T16:46:26.461Z",
       "updatedAt": "2026-07-16T14:05:43.391Z"
+    },
+    {
+      "id": "org-protomaps",
+      "kind": "organization",
+      "name": "Protomaps",
+      "countryCode": "INT",
+      "subtype": "system_operator",
+      "url": "https://docs.protomaps.com/",
+      "summary": "Open source web mapping and PMTiles provider used for an OpenStreetMap-derived basemap.",
+      "description": "Protomaps provides PMTiles tooling and an OpenStreetMap-derived vector basemap that can be copied to owned storage or extracted into regional cutouts for Ryu map context.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [],
+        "operator": null,
+        "role": null,
+        "disciplineFamily": null,
+        "geographicScope": null,
+        "gallery": [],
+        "data": {
+          "descriptors": [],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-protomaps-docs",
+          "src-protomaps-basemap-downloads"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:08:49.289Z"
+    },
+    {
+      "id": "system-protomaps-basemap",
+      "kind": "system",
+      "name": "Protomaps Basemap",
+      "countryCode": "INT",
+      "subtype": "basemap",
+      "url": "https://docs.protomaps.com/basemaps/downloads",
+      "summary": "OpenStreetMap-derived vector basemap distributed as PMTiles for self-hosted land, coast, roads, and label context.",
+      "description": "The Protomaps Basemap is a general purpose vector basemap derived from OpenStreetMap and distributed as PMTiles. For Ryu MVP-0 it should supply default land, coast, road, water feature, and label context behind Oregon marine layers.",
+      "recordDepth": "thin",
+      "reviewState": "agent_researched",
+      "review": {
+        "agentResearch": [
+          {
+            "by": "Codex",
+            "at": "2026-07-24",
+            "scope": "OSU MVP-0 source research pass"
+          }
+        ],
+        "humanReview": []
+      },
+      "details": {
+        "aliases": [
+          "Protomaps OSM Basemap"
+        ],
+        "operator": {
+          "id": "org-protomaps",
+          "name": "Protomaps",
+          "countryCode": "INT"
+        },
+        "role": "basemap",
+        "disciplineFamily": "cartography",
+        "geographicScope": "global with Oregon and Pacific Northwest cutout planned",
+        "gallery": [],
+        "data": {
+          "descriptors": [
+            {
+              "id": "system-protomaps-basemap-format-pmtiles",
+              "category": "format",
+              "label": "PMTiles",
+              "description": "Single-file vector tile archive suitable for self-hosted regional cutouts.",
+              "source": {
+                "id": "src-protomaps-basemap-downloads",
+                "title": "Protomaps Basemap Downloads",
+                "url": "https://docs.protomaps.com/basemaps/downloads"
+              }
+            },
+            {
+              "id": "system-protomaps-basemap-type-openstreetmap-derived",
+              "category": "type",
+              "label": "OpenStreetMap-derived basemap",
+              "description": "General purpose vector basemap with roads, water features, city labels, and location context.",
+              "source": {
+                "id": "src-protomaps-basemap-downloads",
+                "title": "Protomaps Basemap Downloads",
+                "url": "https://docs.protomaps.com/basemaps/downloads"
+              }
+            },
+            {
+              "id": "system-protomaps-basemap-method-regional-extract",
+              "category": "access",
+              "label": "Regional PMTiles extract",
+              "description": "Use PMTiles extract workflow for an Oregon or Pacific Northwest cutout instead of storing the full planet file.",
+              "source": {
+                "id": "src-protomaps-basemap-downloads",
+                "title": "Protomaps Basemap Downloads",
+                "url": "https://docs.protomaps.com/basemaps/downloads"
+              }
+            }
+          ],
+          "recordCount": null,
+          "storageSize": null
+        },
+        "access": [
+          {
+            "id": "system-protomaps-basemap-access-downloads",
+            "type": "download",
+            "method": "pmtiles_extract",
+            "label": "PMTiles downloads and regional extracts",
+            "url": "https://docs.protomaps.com/basemaps/downloads",
+            "description": "Download full basemap builds or create regional cutouts with PMTiles tooling.",
+            "source": {
+              "id": "src-protomaps-basemap-downloads",
+              "title": "Protomaps Basemap Downloads",
+              "url": "https://docs.protomaps.com/basemaps/downloads"
+            }
+          },
+          {
+            "id": "system-protomaps-basemap-access-docs",
+            "type": "documentation",
+            "method": "web",
+            "label": "Protomaps documentation",
+            "url": "https://docs.protomaps.com/",
+            "description": "Documentation for PMTiles, serving options, browser integrations, and basemap styling.",
+            "source": {
+              "id": "src-protomaps-docs",
+              "title": "Protomaps Docs",
+              "url": "https://docs.protomaps.com/"
+            }
+          }
+        ],
+        "identifiers": [],
+        "usage": []
+      },
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-protomaps-docs",
+          "src-protomaps-basemap-downloads"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.289Z",
+      "updatedAt": "2026-07-24T14:28:07.681Z"
     },
     {
       "id": "org-q-quatics",
@@ -9793,6 +10291,34 @@
       "updatedAt": "2026-07-24T13:21:17.241Z"
     },
     {
+      "id": "rel-gebco-operates-gebco-web-services",
+      "sourceNodeId": "org-gebco",
+      "targetNodeId": "system-gebco-web-services",
+      "kind": "operates",
+      "note": "GEBCO publishes the WMS bathymetry web service used as a planned Ryu underlay.",
+      "properties": {
+        "sourceRefs": [
+          "src-gebco-wms"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
+    },
+    {
+      "id": "rel-gebco-part-of-int",
+      "sourceNodeId": "country-int",
+      "targetNodeId": "org-gebco",
+      "kind": "governs",
+      "note": "GEBCO is grouped under international context for global bathymetry data products.",
+      "properties": {
+        "sourceRefs": [
+          "src-gebco-wms"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
+    },
+    {
       "id": "rel-geome-collaboration-operates-genomic-observatories-metadatabase",
       "sourceNodeId": "org-geome-collaboration",
       "targetNodeId": "system-geome",
@@ -10163,6 +10689,64 @@
       "properties": {},
       "createdAt": "2026-05-26T21:51:00.374Z",
       "updatedAt": "2026-07-24T13:21:17.241Z"
+    },
+    {
+      "id": "rel-oregon-dlcd-operates-oregon-dlcd-coastal-gis",
+      "sourceNodeId": "org-oregon-dlcd",
+      "targetNodeId": "system-oregon-dlcd-coastal-gis",
+      "kind": "operates",
+      "note": "Oregon DLCD and OCMP publish the coastal GIS downloads and Territorial Sea Plan service.",
+      "properties": {
+        "sourceRefs": [
+          "src-dlcd-maps-data-tools",
+          "src-dlcd-territorial-sea-mapserver"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
+    },
+    {
+      "id": "rel-oregon-dlcd-part-of-usa",
+      "sourceNodeId": "country-usa",
+      "targetNodeId": "org-oregon-dlcd",
+      "kind": "governs",
+      "note": "Oregon DLCD is a United States state agency context node for Oregon coastal GIS.",
+      "properties": {
+        "sourceRefs": [
+          "src-dlcd-maps-data-tools"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
+    },
+    {
+      "id": "rel-protomaps-operates-protomaps-basemap",
+      "sourceNodeId": "org-protomaps",
+      "targetNodeId": "system-protomaps-basemap",
+      "kind": "operates",
+      "note": "Protomaps publishes the OpenStreetMap-derived Protomaps Basemap and PMTiles documentation.",
+      "properties": {
+        "sourceRefs": [
+          "src-protomaps-docs",
+          "src-protomaps-basemap-downloads"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
+    },
+    {
+      "id": "rel-protomaps-part-of-int",
+      "sourceNodeId": "country-int",
+      "targetNodeId": "org-protomaps",
+      "kind": "governs",
+      "note": "Protomaps is grouped under international context for this global basemap source.",
+      "properties": {
+        "sourceRefs": [
+          "src-protomaps-docs"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.290Z",
+      "updatedAt": "2026-07-24T14:08:49.290Z"
     },
     {
       "id": "rel-q-quatics-operates-fishbase",
@@ -10984,6 +11568,17 @@
       "note": "GBIF technical documentation entry point used as a reachable source for API, downloads, IPT, data publishing, and data-use access paths; www.gbif.org overview pages can present Cloudflare challenges to automated validation."
     },
     {
+      "id": "src-gebco-wms",
+      "title": "GEBCO Web Map Service",
+      "sourceType": "official_docs",
+      "url": "https://www.gebco.net/data-products/gebco-web-services/web-map-service",
+      "localPath": null,
+      "publisher": "GEBCO / BODC",
+      "publishedAt": null,
+      "accessedAt": "2026-07-24",
+      "note": "Official GEBCO WMS documentation and current service URL for bathymetry map layers."
+    },
+    {
       "id": "src-geome-home",
       "title": "GEOME homepage",
       "sourceType": "official_about",
@@ -11215,6 +11810,28 @@
       "note": "OceanSITES programme overview and open data framing"
     },
     {
+      "id": "src-dlcd-maps-data-tools",
+      "title": "Oregon DLCD Maps, Data and Tools",
+      "sourceType": "data_portal",
+      "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx",
+      "localPath": null,
+      "publisher": "Oregon Department of Land Conservation and Development",
+      "publishedAt": null,
+      "accessedAt": "2026-07-24",
+      "note": "Official Oregon DLCD data and web services page listing coastal management GIS datasets."
+    },
+    {
+      "id": "src-dlcd-territorial-sea-mapserver",
+      "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+      "sourceType": "data_portal",
+      "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer",
+      "localPath": null,
+      "publisher": "Oregon Department of Land Conservation and Development / Oregon Coastal Management Program",
+      "publishedAt": null,
+      "accessedAt": "2026-07-24",
+      "note": "Official ArcGIS REST service for Oregon Territorial Sea Plan renewable energy and rocky habitat managed area layers."
+    },
+    {
       "id": "src-pangaea-about",
       "title": "PANGAEA About",
       "sourceType": "official_about",
@@ -11235,6 +11852,28 @@
       "publishedAt": "2023-08-21",
       "accessedAt": "2026-07-21",
       "note": "Public raw CSV and parquet exports from FishBase and SeaLifeBase backend MySQL databases."
+    },
+    {
+      "id": "src-protomaps-basemap-downloads",
+      "title": "Protomaps Basemap Downloads",
+      "sourceType": "official_docs",
+      "url": "https://docs.protomaps.com/basemaps/downloads",
+      "localPath": null,
+      "publisher": "Protomaps LLC",
+      "publishedAt": null,
+      "accessedAt": "2026-07-24",
+      "note": "Official Protomaps basemap download page covering PMTiles archives, daily builds, partial extracts, and attribution notes."
+    },
+    {
+      "id": "src-protomaps-docs",
+      "title": "Protomaps Docs",
+      "sourceType": "official_docs",
+      "url": "https://docs.protomaps.com/",
+      "localPath": null,
+      "publisher": "Protomaps LLC",
+      "publishedAt": null,
+      "accessedAt": "2026-07-24",
+      "note": "Official documentation for Protomaps, PMTiles, and the OpenStreetMap-derived Protomaps basemap."
     },
     {
       "id": "src-sealifebase-who",
@@ -11455,6 +12094,106 @@
       "properties": {},
       "createdAt": "2026-05-26T16:46:26.460Z",
       "updatedAt": "2026-07-22T16:14:05.011Z"
+    },
+    {
+      "id": "ryu-gebco-wms-underlay",
+      "nodeId": "system-gebco-web-services",
+      "status": "planned",
+      "mode": "external_wms",
+      "priority": 1,
+      "capabilities": [
+        "bathymetry_underlay",
+        "ocean_relief"
+      ],
+      "target": "https://wms.gebco.net/mapserv?",
+      "upstream": "gebco:wms",
+      "format": "wms",
+      "contractRef": "https://www.gebco.net/data-products/gebco-web-services/web-map-service",
+      "caveat": "Visual context only; not for navigation; service performance should be tested.",
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-gebco-wms"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.291Z",
+      "updatedAt": "2026-07-24T14:08:49.291Z"
+    },
+    {
+      "id": "ryu-oregon-dlcd-coastal-boundaries-snapshot",
+      "nodeId": "system-oregon-dlcd-coastal-gis",
+      "status": "planned",
+      "mode": "self_hosted_snapshot",
+      "priority": 1,
+      "capabilities": [
+        "coastal_boundary_context",
+        "oregon_context",
+        "shoreline_context"
+      ],
+      "target": "ryu-map-assets",
+      "upstream": "oregon-dlcd:coastal-management-downloads",
+      "format": "geojson",
+      "contractRef": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx",
+      "caveat": "Verify authoritative metadata per layer before publishing or analysis.",
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-dlcd-maps-data-tools"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.291Z",
+      "updatedAt": "2026-07-24T14:08:49.291Z"
+    },
+    {
+      "id": "ryu-oregon-territorial-sea-plan-arcgis",
+      "nodeId": "system-oregon-dlcd-coastal-gis",
+      "status": "planned",
+      "mode": "external_arcgis_rest",
+      "priority": 2,
+      "capabilities": [
+        "territorial_sea",
+        "rocky_habitat",
+        "planning_areas",
+        "renewable_energy_planning"
+      ],
+      "target": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer",
+      "upstream": "oregon-dlcd:territorial-sea-plan-mapserver",
+      "format": "arcgis_rest",
+      "contractRef": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer",
+      "caveat": "Oregon planning and management boundary context; verify authoritative metadata per layer.",
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-dlcd-territorial-sea-mapserver"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.291Z",
+      "updatedAt": "2026-07-24T14:08:49.291Z"
+    },
+    {
+      "id": "ryu-protomaps-oregon-pnw-pmtiles",
+      "nodeId": "system-protomaps-basemap",
+      "status": "planned",
+      "mode": "self_hosted_snapshot",
+      "priority": 1,
+      "capabilities": [
+        "basemap_tiles",
+        "land_context",
+        "label_context"
+      ],
+      "target": "ryu-map-assets",
+      "upstream": "protomaps:daily-basemap",
+      "format": "pmtiles",
+      "contractRef": "https://docs.protomaps.com/basemaps/downloads",
+      "caveat": "OSM attribution is required; Oregon and Pacific Northwest cutout still needs ocean styling.",
+      "properties": {
+        "priority": "MVP-0",
+        "sourceRefs": [
+          "src-protomaps-basemap-downloads"
+        ]
+      },
+      "createdAt": "2026-07-24T14:08:49.291Z",
+      "updatedAt": "2026-07-24T14:08:49.291Z"
     },
     {
       "id": "oa-sealifebase-snapshot",
