@@ -6,16 +6,5 @@
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["src/**/*.ts", "../shared/**/*.ts"],
-  "exclude": [
-    "src/arcgisRestConnector.ts",
-    "src/db.ts",
-    "src/exportPublicBootstrap.ts",
-    "src/importInventory.ts",
-    "src/importSqliteToPostgres.ts",
-    "src/mcpArcgisRestServer.ts",
-    "src/mcpPortalServer.ts",
-    "src/sqliteGraphRepository.ts",
-    "src/validateUrls.ts"
-  ]
+  "include": ["src/**/*.ts", "../shared/**/*.ts"]
 }

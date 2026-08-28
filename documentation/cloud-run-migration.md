@@ -3,8 +3,9 @@
 Explorer is the graph application formerly codenamed Ryu. CHM owns the shared
 entry, IAP, load balancer, Cloud SQL instance, and path routing. This repo owns
 Explorer runtime behavior, schema, migrations, seed data, validation, and the
-container image. Production uses Cloud SQL/Postgres; SQLite-derived data may be
-used as seed content, but SQLite infrastructure should not run in production.
+container image. Production uses Cloud SQL/Postgres as the canonical graph
+store. The tracked bootstrap JSON is repeatable seed/export material, not a
+runtime database.
 
 ## Runtime Modes
 
@@ -50,12 +51,15 @@ SQL, the `explorer` database, database users, and Secret Manager secrets.
 
 ```sh
 npm --workspace server run migrate:postgres
+npm --workspace server run seed:postgres
 ```
 
-The launch seed was loaded from the deployed `client/dist/bootstrap.public.json`
-into Cloud SQL. Keep that seed path Postgres-native going forward; do not add
-`better-sqlite3`, `data/ryu.sqlite`, or SQLite import tooling to the production
-image.
+The seed command loads `client/dist/bootstrap.public.json` in the built image
+and falls back to `client/public/bootstrap.public.json` locally. It uses
+Postgres `jsonb_to_recordset` and `ON CONFLICT` upserts, so it can be rerun
+without reintroducing SQLite tooling. By default it does not delete live rows;
+use `npm --workspace server run seed:postgres -- --prune` only when the database
+should exactly match the bootstrap file.
 
 The seeded core tables are:
 

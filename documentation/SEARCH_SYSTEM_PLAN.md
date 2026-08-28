@@ -182,7 +182,7 @@ The app resolver then determines the visible systems, organizations, and graph e
 
 ## Deferred Until Needed
 
-- SQLite FTS tables.
+- Postgres full-text search indexes.
 - Server-side search endpoint.
 - Cross-session search analytics.
 - Vector embeddings.

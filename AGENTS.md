@@ -3,7 +3,7 @@
 ## Canonical Graph Data
 - Treat the Cloud SQL PostgreSQL `explorer` database on the CHM instance `chm` as the production canonical graph.
 - Treat `client/public/bootstrap.public.json` as a launch seed/export artifact, not as a production runtime source of truth.
-- The initial launch data may be SQLite-derived, but production must not run SQLite infrastructure or depend on `better-sqlite3`.
+- The initial launch seed may include converted legacy data, but production must run on Cloud SQL/Postgres only.
 - Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
 
 ## Documentation

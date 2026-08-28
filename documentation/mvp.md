@@ -289,7 +289,7 @@ Start with a small Oregon-focused system set:
 - Add `list_systems`.
 - Add `search_systems`.
 - Add `get_system`.
-- Use current SQLite data as the authority.
+- Use Cloud SQL/Postgres data as the authority.
 - Include planned routes only when requested; default runtime results should prefer live routes.
 
 ### Phase 3: Build One Connector Path

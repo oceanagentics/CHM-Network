@@ -3,8 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { GraphBootstrapPayload } from "../../shared/domain";
-import { getDatabase } from "./db";
-import { SqliteGraphRepository } from "./sqliteGraphRepository";
+import { createGraphRepository } from "./repositoryFactory";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,10 +21,21 @@ function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstrapPayloa
   };
 }
 
-const repository = new SqliteGraphRepository(getDatabase());
-const bootstrap = toPublicBootstrap(repository.getBootstrap());
+async function main() {
+  const repository = createGraphRepository();
+  try {
+    const bootstrap = toPublicBootstrap(await repository.getBootstrap());
 
-fs.mkdirSync(outputDir, { recursive: true });
-fs.writeFileSync(outputPath, `${JSON.stringify(bootstrap, null, 2)}\n`, "utf8");
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify(bootstrap, null, 2)}\n`, "utf8");
 
-console.log(`Wrote public bootstrap to ${outputPath}`);
+    console.log(`Wrote public bootstrap to ${outputPath}`);
+  } finally {
+    await repository.close?.();
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

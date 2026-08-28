@@ -4,7 +4,7 @@ import type {
   RyuSystemRecord,
   Source,
 } from "../../shared/domain";
-import type { SqliteGraphRepository } from "./sqliteGraphRepository";
+import type { GraphRepository } from "./graphRepository";
 
 type ConnectorStatus = "ready" | "degraded" | "blocked" | "unimplemented";
 
@@ -303,13 +303,13 @@ async function fetchJson(url: string): Promise<ArcgisMetadata> {
 }
 
 export class ArcgisRestConnector {
-  constructor(private readonly repository: SqliteGraphRepository) {}
+  constructor(private readonly repository: GraphRepository) {}
 
   async health(input: { ryuSystemId: string; ryuRouteId: string }) {
     const checkedAt = new Date().toISOString();
 
     try {
-      const { route } = this.resolveRoute(input.ryuSystemId, input.ryuRouteId);
+      const { route } = await this.resolveRoute(input.ryuSystemId, input.ryuRouteId);
       const metadata = await fetchJson(metadataUrl(route.connectorTarget ?? ""));
       const hasLayers = Array.isArray(metadata.layers) || readString(metadata.name) !== null;
 
@@ -328,19 +328,19 @@ export class ArcgisRestConnector {
   }
 
   async searchLayers(input: LayerSearchInput) {
-    const { system, route } = this.resolveRoute(input.ryuSystemId, input.ryuRouteId);
+    const { system, route } = await this.resolveRoute(input.ryuSystemId, input.ryuRouteId);
     const metadata = await fetchJson(metadataUrl(route.connectorTarget ?? ""));
-    const layers = this.layerSummaries(metadata, route)
-      .map((summary) => this.mapLayer(system, route, summary))
-      .filter((layer) => this.matchesLayer(layer, input));
+    const layers = (await Promise.all(
+      this.layerSummaries(metadata, route).map((summary) => this.mapLayer(system, route, summary)),
+    )).filter((layer) => this.matchesLayer(layer, input));
 
     return { layers };
   }
 
   async getLayer(input: LayerLookupInput) {
-    const { system, route, arcgisLayerId } = this.resolveLayerLookup(input);
+    const { system, route, arcgisLayerId } = await this.resolveLayerLookup(input);
     const metadata = await fetchJson(metadataUrl(layerUrl(route.connectorTarget ?? "", arcgisLayerId)));
-    const layer = this.mapLayer(system, route, {
+    const layer = await this.mapLayer(system, route, {
       id: metadata.id ?? arcgisLayerId,
       name: metadata.name ?? arcgisLayerId,
       type: metadata.type,
@@ -355,14 +355,14 @@ export class ArcgisRestConnector {
     };
   }
 
-  getSource(input: { ryuSourceId: string }) {
+  async getSource(input: { ryuSourceId: string }) {
     return {
-      source: sourceFromRecord(this.repository.getSource(input.ryuSourceId)),
+      source: sourceFromRecord(await this.repository.getSource(input.ryuSourceId)),
     };
   }
 
-  getLayerAsset(input: LayerLookupInput) {
-    const { route, arcgisLayerId } = this.resolveLayerLookup(input);
+  async getLayerAsset(input: LayerLookupInput) {
+    const { route, arcgisLayerId } = await this.resolveLayerLookup(input);
     const deliveryType = input.deliveryType ?? "geojson";
 
     if (deliveryType !== "geojson" && deliveryType !== "arcgis_rest") {
@@ -386,8 +386,8 @@ export class ArcgisRestConnector {
     };
   }
 
-  private resolveRoute(ryuSystemId: string, ryuRouteId: string) {
-    const system = this.repository.getPortalSystem(ryuSystemId);
+  private async resolveRoute(ryuSystemId: string, ryuRouteId: string) {
+    const system = await this.repository.getPortalSystem(ryuSystemId);
     const route = system.routes.find((candidate) => candidate.routeId === ryuRouteId);
     if (!route) {
       throw new Error(`route not found for ${ryuSystemId}: ${ryuRouteId}`);
@@ -402,7 +402,7 @@ export class ArcgisRestConnector {
     return { system, route };
   }
 
-  private resolveLayerLookup(input: LayerLookupInput) {
+  private async resolveLayerLookup(input: LayerLookupInput) {
     const parsed = parseConnectorLayerId(input.connectorLayerId);
     const ryuRouteId = input.ryuRouteId ?? parsed?.routeId;
     if (!ryuRouteId) {
@@ -410,9 +410,9 @@ export class ArcgisRestConnector {
     }
 
     const system = input.ryuSystemId
-      ? this.repository.getPortalSystem(input.ryuSystemId)
-      : this.repository
-          .listPortalSystems()
+      ? await this.repository.getPortalSystem(input.ryuSystemId)
+      : (await this.repository
+          .listPortalSystems())
           .find((candidate) =>
             candidate.routes.some((route) => route.routeId === ryuRouteId),
           );
@@ -420,7 +420,7 @@ export class ArcgisRestConnector {
       throw new Error(`system not found for route: ${ryuRouteId}`);
     }
 
-    const { route } = this.resolveRoute(system.ryuSystemId, ryuRouteId);
+    const { route } = await this.resolveRoute(system.ryuSystemId, ryuRouteId);
     return {
       system,
       route,
@@ -444,7 +444,10 @@ export class ArcgisRestConnector {
       .filter((layer) => !Array.isArray(layer.subLayerIds) || layer.subLayerIds.length === 0);
   }
 
-  private routeSource(system: RyuSystemRecord, route: RyuPortalRoute): RyuPortalSource | null {
+  private async routeSource(
+    system: RyuSystemRecord,
+    route: RyuPortalRoute,
+  ): Promise<RyuPortalSource | null> {
     const sourceIds = readStringArray(route.properties.sourceRefs);
     for (const sourceId of sourceIds) {
       const source = system.sources.find((candidate) => candidate.ryuSourceId === sourceId);
@@ -453,7 +456,7 @@ export class ArcgisRestConnector {
       }
 
       try {
-        return sourceFromRecord(this.repository.getSource(sourceId));
+        return sourceFromRecord(await this.repository.getSource(sourceId));
       } catch {
         continue;
       }
@@ -462,16 +465,16 @@ export class ArcgisRestConnector {
     return system.sources[0] ?? null;
   }
 
-  private mapLayer(
+  private async mapLayer(
     system: RyuSystemRecord,
     route: RyuPortalRoute,
     layer: ArcgisLayerSummary,
-  ): ConnectorLayer {
+  ): Promise<ConnectorLayer> {
     const arcgisLayerId = String(layer.id);
     const title = readString(layer.name) ?? arcgisLayerId;
     const family = inferFamily(system, route);
     const semantics = inferSemantics(system, route, title);
-    const source = this.routeSource(system, route);
+    const source = await this.routeSource(system, route);
     const deliveryType = route.deliveryFormats.includes("geojson") ? "geojson" : "arcgis_rest";
     const caveats = uniqueStrings([...route.caveats, ...(source?.caveats ?? [])]);
 

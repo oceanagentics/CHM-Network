@@ -4,10 +4,10 @@ Use this guide when researching and backfilling rich database records for Ryu. T
 
 ## Source Of Truth
 
-- Treat `data/ryu.sqlite` as the canonical editable graph.
-- Do not create a parallel registry, merged CSV, seed file, or alternate bootstrap as a new source of truth.
+- Treat Cloud SQL/Postgres as the canonical editable graph.
+- Do not create a parallel registry, merged CSV, or alternate bootstrap as a new source of truth.
 - After DB edits, regenerate the public bootstrap with `npm --workspace server run export:public`.
-- If UI-facing data changed, verify with `npm run build:public`.
+- If UI-facing data changed, verify with `npm run build`.
 - `client/public/bootstrap.public.json` is generated output. Keep it in sync, but do not edit it by hand.
 
 ## Record Shape
@@ -200,7 +200,7 @@ Each identifier should explain:
 
 ## Updating The DB
 
-Use a single SQLite transaction for each system backfill when practical.
+Use a single Postgres transaction for each system backfill when practical.
 
 Recommended order:
 
@@ -219,21 +219,21 @@ Do not delete unrelated rows for other systems. Do not change existing user or a
 Run these checks before finishing:
 
 ```sh
-sqlite3 data/ryu.sqlite "PRAGMA foreign_key_check;"
+npm --workspace server run migrate:postgres
 npm --workspace server run export:public
-npm run build:public
+npm run build
 ```
 
 For the target system, also check:
 
 ```sh
-sqlite3 -json data/ryu.sqlite \
+psql "$DATABASE_URL" -c \
   "SELECT id, url, summary, description, record_depth, review_state, details_json FROM nodes WHERE id='<node-id>';"
 
-sqlite3 -header -column data/ryu.sqlite \
+psql "$DATABASE_URL" -c \
   "SELECT kind, source_node_id, target_node_id, note FROM edges WHERE source_node_id='<node-id>' OR target_node_id='<node-id>' ORDER BY kind;"
 
-sqlite3 -header -column data/ryu.sqlite \
+psql "$DATABASE_URL" -c \
   "SELECT id, status, mode, priority, format, contract_ref FROM ryu_routes WHERE node_id='<node-id>' ORDER BY priority;"
 ```
 
@@ -242,7 +242,7 @@ Confirm:
 - Required access URLs, descriptions, and sources are present.
 - Required metric sources are present.
 - Gallery local files exist for every local `url` and `thumbnailUrl`.
-- The public bootstrap exports the same values you expect from SQLite.
+- The public bootstrap exports the same values you expect from Postgres.
 
 ## Final Summary For Users
 

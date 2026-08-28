@@ -123,15 +123,33 @@ EXECUTE FUNCTION set_updated_at_timestamp();
 
 DO $$
 BEGIN
+  REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'explorer_read') THEN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'cloudsqlsuperuser') THEN
+      REVOKE cloudsqlsuperuser FROM explorer_read;
+    END IF;
+
+    ALTER ROLE explorer_read NOCREATEDB NOCREATEROLE;
+
     GRANT CONNECT ON DATABASE explorer TO explorer_read;
+    REVOKE CREATE ON DATABASE explorer FROM explorer_read;
+    REVOKE CREATE ON SCHEMA public FROM explorer_read;
     GRANT USAGE ON SCHEMA public TO explorer_read;
     GRANT SELECT ON ALL TABLES IN SCHEMA public TO explorer_read;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO explorer_read;
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'explorer_write') THEN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'cloudsqlsuperuser') THEN
+      REVOKE cloudsqlsuperuser FROM explorer_write;
+    END IF;
+
+    ALTER ROLE explorer_write NOCREATEDB NOCREATEROLE;
+
     GRANT CONNECT ON DATABASE explorer TO explorer_write;
+    REVOKE CREATE ON DATABASE explorer FROM explorer_write;
+    REVOKE CREATE ON SCHEMA public FROM explorer_write;
     GRANT USAGE ON SCHEMA public TO explorer_write;
     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO explorer_write;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO explorer_write;

@@ -1,8 +1,8 @@
 # Ryu SQL-To-UI Cleanup Tracker
 
-Use this file to track review-facing cleanup where data exists in SQLite, is available in the app object model, but is hidden, renamed unclearly, or only partly rendered in the UI.
+Use this file to track review-facing cleanup where data exists in Postgres, is available in the app object model, but is hidden, renamed unclearly, or only partly rendered in the UI.
 
-Terminology rule: name each item from the SQLite table, column, and JSON path first. UI labels are listed only as the place a reviewer should look.
+Terminology rule: name each item from the Postgres table, column, and JSON path first. UI labels are listed only as the place a reviewer should look.
 
 ## Completed
 

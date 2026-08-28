@@ -5,8 +5,7 @@ import type {
   RyuSystemRecord,
   Source,
 } from "../../shared/domain";
-import { getDatabase } from "./db";
-import { SqliteGraphRepository } from "./sqliteGraphRepository";
+import { createGraphRepository } from "./repositoryFactory";
 
 type JsonRpcId = string | number | null;
 
@@ -44,7 +43,7 @@ const defaultWmsBbox = {
   north: 90,
 };
 
-const repository = new SqliteGraphRepository(getDatabase());
+const repository = createGraphRepository();
 
 let inputBuffer = "";
 let frameMode: FrameMode = "line";
@@ -110,7 +109,7 @@ function sourceIdsForRoute(route: RyuPortalRoute): string[] {
   return readStringList(route.properties.sourceRefs) ?? [];
 }
 
-function getWmsRouteContext(args: unknown): WmsRouteContext {
+async function getWmsRouteContext(args: unknown): Promise<WmsRouteContext> {
   const input = isRecord(args) ? args : {};
   const ryuSystemId = readString(input.ryuSystemId);
   const ryuRouteId = readString(input.ryuRouteId);
@@ -118,7 +117,7 @@ function getWmsRouteContext(args: unknown): WmsRouteContext {
     throw new Error("ryuSystemId and ryuRouteId are required");
   }
 
-  const system = repository.getPortalSystem(ryuSystemId, {
+  const system = await repository.getPortalSystem(ryuSystemId, {
     includeRoutes: true,
     includeSources: true,
   });
@@ -271,9 +270,9 @@ function matchesQuery(value: string, query: string | undefined): boolean {
     .every((term) => searchText.includes(term));
 }
 
-function searchWmsLayers(args: unknown) {
+async function searchWmsLayers(args: unknown) {
   const input = isRecord(args) ? args : {};
-  const context = getWmsRouteContext(input);
+  const context = await getWmsRouteContext(input);
   const layer = wmsLayerRecord(context);
   const query = readString(input.query);
   const searchText = JSON.stringify(layer).toLowerCase();
@@ -298,9 +297,9 @@ function searchWmsLayers(args: unknown) {
   return { layers: [layer] };
 }
 
-function getWmsLayer(args: unknown) {
+async function getWmsLayer(args: unknown) {
   const input = isRecord(args) ? args : {};
-  const context = getWmsRouteContext(input);
+  const context = await getWmsRouteContext(input);
   const layer = wmsLayerRecord(context);
   const requestedLayerId = readString(input.connectorLayerId);
   if (requestedLayerId && requestedLayerId !== layer.connectorLayerId) {
@@ -310,9 +309,9 @@ function getWmsLayer(args: unknown) {
   return { layer };
 }
 
-function getWmsLayerAsset(args: unknown) {
+async function getWmsLayerAsset(args: unknown) {
   const input = isRecord(args) ? args : {};
-  const layer = getWmsLayer(args).layer;
+  const layer = (await getWmsLayer(args)).layer;
   const requestedDeliveryType = readString(input.deliveryType);
   if (requestedDeliveryType && !matchesStringFilters(requestedDeliveryType, layer.deliveryFormats)) {
     throw new Error(`delivery type not available: ${requestedDeliveryType}`);
@@ -333,7 +332,7 @@ function getWmsLayerAsset(args: unknown) {
   };
 }
 
-function getConnectorSource(args: unknown) {
+async function getConnectorSource(args: unknown) {
   const input = isRecord(args) ? args : {};
   const ryuSourceId = readString(input.ryuSourceId);
   if (!ryuSourceId) {
@@ -341,7 +340,7 @@ function getConnectorSource(args: unknown) {
   }
 
   return {
-    source: connectorSource(repository.getSource(ryuSourceId)),
+    source: connectorSource(await repository.getSource(ryuSourceId)),
   };
 }
 
@@ -362,7 +361,7 @@ function escapeRegExp(value: string): string {
 }
 
 async function getWmsHealth(args: unknown) {
-  const context = getWmsRouteContext(args);
+  const context = await getWmsRouteContext(args);
   const checkedAt = new Date().toISOString();
   const capabilitiesUrl = wmsCapabilitiesUrl(context);
   const layerNames = wmsLayerName(context).split(",").map((item) => item.trim()).filter(Boolean);
@@ -639,13 +638,13 @@ function toolSchemas() {
 async function callTool(name: string, args: unknown): Promise<unknown> {
   if (name === "list_systems") {
     return toolResult({
-      systems: repository.listPortalSystems(readSystemQuery(args)),
+      systems: await repository.listPortalSystems(readSystemQuery(args)),
     });
   }
 
   if (name === "search_systems") {
     return toolResult({
-      systems: repository.searchPortalSystems(readSystemQuery(args)),
+      systems: await repository.searchPortalSystems(readSystemQuery(args)),
     });
   }
 
@@ -657,7 +656,7 @@ async function callTool(name: string, args: unknown): Promise<unknown> {
     }
 
     return toolResult({
-      system: repository.getPortalSystem(ryuSystemId, readSystemQuery(input)),
+      system: await repository.getPortalSystem(ryuSystemId, readSystemQuery(input)),
     });
   }
 
@@ -666,19 +665,19 @@ async function callTool(name: string, args: unknown): Promise<unknown> {
   }
 
   if (name === "search_layers") {
-    return toolResult(searchWmsLayers(args));
+    return toolResult(await searchWmsLayers(args));
   }
 
   if (name === "get_layer") {
-    return toolResult(getWmsLayer(args));
+    return toolResult(await getWmsLayer(args));
   }
 
   if (name === "get_source") {
-    return toolResult(getConnectorSource(args));
+    return toolResult(await getConnectorSource(args));
   }
 
   if (name === "get_layer_asset") {
-    return toolResult(getWmsLayerAsset(args));
+    return toolResult(await getWmsLayerAsset(args));
   }
 
   throw new Error(`unknown tool: ${name}`);
@@ -865,4 +864,8 @@ process.stdin.on("data", (chunk) => {
 
 process.stdin.on("error", (error) => {
   console.error(error);
+});
+
+process.stdin.on("end", () => {
+  void repository.close?.();
 });

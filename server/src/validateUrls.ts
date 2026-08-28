@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 import { promisify } from "node:util";
 
-import { getDatabase } from "./db";
+import type { GraphBootstrapPayload } from "../../shared/domain";
+import { createGraphRepository } from "./repositoryFactory";
 
 type UrlRecord = {
   tableName: string;
@@ -40,26 +41,17 @@ function isHttpUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
-function sourceUrlRecords(): UrlRecord[] {
-  const db = getDatabase();
-  const rows = db
-    .prepare(
-      `
-        SELECT id, url
-        FROM sources
-        WHERE url IS NOT NULL AND trim(url) <> ''
-        ORDER BY id
-      `,
-    )
-    .all() as Array<{ id: string; url: string }>;
-
-  return rows.map((row) => ({
-    tableName: "sources",
-    recordId: row.id,
-    fieldName: "url",
-    url: row.url,
-    description: null,
-  }));
+function sourceUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
+  return bootstrap.sources
+    .filter((source) => source.url?.trim())
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((source) => ({
+      tableName: "sources",
+      recordId: source.id,
+      fieldName: "url",
+      url: source.url ?? "",
+      description: null,
+    }));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -70,22 +62,10 @@ function stringField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-function nodeUrlRecords(): UrlRecord[] {
-  const db = getDatabase();
-  const rows = db
-    .prepare(
-      `
-        SELECT id, details_json
-        FROM nodes
-        WHERE details_json IS NOT NULL AND trim(details_json) <> ''
-        ORDER BY id
-      `,
-    )
-    .all() as Array<{ id: string; details_json: string | null }>;
-
+function nodeUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
   const records: UrlRecord[] = [];
-  for (const row of rows) {
-    const details = row.details_json ? JSON.parse(row.details_json) as unknown : {};
+  for (const node of bootstrap.nodes.sort((left, right) => left.id.localeCompare(right.id))) {
+    const details = node.details;
     if (!isRecord(details)) {
       continue;
     }
@@ -100,7 +80,7 @@ function nodeUrlRecords(): UrlRecord[] {
       if (url) {
         records.push({
           tableName: "nodes",
-          recordId: row.id,
+          recordId: node.id,
           fieldName: `details.access.${stringField(pathRecord.id) ?? index}.url`,
           url,
           description: stringField(pathRecord.description),
@@ -119,7 +99,7 @@ function nodeUrlRecords(): UrlRecord[] {
       if (url) {
         records.push({
           tableName: "nodes",
-          recordId: row.id,
+          recordId: node.id,
           fieldName: `details.gallery.${itemId}.url`,
           url,
           description: null,
@@ -130,7 +110,7 @@ function nodeUrlRecords(): UrlRecord[] {
       if (thumbnailUrl) {
         records.push({
           tableName: "nodes",
-          recordId: row.id,
+          recordId: node.id,
           fieldName: `details.gallery.${itemId}.thumbnailUrl`,
           url: thumbnailUrl,
           description: null,
@@ -484,9 +464,17 @@ function formatFailure(records: UrlRecord[], result: UrlResult): string {
 }
 
 async function main() {
+  const repository = createGraphRepository();
+  let bootstrap: GraphBootstrapPayload;
+  try {
+    bootstrap = await repository.getBootstrap();
+  } finally {
+    await repository.close?.();
+  }
+
   const records = [
-    ...sourceUrlRecords(),
-    ...nodeUrlRecords(),
+    ...sourceUrlRecords(bootstrap),
+    ...nodeUrlRecords(bootstrap),
   ];
   const recordsByUrl = new Map<string, UrlRecord[]>();
 

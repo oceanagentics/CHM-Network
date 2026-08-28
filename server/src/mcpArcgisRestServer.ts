@@ -1,6 +1,5 @@
 import { ArcgisRestConnector } from "./arcgisRestConnector";
-import { getDatabase } from "./db";
-import { SqliteGraphRepository } from "./sqliteGraphRepository";
+import { createGraphRepository } from "./repositoryFactory";
 
 type JsonRpcId = string | number | null;
 
@@ -23,7 +22,8 @@ type JsonRpcResponse = {
 
 type FrameMode = "line" | "content-length";
 
-const connector = new ArcgisRestConnector(new SqliteGraphRepository(getDatabase()));
+const repository = createGraphRepository();
+const connector = new ArcgisRestConnector(repository);
 
 let inputBuffer = "";
 let frameMode: FrameMode = "line";
@@ -230,11 +230,11 @@ async function callTool(name: string, args: unknown): Promise<unknown> {
       throw new Error("ryuSourceId is required");
     }
 
-    return toolResult(connector.getSource({ ryuSourceId }));
+    return toolResult(await connector.getSource({ ryuSourceId }));
   }
 
   if (name === "get_layer_asset") {
-    return toolResult(connector.getLayerAsset(layerInput(args)));
+    return toolResult(await connector.getLayerAsset(layerInput(args)));
   }
 
   throw new Error(`unknown tool: ${name}`);
@@ -419,4 +419,8 @@ process.stdin.on("data", (chunk) => {
   } else {
     processLineFrames();
   }
+});
+
+process.stdin.on("end", () => {
+  void repository.close?.();
 });
