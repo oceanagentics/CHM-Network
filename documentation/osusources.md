@@ -125,6 +125,7 @@ Use `Ryu` terminology in new notes, source records, route labels, and review lan
 
 3. Esri Ocean Basemap
    - Keep only as an optional demo fallback if self-hosted/open basemap work is delayed.
+   - Do not hide it under a PMTiles route; if used, register a separate raster basemap route with Esri-specific provenance and caveats.
 
 ## MVP-0 Research Pass
 
@@ -134,8 +135,17 @@ Use `Ryu` terminology in new notes, source records, route labels, and review lan
 - Official docs: https://docs.protomaps.com/basemaps/downloads
 - Access pattern: PMTiles archive, hosted tiles, or regional PMTiles extract.
 - Ryu use: default land/coast/label basemap.
-- Proposed route: planned self-hosted Oregon/PNW PMTiles cutout.
+- Proposed route: planned self-hosted Oregon/PNW vector PMTiles cutout.
 - Caveats: OSM attribution is required; the basemap is not marine-specific and needs ocean styling.
+
+### OpenStreetMap Standard Raster Tiles
+
+- Provider: OpenStreetMap Foundation / OpenStreetMap contributors.
+- Official tile policy: https://operations.osmfoundation.org/policies/tiles/
+- Access pattern: XYZ raster tile URL template.
+- Ryu use: directly renderable raster basemap option for MVP browser maps.
+- Route: active external XYZ raster tile route.
+- Caveats: OSM attribution is required; tile.openstreetmap.org is best-effort with no SLA and is not for bulk download or offline use.
 
 ### GEBCO Web Map Service
 
@@ -161,15 +171,15 @@ Use `Ryu` terminology in new notes, source records, route labels, and review lan
 
 ### Organizations
 
-- `org-protomaps`
-- `org-gebco`
-- `org-oregon-dlcd`
+- `protomaps`
+- `gebco`
+- `oregon-dlcd`
 
 ### Systems
 
-- `system-protomaps-basemap`
-- `system-gebco-web-services`
-- `system-oregon-dlcd-coastal-gis`
+- `protomaps-basemap`
+- `gebco-web-services`
+- `oregon-dlcd-coastal-gis`
 
 ### Sources
 
@@ -181,17 +191,23 @@ Use `Ryu` terminology in new notes, source records, route labels, and review lan
 
 ### Edges
 
-- `org-protomaps` operates `system-protomaps-basemap`
-- `org-gebco` operates `system-gebco-web-services`
-- `org-oregon-dlcd` operates `system-oregon-dlcd-coastal-gis`
+- `protomaps` operates `protomaps-basemap`
+- `gebco` operates `gebco-web-services`
+- `oregon-dlcd` operates `oregon-dlcd-coastal-gis`
 
 ### Ryu Routes
 
-- `ryu-protomaps-oregon-pnw-pmtiles`
+- `ryu-protomaps-oregon-pnw-vector-pmtiles`
   - Status: `planned`
   - Mode: `self_hosted_snapshot`
   - Format: `pmtiles`
-  - Capability: basemap tiles, land context, label context
+  - Capability: vector basemap, basemap tiles, land context, label context
+
+- `ryu-openstreetmap-standard-raster-basemap`
+  - Status: `active`
+  - Mode: `external_xyz_raster_tile`
+  - Format: `raster_tile`
+  - Capability: raster basemap, basemap tiles, land context, label context
 
 - `ryu-gebco-wms-underlay`
   - Status: `planned`

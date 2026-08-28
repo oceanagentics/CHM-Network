@@ -1,20 +1,22 @@
 # Ryu Agent Notes
 
 ## Canonical Graph Data
-- Treat `data/ryu.sqlite` as the canonical graph during active editing.
-- Treat the live app DB as the only graph source of truth; do not keep alternate bootstrap or seed graph sources in the repo.
+- Treat the Cloud SQL PostgreSQL `explorer` database on the CHM instance `chm` as the production canonical graph.
+- Treat `client/public/bootstrap.public.json` as a launch seed/export artifact, not as a production runtime source of truth.
+- The initial launch data may be SQLite-derived, but production must not run SQLite infrastructure or depend on `better-sqlite3`.
 - Treat `research/*` CSV folders as incremental research/import batches, not as a separate central source of truth.
 
 ## Documentation
 - Follow `documentation/RICH_RESEARCH_RECORDS.md` for standing rich research and record-backfill instructions.
 - Use `documentation/mvp.md` as the current Deeptime/Ryu MCP portal working plan.
 - Use `documentation/osusources.md` as the current Oregon/OSU source plan.
+- Use `documentation/cloud-run-migration.md` for Cloud Run, CHM routing, and Cloud SQL migration work.
 - Treat `documentation/mvp.md` and `documentation/osusources.md` as active project plans for today's Deeptime/Ryu work, not permanent modeling policy.
 
 ## Research Import Workflow
 - Each research job may live in its own dated folder under `research/`.
 - A research job should include `systems.csv`, `system_links.csv`, `sources.csv`, and optional notes.
-- Import research jobs directly into `data/ryu.sqlite` with `npm --workspace server run import:inventory -- <research-folder>`.
+- Port research imports to a Postgres-native path before using them against production data.
 - Research jobs may reference parent systems or workflow targets that were already imported by earlier jobs.
 - Do not create or maintain a separate merged central CSV registry.
 
@@ -60,6 +62,8 @@
 ### Nodes
 - `country`, `organization`, and `system` are flat node types.
 - Do not add hidden hierarchy fields. Use explicit edges for graph relationships.
+- Node IDs are globally unique, kindless slugs. Do not encode kind with prefixes such as `system-`, `org-`, or `country-`; use the `kind` field for type.
+- If a natural slug collides across node kinds, keep the most queried entity on the natural slug and add a meaning-bearing suffix such as `-operator` to the other entity.
 
 ### Edges
 - `governs`: `country -> organization`
@@ -97,28 +101,23 @@
 - When capture is blocked, report the blocker and target URL back to the human so they can provide access, clear the session, or supply screenshots.
 
 ## Startup Behavior
-- On startup, the server opens `data/ryu.sqlite` and validates that the required app tables exist.
-- If the DB file is missing or invalid, the server fails fast instead of creating or reseeding an alternate graph.
+- On startup, the server connects to the configured Postgres database.
+- If required Postgres connection settings or schema objects are missing, the server should fail fast instead of creating or reseeding an alternate graph.
 
 ## GCP Environment
 - Organization: `oceanagentics.com`
 - Project: `chm-network` (`288836337031`)
-- VM: `chm-network-vm`
-- Zone: `us-west1-b`
-- Machine type: `e2-micro`
-- Public URL: `http://34.169.201.150`
-- The VM currently serves the public read-only build with `nginx` from `/var/www/chm-network`.
-- Port `80` and `443` are open via firewall rule `chm-network-allow-web`.
-- The VM's external IP is currently ephemeral. If the instance is stopped and started, the IP may change until a static IP is attached.
+- Region: `us-east4`
+- Public entry: `https://chm.oceanagentics.org/explorer`
+- CHM owns the domain, load balancer, IAP, and path routing.
+- Explorer owns the app image, runtime behavior, Postgres schema, and graph data model.
+- Browser-facing `explorer` uses read credentials; private `explorer-api` uses write credentials; migration jobs use migration credentials.
 
-## Public Publishing
-- Use the dedicated Compute Engine key at `~/.ssh/CHM-Network` for Ryu production VM access.
-- Publish the public site with `npm run publish:prod`.
-- The public build uses `client/.env.public` and reads from `/bootstrap.public.json` instead of the live API.
-- The export step writes the sanitized bootstrap file to `client/public/bootstrap.public.json`.
-- `npm run publish:prod` builds the public bundle, uploads a release archive over SSH, installs it under `/var/www/chm-network-releases/<timestamp>-<sha>`, repoints `/var/www/chm-network`, reloads `nginx`, and verifies `/` plus `/bootstrap.public.json`.
-- The script uses direct SSH/SCP with `~/.ssh/CHM-Network`; do not rely on `gcloud compute scp/ssh` for routine publishing.
-- GCS static hosting is not the active publish path. Public bucket access was blocked by the org's domain-restricted sharing policy.
+## Cloud Run Publishing
+- Build the Explorer image with `cloudbuild.yaml` into Artifact Registry repository `chm-apps`.
+- CHM Terraform deploys the image to the browser-facing `explorer` service and private `explorer-api` service.
+- Run schema changes through the `explorer-migrate` Cloud Run job.
+- Verify database visibility through the read-only `explorer-db-check` Cloud Run job.
 
 ## Graph View Layers
 - Keep graph view code split into two top-level phases: graph build and graph display.

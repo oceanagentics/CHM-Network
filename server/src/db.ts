@@ -29,6 +29,28 @@ function validateDatabase(db: Database.Database): void {
       `Database at ${dbPath} is missing required tables: ${missingTables.join(", ")}`,
     );
   }
+
+  const prefixedNodeRows = db
+    .prepare(
+      `
+        SELECT id
+        FROM nodes
+        WHERE id GLOB 'system-*'
+           OR id GLOB 'org-*'
+           OR id GLOB 'country-*'
+        ORDER BY id
+        LIMIT 10
+      `,
+    )
+    .all() as Array<{ id: string }>;
+
+  if (prefixedNodeRows.length > 0) {
+    throw new Error(
+      `Node ids must be kindless slugs; found legacy prefixed ids: ${prefixedNodeRows
+        .map((row) => row.id)
+        .join(", ")}`,
+    );
+  }
 }
 
 function openDatabase(): Database.Database {

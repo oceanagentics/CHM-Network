@@ -178,6 +178,7 @@ export interface RyuPortalSource {
   sourceType: string;
   provider: string | null;
   originalUrl: string | null;
+  ryuUrl: string;
   localPath: string | null;
   citation: string | null;
   license: string | null;

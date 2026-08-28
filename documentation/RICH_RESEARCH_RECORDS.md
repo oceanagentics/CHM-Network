@@ -175,7 +175,7 @@ Preferred capture path:
 
 Storage convention:
 
-- Store assets under `client/public/system-gallery/<system-id>/`.
+- Store assets under `client/public/gallery/<node-id>/`.
 - Use one high-resolution file and one thumbnail per gallery item.
 - Recommended filenames: `<capture-name>-high.png` and `<capture-name>-thumb.png`.
 - Recommended capture size for screenshots: `1440x900`.
@@ -228,13 +228,13 @@ For the target system, also check:
 
 ```sh
 sqlite3 -json data/ryu.sqlite \
-  "SELECT id, url, summary, description, record_depth, review_state, details_json FROM nodes WHERE id='<system-id>';"
+  "SELECT id, url, summary, description, record_depth, review_state, details_json FROM nodes WHERE id='<node-id>';"
 
 sqlite3 -header -column data/ryu.sqlite \
-  "SELECT kind, source_node_id, target_node_id, note FROM edges WHERE source_node_id='<system-id>' OR target_node_id='<system-id>' ORDER BY kind;"
+  "SELECT kind, source_node_id, target_node_id, note FROM edges WHERE source_node_id='<node-id>' OR target_node_id='<node-id>' ORDER BY kind;"
 
 sqlite3 -header -column data/ryu.sqlite \
-  "SELECT id, status, mode, priority, format, contract_ref FROM ryu_routes WHERE node_id='<system-id>' ORDER BY priority;"
+  "SELECT id, status, mode, priority, format, contract_ref FROM ryu_routes WHERE node_id='<node-id>' ORDER BY priority;"
 ```
 
 Confirm:

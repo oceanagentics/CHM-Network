@@ -6,17 +6,28 @@ import { defineConfig } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const appBasePath = process.env.VITE_APP_BASE_PATH || process.env.APP_BASE_PATH || "/";
+
+function normalizeViteBase(value: string): string {
+  if (!value || value === "/") {
+    return "/";
+  }
+
+  return `/${value.replace(/^\/+|\/+$/g, "")}/`;
+}
 
 export default defineConfig({
+  base: normalizeViteBase(appBasePath),
   plugins: [react()],
   server: {
+    host: "127.0.0.1",
     port: 5173,
+    strictPort: true,
     proxy: {
-      "/api": "http://localhost:8787",
+      "/api": "http://127.0.0.1:8787",
     },
     fs: {
       allow: [path.resolve(__dirname, "..")],
     },
   },
 });
-

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "geojson-snapshot-v1",
+  "snapshotId": "ecotrust-oregon-fisheries-uses-values",
+  "connectorRef": "connector:downloadable-gis-snapshot",
+  "title": "Ecotrust Oregon fisheries uses and values contours",
+  "description": "Static Ryu-hosted GeoJSON converted from the CoastAtlas/Ecotrust Dungeness crab percent-volume contour shapefile for MVP fishery interaction mapping.",
+  "generatedAt": "2026-07-24",
+  "bounds": [-124.882672, 42.006701, -123.710428, 46.256951],
+  "sources": [
+    {
+      "title": "Fishing - Ecotrust Uses and Values Project",
+      "provider": "West Coast Ocean Data Portal / OROWindMap",
+      "url": "https://offshorewind.westcoastoceans.org/orowindmap-data-catalog/fishing-ecotrust-uses-and-values-project/"
+    },
+    {
+      "title": "Statewide Commercial Dungeness Crab Stated Importance Percent Volume Contours, Ecotrust, 2012",
+      "provider": "Oregon Coastal Atlas",
+      "url": "https://www.coastalatlas.net/metadata/StatewideCommercialDungenessCrabStatedImportancePercentVolumeContours,Ecotrust,2012.htm"
+    },
+    {
+      "title": "dcrabt_allr_pvc_line.zip",
+      "provider": "Oregon Coastal Atlas",
+      "url": "https://www.coastalatlas.net/downloads/shapes/dcrabt_allr_pvc_line.zip"
+    }
+  ],
+  "caveats": [
+    "The source represents aggregated stated importance from fisheries interviews, not live fishing effort.",
+    "The source metadata says to contact Ecotrust about accessing and using the data."
+  ],
+  "layers": [
+    {
+      "id": "dungeness-crab-contours",
+      "title": "Dungeness crab stated-importance contours",
+      "description": "Commercial Dungeness crab stated-importance percent-volume contour lines converted from Oregon GIC Lambert feet to WGS84 GeoJSON.",
+      "url": "dungeness-crab-contours.geojson",
+      "geometryType": "LineString",
+      "featureCount": 20,
+      "semanticTags": ["fishery", "Dungeness crab", "Ecotrust", "uses and values", "Oregon coast"],
+      "fields": ["Id", "ISOPLETH", "PERCENT"],
+      "style": {
+        "stroke": "#8a5a00",
+        "fill": "#f2b84b"
+      }
+    }
+  ]
+}

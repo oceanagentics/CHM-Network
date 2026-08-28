@@ -95,7 +95,7 @@ Return the full registry record for one system:
 
 ```json
 {
-  "ryuSystemId": "system-oregon-dlcd-coastal-gis",
+  "ryuSystemId": "oregon-dlcd-coastal-gis",
   "includeRoutes": true,
   "includeSources": true
 }
@@ -107,10 +107,10 @@ Minimum response shape:
 
 ```json
 {
-  "ryuSystemId": "system-oregon-dlcd-coastal-gis",
+  "ryuSystemId": "oregon-dlcd-coastal-gis",
   "name": "Oregon DLCD Coastal GIS",
   "operator": {
-    "id": "org-oregon-dlcd",
+    "id": "oregon-dlcd",
     "name": "Oregon Department of Land Conservation and Development"
   },
   "summary": "Oregon coastal boundary and planning GIS resources.",
@@ -162,6 +162,22 @@ System APIs or MCP connectors should expose their own tools. The common starting
 
 Connectors may add source-specific tools later, but Deeptime should be able to retrieve map-ready layer records through the common layer tools for the MVP.
 
+Connector contracts live in `documentation/contracts/`:
+
+- `connector-v1.md`
+- `arcgis-rest-mapserver-v1.md`
+- `geojson-snapshot-v1.md`
+- `ogc-wms-raster-v1.md`
+- `pmtiles-basemap-v1.md`
+- `downloadable-gis-snapshot-v1.md`
+
+MVP source-system contracts live under `documentation/contracts/systems/`:
+
+- `noaa-bia-cetaceans-v1.md`
+- `noaa-esi-wa-or-marine-mammals-v1.md`
+- `ecotrust-oregon-fisheries-uses-values-v1.md`
+- `odfw-commercial-landings-v1.md`
+
 ## Connector Layer Record
 
 Connectors should normalize returned layer records into a shared shape:
@@ -169,7 +185,7 @@ Connectors should normalize returned layer records into a shared shape:
 ```json
 {
   "connectorLayerId": "oregon-territorial-sea",
-  "ryuSystemId": "system-oregon-dlcd-coastal-gis",
+  "ryuSystemId": "oregon-dlcd-coastal-gis",
   "ryuRouteId": "ryu-oregon-territorial-sea-plan-arcgis",
   "ryuSourceId": "src-dlcd-territorial-sea-mapserver",
   "title": "Oregon Territorial Sea",
@@ -234,17 +250,17 @@ Probability maps can be added later as separate layers with `semantics: "probabi
 
 Start with a small Oregon-focused system set:
 
-1. `system-protomaps-basemap`
+1. `protomaps-basemap`
    - Role: land, coast, roads, labels
    - Capability: `basemap_tiles`
    - Connector type: PMTiles or hosted tile fallback
 
-2. `system-gebco-web-services`
+2. `gebco-web-services`
    - Role: bathymetry and ocean relief context
    - Capability: `bathymetry_underlay`
    - Connector type: WMS
 
-3. `system-oregon-dlcd-coastal-gis`
+3. `oregon-dlcd-coastal-gis`
    - Role: Oregon coastal zone, territorial sea, rocky habitat, planning boundaries
    - Capability: `management_boundaries`, `coastal_boundary_context`
    - Connector type: ArcGIS REST and/or GeoJSON snapshot

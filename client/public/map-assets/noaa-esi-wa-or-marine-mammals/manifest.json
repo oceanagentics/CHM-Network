@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "geojson-snapshot-v1",
+  "snapshotId": "noaa-esi-wa-or-marine-mammals",
+  "connectorRef": "connector:downloadable-gis-snapshot",
+  "title": "NOAA ESI Outer Coast Washington/Oregon cetacean polygons",
+  "description": "Static Ryu-hosted GeoJSON extracted from the NOAA 2014 Outer Coast Washington/Oregon ESI geodatabase. M_MAMMAL polygons are filtered through BIOFILE to whale, dolphin, and porpoise records.",
+  "generatedAt": "2026-07-24",
+  "bounds": [-125.681664, 41.997499, -123.647068, 48.505897],
+  "sources": [
+    {
+      "title": "Outer Coast of Washington and Oregon 2014 ESI MARINE MAMMAL Polygons",
+      "provider": "NOAA Office of Response and Restoration",
+      "url": "https://www.fisheries.noaa.gov/inport/item/55730"
+    },
+    {
+      "title": "Download ESI Maps and GIS Data",
+      "provider": "NOAA Office of Response and Restoration",
+      "url": "https://response.restoration.noaa.gov/oil-and-chemical-spills/oil-spills/download-esi-maps-and-gis-data"
+    },
+    {
+      "title": "WA_OR_2014_GDB.zip",
+      "provider": "NOAA Office of Response and Restoration",
+      "url": "https://response.restoration.noaa.gov/sites/default/files/esimaps/gisdata/WA_OR_2014_GDB.zip"
+    }
+  ],
+  "caveats": [
+    "ESI is an oil-spill planning and response dataset, not a real-time animal observation layer.",
+    "The GeoJSON is simplified for MVP browser rendering and filtered to cetacean BIOFILE records."
+  ],
+  "layers": [
+    {
+      "id": "cetacean-polygons",
+      "title": "NOAA ESI cetacean polygons",
+      "description": "M_MAMMAL polygon features joined to BIOFILE whale, dolphin, and porpoise records by RARNUM.",
+      "url": "cetacean-polygons.geojson",
+      "geometryType": "Polygon",
+      "featureCount": 630,
+      "semanticTags": ["whale", "cetacean", "marine mammal", "NOAA ESI", "Oregon coast"],
+      "fields": [
+        "RARNUM",
+        "common_names",
+        "scientific_names",
+        "subelements",
+        "season_summary",
+        "concentration",
+        "mapping_qualifier",
+        "active_months"
+      ],
+      "style": {
+        "stroke": "#b83a6f",
+        "fill": "#f06f9d"
+      }
+    }
+  ]
+}

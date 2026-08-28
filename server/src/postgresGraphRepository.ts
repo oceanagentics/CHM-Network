@@ -1,4 +1,5 @@
-import type Database from "better-sqlite3";
+import type { Pool } from "pg";
+import crypto from "node:crypto";
 
 import type {
   GraphBootstrapPayload,
@@ -36,7 +37,6 @@ import {
   mapSavedView,
   mapSource,
   normalizeString,
-  readString,
   readStringArray,
   stringifyJson,
   systemSearchScore,
@@ -47,45 +47,97 @@ import {
   type RawRyuRoute,
 } from "./graphRepositorySupport";
 
-export class SqliteGraphRepository implements GraphRepository {
-  constructor(private readonly db: Database.Database) {}
+function jsonText(value: unknown): string | null {
+  if (value == null) {
+    return null;
+  }
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
 
-  getBootstrap(): GraphBootstrapPayload {
-    const nodes = (this.db
-      .prepare("SELECT * FROM nodes ORDER BY name")
-      .all() as RawNode[]).map((node) => mapNode(node));
-    const edges = (this.db
-      .prepare("SELECT * FROM edges ORDER BY id")
-      .all() as RawEdge[]).map((edge) => mapEdge(edge));
-    const sources = this.db
-      .prepare("SELECT * FROM sources ORDER BY title")
-      .all()
-      .map((row) => mapSource(row as Record<string, unknown>));
-    const ryuRoutes = (this.db
-      .prepare("SELECT * FROM ryu_routes ORDER BY node_id, priority, id")
-      .all() as RawRyuRoute[]).map((route) => mapRyuRoute(route));
+function timestampText(value: unknown): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+function mapPostgresNode(row: Record<string, unknown>): GraphNode {
+  return mapNode({
+    ...(row as RawNode),
+    review_json: jsonText(row.review_json),
+    details_json: jsonText(row.details_json),
+    properties_json: jsonText(row.properties_json),
+    created_at: timestampText(row.created_at),
+    updated_at: timestampText(row.updated_at),
+  });
+}
+
+function mapPostgresEdge(row: Record<string, unknown>): GraphEdge {
+  return mapEdge({
+    ...(row as RawEdge),
+    properties_json: jsonText(row.properties_json),
+    created_at: timestampText(row.created_at),
+    updated_at: timestampText(row.updated_at),
+  });
+}
+
+function mapPostgresRoute(row: Record<string, unknown>): RyuRoute {
+  return mapRyuRoute({
+    ...(row as RawRyuRoute),
+    capabilities_json: jsonText(row.capabilities_json),
+    properties_json: jsonText(row.properties_json),
+    priority: Number(row.priority),
+    created_at: timestampText(row.created_at),
+    updated_at: timestampText(row.updated_at),
+  });
+}
+
+function mapPostgresSavedView(row: Record<string, unknown>): SavedView {
+  return mapSavedView({
+    ...row,
+    filter_json: jsonText(row.filter_json),
+    layout_json: jsonText(row.layout_json),
+    style_json: jsonText(row.style_json),
+    created_at: timestampText(row.created_at),
+    updated_at: timestampText(row.updated_at),
+  });
+}
+
+export class PostgresGraphRepository implements GraphRepository {
+  constructor(private readonly pool: Pool) {}
+
+  async close(): Promise<void> {
+    await this.pool.end();
+  }
+
+  async getBootstrap(): Promise<GraphBootstrapPayload> {
+    const [nodeRows, edgeRows, sourceRows, routeRows] = await Promise.all([
+      this.query("SELECT * FROM nodes ORDER BY name"),
+      this.query("SELECT * FROM edges ORDER BY id"),
+      this.query("SELECT * FROM sources ORDER BY title"),
+      this.query("SELECT * FROM ryu_routes ORDER BY node_id, priority, id"),
+    ]);
+    const nodes = nodeRows.map(mapPostgresNode);
     const savedViews = filterSavedViews(
-      this.listSavedViews(),
+      await this.listSavedViews(),
       new Set(nodes.map((node) => node.id)),
     );
 
     return {
       nodes,
-      edges,
-      sources,
-      ryuRoutes,
+      edges: edgeRows.map(mapPostgresEdge),
+      sources: sourceRows.map((row) => mapSource(row)),
+      ryuRoutes: routeRows.map(mapPostgresRoute),
       savedViews,
     };
   }
 
-  listPortalSystems(query: RyuSystemQuery = {}): RyuSystemRecord[] {
-    return this.buildPortalSystems()
+  async listPortalSystems(query: RyuSystemQuery = {}): Promise<RyuSystemRecord[]> {
+    const systems = await this.buildPortalSystems();
+    return systems
       .filter((system) => this.matchesPortalSystem(system, query))
       .map((system) => this.withPortalIncludes(system, query));
   }
 
-  searchPortalSystems(query: RyuSystemQuery = {}): RyuSystemRecord[] {
-    return this.listPortalSystems(query)
+  async searchPortalSystems(query: RyuSystemQuery = {}): Promise<RyuSystemRecord[]> {
+    return (await this.listPortalSystems(query))
       .map((system) => ({
         system,
         score: systemSearchScore(system, query.query),
@@ -97,8 +149,8 @@ export class SqliteGraphRepository implements GraphRepository {
       .map(({ system }) => system);
   }
 
-  getPortalSystem(id: string, query: RyuSystemQuery = {}): RyuSystemRecord {
-    const system = this.buildPortalSystems().find((candidate) => candidate.ryuSystemId === id);
+  async getPortalSystem(id: string, query: RyuSystemQuery = {}): Promise<RyuSystemRecord> {
+    const system = (await this.buildPortalSystems()).find((candidate) => candidate.ryuSystemId === id);
     if (!system) {
       throw new Error(`system not found: ${id}`);
     }
@@ -106,247 +158,283 @@ export class SqliteGraphRepository implements GraphRepository {
     return this.withPortalIncludes(system, query);
   }
 
-  createNode(input: GraphNodeInput): GraphNode {
+  async createNode(input: GraphNodeInput): Promise<GraphNode> {
     const node = this.validateNodeInput(input);
-    const id = this.createNodeId(node.name);
+    const id = await this.createNodeId(node.name);
+    const params = this.nodeParams(id, node);
 
-    this.db
-      .prepare(
-        `
+    await this.pool.query(
+      `
         INSERT INTO nodes (
           id, kind, name, country_code, subtype, url, summary, description,
           record_depth, review_state, review_json, details_json, properties_json
         ) VALUES (
-          @id, @kind, @name, @countryCode, @subtype, @url, @summary, @description,
-          @recordDepth, @reviewState, @reviewJson, @detailsJson, @propertiesJson
+          $1, $2, $3, $4, $5, $6, $7, $8,
+          $9, $10, $11::jsonb, $12::jsonb, $13::jsonb
         )
       `,
-      )
-      .run(this.nodeParams(id, node));
+      [
+        params.id,
+        params.kind,
+        params.name,
+        params.countryCode,
+        params.subtype,
+        params.url,
+        params.summary,
+        params.description,
+        params.recordDepth,
+        params.reviewState,
+        params.reviewJson,
+        params.detailsJson,
+        params.propertiesJson,
+      ],
+    );
 
     return this.getNode(id);
   }
 
-  private createNodeId(name: string): string {
-    const baseId = idPart(name).replace(/^(system|org|country)-/, "") || crypto.randomUUID();
-    const exists = this.db.prepare("SELECT 1 FROM nodes WHERE id = ? LIMIT 1");
-    if (!exists.get(baseId)) {
-      return baseId;
-    }
-
-    for (let suffix = 2; suffix < 1000; suffix += 1) {
-      const candidate = `${baseId}-${suffix}`;
-      if (!exists.get(candidate)) {
-        return candidate;
-      }
-    }
-
-    return `${baseId}-${crypto.randomUUID()}`;
-  }
-
-  updateNode(id: string, input: GraphNodeInput): GraphNode {
-    const existing = this.getNode(id);
+  async updateNode(id: string, input: GraphNodeInput): Promise<GraphNode> {
+    const existing = await this.getNode(id);
     const node = this.validateNodeInput(input, existing);
+    const params = this.nodeParams(id, node);
 
-    this.db
-      .prepare(
-        `
+    await this.pool.query(
+      `
         UPDATE nodes
-        SET kind = @kind,
-            name = @name,
-            country_code = @countryCode,
-            subtype = @subtype,
-            url = @url,
-            summary = @summary,
-            description = @description,
-            record_depth = @recordDepth,
-            review_state = @reviewState,
-            review_json = @reviewJson,
-            details_json = @detailsJson,
-            properties_json = @propertiesJson
-        WHERE id = @id
+        SET kind = $2,
+            name = $3,
+            country_code = $4,
+            subtype = $5,
+            url = $6,
+            summary = $7,
+            description = $8,
+            record_depth = $9,
+            review_state = $10,
+            review_json = $11::jsonb,
+            details_json = $12::jsonb,
+            properties_json = $13::jsonb
+        WHERE id = $1
       `,
-      )
-      .run(this.nodeParams(id, node));
+      [
+        params.id,
+        params.kind,
+        params.name,
+        params.countryCode,
+        params.subtype,
+        params.url,
+        params.summary,
+        params.description,
+        params.recordDepth,
+        params.reviewState,
+        params.reviewJson,
+        params.detailsJson,
+        params.propertiesJson,
+      ],
+    );
 
     return this.getNode(id);
   }
 
-  deleteNode(id: string): void {
-    this.getNode(id);
-    this.db.prepare("DELETE FROM nodes WHERE id = ?").run(id);
+  async deleteNode(id: string): Promise<void> {
+    await this.getNode(id);
+    await this.pool.query("DELETE FROM nodes WHERE id = $1", [id]);
   }
 
-  createEdge(input: GraphEdgeInput): GraphEdge {
-    const edge = this.validateEdgeInput(input);
+  async createEdge(input: GraphEdgeInput): Promise<GraphEdge> {
+    const edge = await this.validateEdgeInput(input);
     const id = createId("edge");
 
-    this.db
-      .prepare(
-        `
+    await this.pool.query(
+      `
         INSERT INTO edges (
           id, source_node_id, target_node_id, kind, note, properties_json
-        ) VALUES (
-          @id, @sourceNodeId, @targetNodeId, @kind, @note, @propertiesJson
-        )
+        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
       `,
-      )
-      .run({
+      [
         id,
-        sourceNodeId: edge.sourceNodeId,
-        targetNodeId: edge.targetNodeId,
-        kind: edge.kind,
-        note: edge.note,
-        propertiesJson: stringifyJson(edge.properties ?? {}),
-      });
+        edge.sourceNodeId,
+        edge.targetNodeId,
+        edge.kind,
+        edge.note,
+        stringifyJson(edge.properties ?? {}),
+      ],
+    );
 
     return this.getEdge(id);
   }
 
-  updateEdge(id: string, input: GraphEdgeInput): GraphEdge {
-    this.getEdge(id);
-    const edge = this.validateEdgeInput(input, id);
+  async updateEdge(id: string, input: GraphEdgeInput): Promise<GraphEdge> {
+    await this.getEdge(id);
+    const edge = await this.validateEdgeInput(input, id);
 
-    this.db
-      .prepare(
-        `
+    await this.pool.query(
+      `
         UPDATE edges
-        SET source_node_id = @sourceNodeId,
-            target_node_id = @targetNodeId,
-            kind = @kind,
-            note = @note,
-            properties_json = @propertiesJson
-        WHERE id = @id
+        SET source_node_id = $2,
+            target_node_id = $3,
+            kind = $4,
+            note = $5,
+            properties_json = $6::jsonb
+        WHERE id = $1
       `,
-      )
-      .run({
+      [
         id,
-        sourceNodeId: edge.sourceNodeId,
-        targetNodeId: edge.targetNodeId,
-        kind: edge.kind,
-        note: edge.note,
-        propertiesJson: stringifyJson(edge.properties ?? {}),
-      });
+        edge.sourceNodeId,
+        edge.targetNodeId,
+        edge.kind,
+        edge.note,
+        stringifyJson(edge.properties ?? {}),
+      ],
+    );
 
     return this.getEdge(id);
   }
 
-  deleteEdge(id: string): void {
-    this.getEdge(id);
-    this.db.prepare("DELETE FROM edges WHERE id = ?").run(id);
+  async deleteEdge(id: string): Promise<void> {
+    await this.getEdge(id);
+    await this.pool.query("DELETE FROM edges WHERE id = $1", [id]);
   }
 
-  createSource(input: SourceInput): Source {
+  async getSource(id: string): Promise<Source> {
+    const row = await this.queryOne("SELECT * FROM sources WHERE id = $1", [id]);
+    if (!row) {
+      throw new Error(`source not found: ${id}`);
+    }
+
+    return mapSource(row);
+  }
+
+  async createSource(input: SourceInput): Promise<Source> {
     const source = this.validateSourceInput(input);
     const id = createId("src");
-    this.db
-      .prepare(
-        `
+
+    await this.pool.query(
+      `
         INSERT INTO sources (
           id, title, source_type, url, local_path, publisher, published_at, accessed_at, note
-        ) VALUES (
-          @id, @title, @sourceType, @url, @localPath, @publisher, @publishedAt, @accessedAt, @note
-        )
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
-      )
-      .run({
+      [
         id,
-        ...source,
-      });
+        source.title,
+        source.sourceType,
+        source.url,
+        source.localPath,
+        source.publisher,
+        source.publishedAt,
+        source.accessedAt,
+        source.note,
+      ],
+    );
 
     return this.getSource(id);
   }
 
-  updateSource(id: string, input: SourceInput): Source {
-    this.getSource(id);
+  async updateSource(id: string, input: SourceInput): Promise<Source> {
+    await this.getSource(id);
     const source = this.validateSourceInput(input);
-    this.db
-      .prepare(
-        `
+
+    await this.pool.query(
+      `
         UPDATE sources
-        SET title = @title,
-            source_type = @sourceType,
-            url = @url,
-            local_path = @localPath,
-            publisher = @publisher,
-            published_at = @publishedAt,
-            accessed_at = @accessedAt,
-            note = @note
-        WHERE id = @id
+        SET title = $2,
+            source_type = $3,
+            url = $4,
+            local_path = $5,
+            publisher = $6,
+            published_at = $7,
+            accessed_at = $8,
+            note = $9
+        WHERE id = $1
       `,
-      )
-      .run({
+      [
         id,
-        ...source,
-      });
+        source.title,
+        source.sourceType,
+        source.url,
+        source.localPath,
+        source.publisher,
+        source.publishedAt,
+        source.accessedAt,
+        source.note,
+      ],
+    );
 
     return this.getSource(id);
   }
 
-  deleteSource(id: string): void {
-    this.getSource(id);
-    this.db.prepare("DELETE FROM sources WHERE id = ?").run(id);
+  async deleteSource(id: string): Promise<void> {
+    await this.getSource(id);
+    await this.pool.query("DELETE FROM sources WHERE id = $1", [id]);
   }
 
-  listSavedViews(): SavedView[] {
-    return this.db
-      .prepare("SELECT * FROM saved_views ORDER BY updated_at DESC")
-      .all()
-      .map((row) => mapSavedView(row as Record<string, unknown>));
+  async listSavedViews(): Promise<SavedView[]> {
+    return (await this.query("SELECT * FROM saved_views ORDER BY updated_at DESC"))
+      .map(mapPostgresSavedView);
   }
 
-  createSavedView(input: SavedViewInput): SavedView {
-    const id = `view-${crypto.randomUUID()}`;
-    this.db
-      .prepare(
-        `
+  async createSavedView(input: SavedViewInput): Promise<SavedView> {
+    const id = createId("view");
+    await this.pool.query(
+      `
         INSERT INTO saved_views (id, name, scope, filter_json, layout_json, style_json)
-        VALUES (@id, @name, @scope, @filterJson, @layoutJson, @styleJson)
+        VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb)
       `,
-      )
-      .run({
+      [
         id,
-        name: input.name,
-        scope: input.scope,
-        filterJson: JSON.stringify(input.filter),
-        layoutJson: JSON.stringify(input.layout),
-        styleJson: JSON.stringify(input.style),
-      });
+        input.name,
+        input.scope,
+        stringifyJson(input.filter),
+        stringifyJson(input.layout),
+        stringifyJson(input.style),
+      ],
+    );
 
     return this.getSavedView(id);
   }
 
-  updateSavedView(id: string, input: SavedViewInput): SavedView {
-    this.db
-      .prepare(
-        `
+  async updateSavedView(id: string, input: SavedViewInput): Promise<SavedView> {
+    await this.pool.query(
+      `
         UPDATE saved_views
-        SET name = @name,
-            scope = @scope,
-            filter_json = @filterJson,
-            layout_json = @layoutJson,
-            style_json = @styleJson
-        WHERE id = @id
+        SET name = $2,
+            scope = $3,
+            filter_json = $4::jsonb,
+            layout_json = $5::jsonb,
+            style_json = $6::jsonb
+        WHERE id = $1
       `,
-      )
-      .run({
+      [
         id,
-        name: input.name,
-        scope: input.scope,
-        filterJson: JSON.stringify(input.filter),
-        layoutJson: JSON.stringify(input.layout),
-        styleJson: JSON.stringify(input.style),
-      });
+        input.name,
+        input.scope,
+        stringifyJson(input.filter),
+        stringifyJson(input.layout),
+        stringifyJson(input.style),
+      ],
+    );
 
     return this.getSavedView(id);
   }
 
-  deleteSavedView(id: string): void {
-    this.db.prepare("DELETE FROM saved_views WHERE id = ?").run(id);
+  async deleteSavedView(id: string): Promise<void> {
+    await this.pool.query("DELETE FROM saved_views WHERE id = $1", [id]);
   }
 
-  private buildPortalSystems(): RyuSystemRecord[] {
-    const graph = this.getBootstrap();
+  private async query(sql: string, params: unknown[] = []): Promise<Array<Record<string, unknown>>> {
+    const result = await this.pool.query(sql, params);
+    return result.rows as Array<Record<string, unknown>>;
+  }
+
+  private async queryOne(
+    sql: string,
+    params: unknown[] = [],
+  ): Promise<Record<string, unknown> | undefined> {
+    return (await this.query(sql, params))[0];
+  }
+
+  private async buildPortalSystems(): Promise<RyuSystemRecord[]> {
+    const graph = await this.getBootstrap();
     const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
     const sourcesById = new Map(graph.sources.map((source) => [source.id, source]));
     const routesByNodeId = new Map<string, RyuRoute[]>();
@@ -477,6 +565,22 @@ export class SqliteGraphRepository implements GraphRepository {
     };
   }
 
+  private async createNodeId(name: string): Promise<string> {
+    const baseId = idPart(name).replace(/^(system|org|country)-/, "") || createId("node");
+    if (!(await this.queryOne("SELECT 1 FROM nodes WHERE id = $1 LIMIT 1", [baseId]))) {
+      return baseId;
+    }
+
+    for (let suffix = 2; suffix < 1000; suffix += 1) {
+      const candidate = `${baseId}-${suffix}`;
+      if (!(await this.queryOne("SELECT 1 FROM nodes WHERE id = $1 LIMIT 1", [candidate]))) {
+        return candidate;
+      }
+    }
+
+    return `${baseId}-${crypto.randomUUID()}`;
+  }
+
   private nodeParams(id: string, input: GraphNodeInput) {
     const details = input.details ?? emptyNodeDetails();
 
@@ -529,10 +633,10 @@ export class SqliteGraphRepository implements GraphRepository {
     };
   }
 
-  private validateEdgeInput(
+  private async validateEdgeInput(
     input: GraphEdgeInput,
     edgeId?: string,
-  ): GraphEdgeInput {
+  ): Promise<GraphEdgeInput> {
     if (!isEdgeKind(input.kind)) {
       throw new Error("invalid edge kind");
     }
@@ -543,8 +647,8 @@ export class SqliteGraphRepository implements GraphRepository {
       throw new Error("edge endpoints must differ");
     }
 
-    const source = this.getNode(input.sourceNodeId);
-    const target = this.getNode(input.targetNodeId);
+    const source = await this.getNode(input.sourceNodeId);
+    const target = await this.getNode(input.targetNodeId);
 
     if (input.kind === "governs" && (source.kind !== "country" || target.kind !== "organization")) {
       throw new Error("governs must connect country to organization");
@@ -564,16 +668,14 @@ export class SqliteGraphRepository implements GraphRepository {
 
     if (input.kind === "governs") {
       const existing = edgeId
-        ? this.db
-            .prepare(
-              "SELECT id FROM edges WHERE target_node_id = ? AND kind = 'governs' AND id <> ? LIMIT 1",
-            )
-            .get(input.targetNodeId, edgeId)
-        : this.db
-            .prepare(
-              "SELECT id FROM edges WHERE target_node_id = ? AND kind = 'governs' LIMIT 1",
-            )
-            .get(input.targetNodeId);
+        ? await this.queryOne(
+            "SELECT id FROM edges WHERE target_node_id = $1 AND kind = 'governs' AND id <> $2 LIMIT 1",
+            [input.targetNodeId, edgeId],
+          )
+        : await this.queryOne(
+            "SELECT id FROM edges WHERE target_node_id = $1 AND kind = 'governs' LIMIT 1",
+            [input.targetNodeId],
+          );
       if (existing) {
         throw new Error("organization may only have one governs edge");
       }
@@ -608,41 +710,30 @@ export class SqliteGraphRepository implements GraphRepository {
     };
   }
 
-  private getNode(id: string): GraphNode {
-    const row = this.db.prepare("SELECT * FROM nodes WHERE id = ?").get(id) as RawNode | undefined;
+  private async getNode(id: string): Promise<GraphNode> {
+    const row = await this.queryOne("SELECT * FROM nodes WHERE id = $1", [id]);
     if (!row) {
       throw new Error(`node not found: ${id}`);
     }
 
-    return mapNode(row);
+    return mapPostgresNode(row);
   }
 
-  private getEdge(id: string): GraphEdge {
-    const row = this.db
-      .prepare("SELECT * FROM edges WHERE id = ?")
-      .get(id) as RawEdge | undefined;
+  private async getEdge(id: string): Promise<GraphEdge> {
+    const row = await this.queryOne("SELECT * FROM edges WHERE id = $1", [id]);
     if (!row) {
       throw new Error(`edge not found: ${id}`);
     }
 
-    return mapEdge(row);
+    return mapPostgresEdge(row);
   }
 
-  getSource(id: string): Source {
-    const row = this.db.prepare("SELECT * FROM sources WHERE id = ?").get(id);
-    if (!row) {
-      throw new Error(`source not found: ${id}`);
-    }
-
-    return mapSource(row as Record<string, unknown>);
-  }
-
-  private getSavedView(id: string): SavedView {
-    const row = this.db.prepare("SELECT * FROM saved_views WHERE id = ?").get(id);
+  private async getSavedView(id: string): Promise<SavedView> {
+    const row = await this.queryOne("SELECT * FROM saved_views WHERE id = $1", [id]);
     if (!row) {
       throw new Error(`saved view not found: ${id}`);
     }
 
-    return mapSavedView(row as Record<string, unknown>);
+    return mapPostgresSavedView(row);
   }
 }

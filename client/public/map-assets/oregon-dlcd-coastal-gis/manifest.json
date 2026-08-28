@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "geojson-snapshot-v1",
+  "snapshotId": "oregon-dlcd-coastal-gis",
+  "connectorRef": "connector:geojson",
+  "title": "Oregon DLCD Territorial Sea Plan planning layers",
+  "description": "Static Ryu-hosted GeoJSON snapshot of Oregon DLCD / Oregon Coastal Management Program Territorial Sea Plan management and planning area polygons for Deeptime map context.",
+  "generatedAt": "2026-07-25",
+  "bounds": [
+    -124.703805,
+    41.998482,
+    -123.927695,
+    46.251074
+  ],
+  "sources": [
+    {
+      "title": "Oregon DLCD Maps, Data and Tools",
+      "provider": "Oregon Department of Land Conservation and Development",
+      "url": "https://www.oregon.gov/lcd/about/pages/maps-data-tools.aspx"
+    },
+    {
+      "title": "Oregon Territorial Sea Plan ArcGIS MapServer",
+      "provider": "Oregon Coastal Management Program / Oregon DLCD",
+      "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer"
+    }
+  ],
+  "caveats": [
+    "Oregon planning and management boundary context; verify authoritative metadata before regulatory or legal use.",
+    "Snapshot GeoJSON may lag the upstream Oregon DLCD ArcGIS service."
+  ],
+  "layers": [
+    {
+      "id": "territorial-sea-plan-renewable-energy",
+      "title": "Oregon Territorial Sea Plan renewable energy areas",
+      "description": "Part V Oregon Territorial Sea Plan polygons for renewable energy suitability, permit, exclusion, conservation, proprietary use, and resource/use management areas.",
+      "url": "territorial-sea-plan-renewable-energy.geojson",
+      "geometryType": "Polygon",
+      "featureCount": 1601,
+      "bounds": [
+        -124.703805,
+        41.998482,
+        -123.927695,
+        46.251074
+      ],
+      "semanticTags": [
+        "Oregon DLCD",
+        "Oregon Coastal Management Program",
+        "Territorial Sea Plan",
+        "renewable energy",
+        "planning areas",
+        "Oregon coast"
+      ],
+      "fields": [
+        "OBJECTID",
+        "AreaType",
+        "Name",
+        "Area_SqMi",
+        "ZoneID",
+        "Shape.STArea()",
+        "Shape.STLength()"
+      ],
+      "sources": [
+        {
+          "title": "TerritorialSeaPlan_PartV_RenewableEnergy",
+          "provider": "Oregon Coastal Management Program / Oregon DLCD",
+          "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer/0"
+        }
+      ],
+      "caveats": [
+        "Planning and management boundary context, not live environmental monitoring data.",
+        "Snapshot GeoJSON may lag the upstream Oregon DLCD ArcGIS service."
+      ],
+      "style": {
+        "stroke": "#2d7d46",
+        "fill": "#8fd17d"
+      }
+    },
+    {
+      "id": "rocky-habitat-managed-areas",
+      "title": "Oregon rocky habitat managed areas",
+      "description": "Part III Oregon Territorial Sea Plan rocky habitat managed area polygons, including marine conservation, garden, and research area designations.",
+      "url": "rocky-habitat-managed-areas.geojson",
+      "geometryType": "Polygon",
+      "featureCount": 26,
+      "bounds": [
+        -124.569609,
+        42.042283,
+        -123.963496,
+        45.926463
+      ],
+      "semanticTags": [
+        "Oregon DLCD",
+        "Oregon Coastal Management Program",
+        "Territorial Sea Plan",
+        "rocky habitat",
+        "managed areas",
+        "Oregon coast"
+      ],
+      "fields": [
+        "OBJECTID",
+        "NAME",
+        "MPATYPE",
+        "SITEID",
+        "Shape.STArea()",
+        "Shape.STLength()"
+      ],
+      "sources": [
+        {
+          "title": "TerritorialSeaPlan_PartIII_RockyHabitatManagedAreas",
+          "provider": "Oregon Coastal Management Program / Oregon DLCD",
+          "url": "https://gis.lcd.state.or.us/server/rest/services/Framework/AdminBounds_TerritorialSeaPlan/MapServer/1"
+        }
+      ],
+      "caveats": [
+        "Planning and management boundary context, not live environmental monitoring data.",
+        "Snapshot GeoJSON may lag the upstream Oregon DLCD ArcGIS service."
+      ],
+      "style": {
+        "stroke": "#7a3db8",
+        "fill": "#c08be8"
+      }
+    }
+  ]
+}

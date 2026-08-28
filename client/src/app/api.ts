@@ -9,7 +9,7 @@ import type {
   Source,
   SourceInput,
 } from "../../../shared/domain";
-import { bootstrapPath } from "./config";
+import { appPath, bootstrapPath } from "./config";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -39,11 +39,11 @@ export function fetchBootstrap(): Promise<GraphBootstrapPayload> {
 }
 
 export function fetchSavedViews(): Promise<SavedView[]> {
-  return request<SavedView[]>("/api/saved-views");
+  return request<SavedView[]>(appPath("/api/saved-views"));
 }
 
 export function createSavedView(input: SavedViewInput): Promise<SavedView> {
-  return request<SavedView>("/api/saved-views", {
+  return request<SavedView>(appPath("/api/saved-views"), {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -53,40 +53,40 @@ export function updateSavedView(
   id: string,
   input: SavedViewInput,
 ): Promise<SavedView> {
-  return request<SavedView>(`/api/saved-views/${id}`, {
+  return request<SavedView>(appPath(`/api/saved-views/${id}`), {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
 export function deleteSavedView(id: string): Promise<void> {
-  return request<void>(`/api/saved-views/${id}`, {
+  return request<void>(appPath(`/api/saved-views/${id}`), {
     method: "DELETE",
   });
 }
 
 export function createNode(input: GraphNodeInput): Promise<GraphNode> {
-  return request<GraphNode>("/api/nodes", {
+  return request<GraphNode>(appPath("/api/nodes"), {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export function updateNode(id: string, input: GraphNodeInput): Promise<GraphNode> {
-  return request<GraphNode>(`/api/nodes/${id}`, {
+  return request<GraphNode>(appPath(`/api/nodes/${id}`), {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
 export function deleteNode(id: string): Promise<void> {
-  return request<void>(`/api/nodes/${id}`, {
+  return request<void>(appPath(`/api/nodes/${id}`), {
     method: "DELETE",
   });
 }
 
 export function createEdge(input: GraphEdgeInput): Promise<GraphEdge> {
-  return request<GraphEdge>("/api/edges", {
+  return request<GraphEdge>(appPath("/api/edges"), {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -96,34 +96,34 @@ export function updateEdge(
   id: string,
   input: GraphEdgeInput,
 ): Promise<GraphEdge> {
-  return request<GraphEdge>(`/api/edges/${id}`, {
+  return request<GraphEdge>(appPath(`/api/edges/${id}`), {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
 export function deleteEdge(id: string): Promise<void> {
-  return request<void>(`/api/edges/${id}`, {
+  return request<void>(appPath(`/api/edges/${id}`), {
     method: "DELETE",
   });
 }
 
 export function createSource(input: SourceInput): Promise<Source> {
-  return request<Source>("/api/sources", {
+  return request<Source>(appPath("/api/sources"), {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export function updateSource(id: string, input: SourceInput): Promise<Source> {
-  return request<Source>(`/api/sources/${id}`, {
+  return request<Source>(appPath(`/api/sources/${id}`), {
     method: "PUT",
     body: JSON.stringify(input),
   });
 }
 
 export function deleteSource(id: string): Promise<void> {
-  return request<void>(`/api/sources/${id}`, {
+  return request<void>(appPath(`/api/sources/${id}`), {
     method: "DELETE",
   });
 }

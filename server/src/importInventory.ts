@@ -23,22 +23,22 @@ const relationshipTypes = new Set([
 ]);
 
 const entityAliases = new Map<string, string>([
-  ["system-obis", "platform-obis"],
-  ["system-bbnj-chm", "platform-bbnj-chm"],
+  ["obis", "platform-obis"],
+  ["bbnj-chm", "platform-bbnj-chm"],
 ]);
 
 const countryMap = new Map<
   string,
   { id: string; code: string; name: string; pseudoCountry?: boolean }
 >([
-  ["Japan", { id: "country-jpn", code: "JPN", name: "Japan" }],
-  ["USA", { id: "country-usa", code: "USA", name: "United States" }],
-  ["Germany", { id: "country-deu", code: "DEU", name: "Germany" }],
-  ["Canada", { id: "country-can", code: "CAN", name: "Canada" }],
-  ["EU", { id: "country-eur", code: "EUR", name: "European Union", pseudoCountry: true }],
+  ["Japan", { id: "jpn", code: "JPN", name: "Japan" }],
+  ["USA", { id: "usa", code: "USA", name: "United States" }],
+  ["Germany", { id: "deu", code: "DEU", name: "Germany" }],
+  ["Canada", { id: "can", code: "CAN", name: "Canada" }],
+  ["EU", { id: "eur", code: "EUR", name: "European Union", pseudoCountry: true }],
   [
     "international",
-    { id: "country-int", code: "INT", name: "International", pseudoCountry: true },
+    { id: "int", code: "INT", name: "International", pseudoCountry: true },
   ],
 ]);
 
@@ -126,6 +126,14 @@ function idPart(value: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
+}
+
+function normalizeEntityId(value: string): string {
+  return value.trim().replace(/^(system|org|country)-/, "");
+}
+
+function normalizeRelationshipId(value: string): string {
+  return value.trim().replace(/\b(system|org|country)-/g, "");
 }
 
 function parseCsv(text: string): CsvRow[] {
@@ -241,22 +249,31 @@ function main() {
   );
 
   const sourceIds = new Set(sources.map((row) => row.source_id));
-  const systemIds = new Set(systems.map((row) => row.system_id));
+  const systemIds = new Set(systems.map((row) => normalizeEntityId(row.system_id)));
+  if (systemIds.size !== systems.length) {
+    throw new Error("inventory contains duplicate system IDs after normalization");
+  }
   const operatorCountryByOrgId = new Map<string, string>();
   const resolvedSystemIds = new Map<string, string>();
 
+  function operatorNodeId(operatorName: string): string {
+    const orgSlug = idPart(operatorName);
+    return systemIds.has(orgSlug) ? `${orgSlug}-operator` : orgSlug;
+  }
+
   function resolveExistingSystemId(preferredId: string): string | null {
-    const exact = findImportedNodeById.get(preferredId) as
+    const normalizedId = normalizeEntityId(preferredId);
+    const exact = findImportedNodeById.get(normalizedId) as
       | { id: string; kind: string }
       | undefined;
     if (exact) {
       if (exact.kind !== "system") {
-        throw new Error(`node ${preferredId} exists with unexpected kind ${exact.kind}`);
+        throw new Error(`node ${normalizedId} exists with unexpected kind ${exact.kind}`);
       }
       return exact.id;
     }
 
-    const aliasId = entityAliases.get(preferredId);
+    const aliasId = entityAliases.get(normalizedId);
     if (!aliasId) {
       return null;
     }
@@ -282,17 +299,19 @@ function main() {
     }
     const parentSystemId = normalizeString(system.parent_system_id);
     if (parentSystemId) {
-      if (parentSystemId === system.system_id) {
+      const normalizedParentSystemId = normalizeEntityId(parentSystemId);
+      const normalizedSystemId = normalizeEntityId(system.system_id);
+      if (normalizedParentSystemId === normalizedSystemId) {
         throw new Error(`system ${system.system_id} cannot parent itself`);
       }
-      if (!systemIds.has(parentSystemId) && !resolveExistingSystemId(parentSystemId)) {
+      if (!systemIds.has(normalizedParentSystemId) && !resolveExistingSystemId(parentSystemId)) {
         throw new Error(
           `system ${system.system_id} references missing parent system ${parentSystemId}`,
         );
       }
     }
     resolveCountry(system.operator_country);
-    const orgId = `org-${idPart(system.operator_name)}`;
+    const orgId = operatorNodeId(system.operator_name);
     const existingCountry = operatorCountryByOrgId.get(orgId);
     if (existingCountry && existingCountry !== system.operator_country) {
       throw new Error(`operator ${system.operator_name} has conflicting countries`);
@@ -301,10 +320,12 @@ function main() {
   }
 
   for (const link of links) {
-    if (!systemIds.has(link.source_system_id) && !resolveExistingSystemId(link.source_system_id)) {
+    const sourceSystemId = normalizeEntityId(link.source_system_id);
+    const targetSystemId = normalizeEntityId(link.target_system_id);
+    if (!systemIds.has(sourceSystemId) && !resolveExistingSystemId(link.source_system_id)) {
       throw new Error(`link ${link.link_id} references missing source system ${link.source_system_id}`);
     }
-    if (!systemIds.has(link.target_system_id) && !resolveExistingSystemId(link.target_system_id)) {
+    if (!systemIds.has(targetSystemId) && !resolveExistingSystemId(link.target_system_id)) {
       throw new Error(`link ${link.link_id} references missing target system ${link.target_system_id}`);
     }
     if (!relationshipTypes.has(link.relation_type)) {
@@ -367,17 +388,18 @@ function main() {
     kind: GraphNodeKind,
     name: string,
   ): string {
-    const exact = findNodeById.get(preferredId) as
+    const normalizedPreferredId = normalizeEntityId(preferredId);
+    const exact = findNodeById.get(normalizedPreferredId) as
       | { id: string; kind: string }
       | undefined;
     if (exact) {
       if (exact.kind !== kind) {
-        throw new Error(`node ${preferredId} exists with unexpected kind ${exact.kind}`);
+        throw new Error(`node ${normalizedPreferredId} exists with unexpected kind ${exact.kind}`);
       }
       return exact.id;
     }
 
-    const aliasId = entityAliases.get(preferredId);
+    const aliasId = entityAliases.get(normalizedPreferredId);
     if (aliasId) {
       const aliased = findNodeById.get(aliasId) as
         | { id: string; kind: string }
@@ -393,7 +415,7 @@ function main() {
     const byName = findNodeByName.get(kind, name) as
       | { id: string; kind: string }
       | undefined;
-    return byName?.id ?? preferredId;
+    return byName?.id ?? normalizedPreferredId;
   }
 
   function ensureNode(params: {
@@ -509,7 +531,8 @@ function main() {
 
     for (const system of systems) {
       const country = resolveCountry(system.operator_country);
-      const orgSlug = idPart(system.operator_name);
+      const orgPreferredId = operatorNodeId(system.operator_name);
+      const normalizedSystemId = normalizeEntityId(system.system_id);
       const countryId = ensureNode({
         preferredId: country.id,
         kind: "country",
@@ -524,7 +547,7 @@ function main() {
         },
       });
       const orgId = ensureNode({
-        preferredId: `org-${orgSlug}`,
+        preferredId: orgPreferredId,
         kind: "organization",
         name: system.operator_name,
         countryCode: country.code,
@@ -535,7 +558,7 @@ function main() {
         properties: {},
       });
       const systemId = ensureNode({
-        preferredId: system.system_id,
+        preferredId: normalizedSystemId,
         kind: "system",
         name: system.system_name,
         countryCode: country.code,
@@ -545,10 +568,10 @@ function main() {
         details: systemDetails(system, orgId, country.code),
         properties: {},
       });
-      resolvedSystemIds.set(system.system_id, systemId);
+      resolvedSystemIds.set(normalizedSystemId, systemId);
 
       ensureEdge({
-        preferredId: `rel-${country.code.toLowerCase()}-governs-${orgSlug}`,
+        preferredId: `rel-${country.code.toLowerCase()}-governs-${orgPreferredId}`,
         sourceNodeId: countryId,
         targetNodeId: orgId,
         kind: "governs",
@@ -556,7 +579,7 @@ function main() {
         properties: {},
       });
       ensureEdge({
-        preferredId: `rel-${orgSlug}-operates-${idPart(system.system_name)}`,
+        preferredId: `rel-${orgPreferredId}-operates-${idPart(system.system_name)}`,
         sourceNodeId: orgId,
         targetNodeId: systemId,
         kind: "operates",
@@ -566,10 +589,11 @@ function main() {
     }
 
     for (const system of systems) {
-      const systemId = resolvedSystemIds.get(system.system_id) ?? system.system_id;
+      const normalizedSystemId = normalizeEntityId(system.system_id);
+      const systemId = resolvedSystemIds.get(normalizedSystemId) ?? normalizedSystemId;
       const parentSystemId = normalizeString(system.parent_system_id);
       const parentNodeId = parentSystemId
-        ? (resolvedSystemIds.get(parentSystemId) ?? resolveExistingSystemId(parentSystemId))
+        ? (resolvedSystemIds.get(normalizeEntityId(parentSystemId)) ?? resolveExistingSystemId(parentSystemId))
         : null;
 
       if (parentNodeId === systemId) {
@@ -590,15 +614,15 @@ function main() {
 
     for (const link of links) {
       ensureEdge({
-        preferredId: link.link_id,
+        preferredId: normalizeRelationshipId(link.link_id),
         sourceNodeId:
-          resolvedSystemIds.get(link.source_system_id) ??
+          resolvedSystemIds.get(normalizeEntityId(link.source_system_id)) ??
           resolveExistingSystemId(link.source_system_id) ??
-          link.source_system_id,
+          normalizeEntityId(link.source_system_id),
         targetNodeId:
-          resolvedSystemIds.get(link.target_system_id) ??
+          resolvedSystemIds.get(normalizeEntityId(link.target_system_id)) ??
           resolveExistingSystemId(link.target_system_id) ??
-          link.target_system_id,
+          normalizeEntityId(link.target_system_id),
         kind: "syncs_to",
         note: normalizeString(link.direction_note),
         properties: {
