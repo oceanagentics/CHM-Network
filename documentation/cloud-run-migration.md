@@ -28,6 +28,9 @@ PGDATABASE=explorer
 The browser-facing `explorer` service should use `PGUSER=explorer_read`. The
 private `explorer-api` service should use `PGUSER=explorer_write` and
 `RYU_TRUSTED_CALLER_SERVICE_ACCOUNTS=chm-sa@chm-network.iam.gserviceaccount.com`.
+Migration SQL removes Cloud SQL's default elevated role membership from
+`explorer_read` and `explorer_write`, so only `explorer_migration` can create
+schema objects.
 
 ## Build Image
 
