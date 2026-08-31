@@ -67,16 +67,16 @@ review fields without edit controls.
 
 Last verified on 2026-08-31:
 
-- Source commit: `6a03086`
-- Image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer@sha256:e2b744ed43b60f99e6740e5e2a156c8bffc39192a75ff7a2af6dac17e471f29e`
-- Browser-facing Cloud Run revision: `explorer-00009-75l`
-- Private API Cloud Run revision: `explorer-api-00008-mhc`
+- Source commit: `fa36202`
+- Image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer@sha256:070e49ba801cfa05f285ca18130c7b3ec7b835e5c28946457b334dcca94b7777`
+- Browser-facing Cloud Run revision: `explorer-00010-vw6`
+- Private API Cloud Run revision: `explorer-api-00009-27n`
 - IAP backend service ID: `4582439918390522076`
 - Seeded Cloud SQL rows: `102` sources, `117` nodes, `139` edges, `10`
   routes, and `2` saved views
 - Private review write probe: `fishbase` updated to
   `reviewState=needs_human_review`, `reviewer=danny@oceanagentics.com`, and
-  `lastReviewed=2026-08-31T14:37:09.097Z`
+  `lastReviewed=2026-08-31T15:05:30.989Z`
 
 ## Build Image
 
