@@ -18,18 +18,20 @@ runtime database.
   configured, a trusted caller service account header. No general node, edge,
   source, saved-view, or schema mutation routes are exposed.
 
-Both production Explorer services should set:
+Production Explorer services should set:
 
 ```sh
-APP_BASE_PATH=/explorer
 RYU_DATA_BACKEND=postgres
 PGHOST=/cloudsql/chm-network:us-east4:chm
 PGDATABASE=explorer
 ```
 
-The browser-facing `explorer` service should use `PGUSER=explorer_read`. The
-browser-facing service should also set
-`IAP_JWT_AUDIENCE=/projects/288836337031/global/backendServices/4582439918390522076`.
+The public browser-facing `explorer` service should set
+`APP_BASE_PATH=/explorer`, use `PGUSER=explorer_read`, omit
+`IAP_JWT_AUDIENCE`, and run with only read-only data exposure. The
+IAP-protected `explorer-admin` service should set
+`APP_BASE_PATH=/explorer/admin`, use `PGUSER=explorer_read`, and set
+`IAP_JWT_AUDIENCE=/projects/288836337031/global/backendServices/5570063593656309274`.
 The private `explorer-api` service should use `PGUSER=explorer_write`,
 `RYU_TRUSTED_CALLER_SERVICE_ACCOUNTS=chm-sa@chm-network.iam.gserviceaccount.com`,
 internal-only Cloud Run ingress, and Cloud Run IAM invoker access for CHM.
@@ -56,7 +58,8 @@ The details panel shows record and review state for selected nodes:
   `reviewer` from CHM/IAP identity and `lastReviewed` server-side.
 - Unauthenticated public Explorer deployments should omit `IAP_JWT_AUDIENCE`;
   that makes Explorer redact reviewer notes, reviewer identity, last-reviewed
-  timestamps, raw review JSON, and local source paths from the bootstrap API.
+  timestamps, raw review JSON, route targets, and local source paths from public
+  APIs.
 
 The browser review helper calls the CHM proxy path by default:
 
@@ -72,17 +75,20 @@ review fields without edit controls.
 
 Last verified on 2026-08-31:
 
-- Source commit: `a44fef4`
-- Image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer@sha256:cb1395e8fbf3707089f57367a5e5b3809a5f3a222a6387c729752aaf69e1edba`
-- Browser-facing Cloud Run revision: `explorer-00011-kxh`
-- Private API Cloud Run revision: `explorer-api-00010-spd`
-- IAP backend service ID: `4582439918390522076`
+- Source commit: `c1fea0b`
+- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:a3bb4e4a8cdb71f0bc1c4f22603513b636f1c8e3c470eb5809370172384695c5`
+- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:31f7b839620a149b30579ca9170e77e777a6f1b5559cd9d57e817f792dd90df2`
+- Public Cloud Run revision: `explorer-00012-xxd`
+- Admin Cloud Run revision: `explorer-admin-00002-sjn`
+- Private API Cloud Run revision: `explorer-api-00011-9j2`
+- Admin IAP backend service ID: `5570063593656309274`
 - Seeded Cloud SQL rows: `102` sources, `117` nodes, `139` edges, `10`
   routes, and `2` saved views
 - Three-state review schema normalization completed on 2026-08-31. Before:
   `99` `unreviewed`, `16` `agent_researched`, and `2`
-  `needs_human_review`. After: `115` `agent_researched` and `2`
-  `needs_revision`.
+  `needs_human_review`. After normalization and smoke probes, the public
+  bootstrap currently reports `115` `agent_researched`, `1` `human_reviewed`,
+  and `1` `needs_revision`.
 - Private review write probe: `fishbase` updated to
   `reviewState=human_reviewed`, `reviewer=danny@oceanagentics.com`, and
   `lastReviewed=2026-08-31T19:45:32.457Z`; removed review state
@@ -90,18 +96,25 @@ Last verified on 2026-08-31:
 
 ## Build Image
 
-Build the Explorer container image into the shared CHM Artifact Registry repo:
+Build the public and admin Explorer container images into the shared CHM
+Artifact Registry repo:
 
 ```sh
 gcloud builds submit \
   --region us-east4 \
   --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer:$(git rev-parse --short HEAD) \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:$(git rev-parse --short HEAD),_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  .
+gcloud builds submit \
+  --region us-east4 \
+  --config cloudbuild.yaml \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:$(git rev-parse --short HEAD),_APP_BASE_PATH=/explorer/admin,_VITE_APP_MODE=author,_VITE_CAN_REVIEW_NODES=true,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
   .
 ```
 
-The Docker build sets `APP_BASE_PATH=/explorer` so Vite emits asset URLs under
-`/explorer/assets/...`.
+The Docker build uses `APP_BASE_PATH` so Vite emits asset URLs under the matching
+base path: `/explorer/assets/...` for public and `/explorer/admin/assets/...`
+for admin.
 
 ## Supported Update Paths
 
@@ -111,9 +124,9 @@ Use these paths for Explorer/Ryu updates:
    A Git commit does not publish Explorer unless an external build/deploy
    trigger is explicitly configured.
 2. Routine app publish: use for UI, API, runtime, and other app-only changes.
-   Commit the Ryu source, build an immutable Explorer image with Cloud Build,
-   deploy that image to both `explorer` and `explorer-api`, and run the smoke
-   checks below.
+   Commit the Ryu source, build immutable public and admin Explorer images with
+   Cloud Build, deploy the public image to `explorer` and `explorer-api`, deploy
+   the admin image to `explorer-admin`, and run the smoke checks below.
 3. Terraform image rollout: use when CHM Terraform should remain the deployment
    record. Build the immutable Explorer image first, then apply CHM Terraform
    with the new image digest for `explorer` and `explorer-api`.
@@ -186,16 +199,19 @@ enabled. Without that network shape, calls to the `run.app` URI are treated as
 external direct requests and receive a Google platform `404` before reaching
 Explorer.
 
-After CHM routes `/explorer` to Cloud Run, verify:
+After CHM routes `/explorer` and `/explorer/admin` to Cloud Run, verify:
 
 ```sh
 curl -I https://chm.oceanagentics.org/explorer
+curl -I https://chm.oceanagentics.org/explorer/
+curl -I https://chm.oceanagentics.org/explorer/admin
+curl -sS https://chm.oceanagentics.org/explorer/api/graph/bootstrap
 ```
 
-Unauthenticated browser requests should be redirected by IAP before reaching
-Explorer. Fetching `/explorer/api/graph/bootstrap` on the public hostname
-requires an authenticated IAP session; a plain unauthenticated `curl` should not
-return graph JSON.
+Unauthenticated `/explorer` should return public read-only Explorer. The public
+bootstrap should return graph JSON with reviewer metadata, raw review JSON,
+route targets, and source local paths redacted. Unauthenticated
+`/explorer/admin` should redirect through IAP before reaching Explorer admin.
 
 Private backend verification completed on 2026-08-31 with a temporary Cloud Run
 job running as `chm-sa`. The job updated `fishbase` through
