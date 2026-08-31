@@ -3,7 +3,42 @@ import { ConfigProvider, theme } from "antd";
 import "antd/dist/reset.css";
 
 import { App } from "./app/App";
+import { adminAppBasePath, appBasePath, isPublicApp } from "./app/config";
 import "./app/styles.css";
+
+function redirectAuthenticatedPublicUserToAdmin() {
+  if (!isPublicApp) {
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 1500);
+  fetch(`${adminAppBasePath}/api/health`, {
+    cache: "no-store",
+    credentials: "same-origin",
+    redirect: "manual",
+    signal: controller.signal,
+  })
+    .then((response) => {
+      if (!response.ok) {
+        return;
+      }
+
+      const publicBasePath = appBasePath || "/";
+      const publicPath =
+        window.location.pathname === publicBasePath ||
+        publicBasePath === "/"
+          ? ""
+          : window.location.pathname.slice(publicBasePath.length);
+      window.location.replace(
+        `${adminAppBasePath}${publicPath}${window.location.search}${window.location.hash}`,
+      );
+    })
+    .catch(() => undefined)
+    .finally(() => window.clearTimeout(timeout));
+}
+
+redirectAuthenticatedPublicUserToAdmin();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <ConfigProvider

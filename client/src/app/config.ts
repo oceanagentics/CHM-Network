@@ -13,6 +13,9 @@ function normalizeBasePath(value: string | undefined): string {
 }
 
 export const appBasePath = normalizeBasePath(import.meta.env.BASE_URL);
+export const adminAppBasePath = normalizeBasePath(
+  import.meta.env.VITE_ADMIN_BASE_PATH ?? "/explorer/admin",
+);
 const reviewApiBasePath = normalizeBasePath(
   import.meta.env.VITE_REVIEW_API_BASE_PATH ?? "/api/explorer",
 );
