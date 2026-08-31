@@ -1,12 +1,7 @@
-import crypto from "node:crypto";
-
 import type {
-  GraphBootstrapPayload,
   GraphEdge,
-  GraphEdgeInput,
   GraphEdgeKind,
   GraphNode,
-  GraphNodeInput,
   GraphNodeKind,
   NodeDetails,
   RecordDepth,
@@ -18,9 +13,7 @@ import type {
   RyuSystemQuery,
   RyuSystemRecord,
   SavedView,
-  SavedViewInput,
   Source,
-  SourceInput,
 } from "../../shared/domain";
 
 export type JsonValue = Record<string, unknown>;
@@ -197,7 +190,14 @@ export function isReviewState(value: unknown): value is ReviewState {
   return typeof value === "string" && reviewStates.includes(value as ReviewState);
 }
 
+function readReviewString(review: JsonValue, key: string): string | null {
+  const value = review[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
 export function mapNode(row: RawNode): GraphNode {
+  const review = parseJson(row.review_json);
+
   return {
     id: row.id,
     kind: row.kind,
@@ -209,7 +209,10 @@ export function mapNode(row: RawNode): GraphNode {
     description: row.description,
     recordDepth: row.record_depth,
     reviewState: row.review_state,
-    review: parseJson(row.review_json),
+    reviewerNote: readReviewString(review, "reviewerNote"),
+    reviewer: readReviewString(review, "reviewer"),
+    lastReviewed: readReviewString(review, "lastReviewed"),
+    review,
     details: normalizeDetails(parseJson(row.details_json)),
     properties: parseJson(row.properties_json),
     createdAt: row.created_at,
@@ -289,10 +292,6 @@ export function filterSavedViews(savedViews: SavedView[], nodeIds: Set<string>):
       (!filter.focusEntityId || nodeIds.has(filter.focusEntityId))
     );
   });
-}
-
-export function createId(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID()}`;
 }
 
 export function idPart(value: string): string {
@@ -485,4 +484,3 @@ export function systemSearchScore(system: RyuSystemRecord, query: string | undef
   const score = terms.reduce((total, term) => total + (searchText.includes(term) ? 1 : 0), 0);
   return searchText.includes(normalizeSearchText(query ?? "")) ? score + terms.length : score;
 }
-

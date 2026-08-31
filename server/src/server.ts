@@ -5,14 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type {
-  GraphEdgeInput,
-  GraphNodeInput,
-  RyuSystemQuery,
-  SavedViewInput,
-  SourceInput,
-} from "../../shared/domain";
+import type { NodeReviewInput, RyuSystemQuery } from "../../shared/domain";
 import type { GraphRepository } from "./graphRepository";
+import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
 import { createGraphRepository } from "./repositoryFactory";
 
 export type RyuRuntimeMode = "local" | "public" | "api";
@@ -102,6 +97,39 @@ function readSystemQuery(input: Record<string, unknown>): RyuSystemQuery {
     routeStatus: readStringList(input.routeStatus),
     includeRoutes: readBoolean(input.includeRoutes),
     includeSources: readBoolean(input.includeSources),
+  };
+}
+
+function readNodeReviewInput(input: unknown): NodeReviewInput {
+  if (!isRecord(input)) {
+    throw new Error("review body is required");
+  }
+
+  const allowedFields = new Set(["reviewState", "reviewerNote"]);
+  const unsupportedFields = Object.keys(input).filter((key) => !allowedFields.has(key));
+  if (unsupportedFields.length > 0) {
+    throw new Error(`unsupported review fields: ${unsupportedFields.join(", ")}`);
+  }
+
+  const hasReviewState = Object.prototype.hasOwnProperty.call(input, "reviewState");
+  const hasReviewerNote = Object.prototype.hasOwnProperty.call(input, "reviewerNote");
+  if (!hasReviewState && !hasReviewerNote) {
+    throw new Error("reviewState or reviewerNote is required");
+  }
+  if (hasReviewState && !isReviewState(input.reviewState)) {
+    throw new Error("invalid reviewState");
+  }
+  if (
+    hasReviewerNote &&
+    input.reviewerNote !== null &&
+    typeof input.reviewerNote !== "string"
+  ) {
+    throw new Error("reviewerNote must be a string or null");
+  }
+
+  return {
+    ...(hasReviewState ? { reviewState: input.reviewState as NodeReviewInput["reviewState"] } : {}),
+    ...(hasReviewerNote ? { reviewerNote: normalizeString(input.reviewerNote) } : {}),
   };
 }
 
@@ -306,61 +334,20 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(await repository.listSavedViews());
   });
 
-  router.post("/api/nodes", writeAccess, async (request, response) => {
-    try {
-      const node = await repository.createNode(request.body as GraphNodeInput);
-      logWrite(request, "create_node");
-      response.status(201).json(node);
-    } catch (error) {
-      sendError(response, error);
+  router.patch("/api/nodes/:id/review", writeAccess, async (request, response) => {
+    const reviewer = readAuditUser(request).email;
+    if (!reviewer) {
+      return response.status(401).json({ error: "missing_chm_user_email" });
     }
-  });
 
-  router.put("/api/nodes/:id", writeAccess, async (request, response) => {
     try {
-      const node = await repository.updateNode(readParam(request, "id"), request.body as GraphNodeInput);
-      logWrite(request, "update_node");
+      const node = await repository.updateNodeReview(
+        readParam(request, "id"),
+        readNodeReviewInput(request.body),
+        reviewer,
+      );
+      logWrite(request, "update_node_review");
       response.json(node);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.delete("/api/nodes/:id", writeAccess, async (request, response) => {
-    try {
-      await repository.deleteNode(readParam(request, "id"));
-      logWrite(request, "delete_node");
-      response.status(204).send();
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.post("/api/edges", writeAccess, async (request, response) => {
-    try {
-      const edge = await repository.createEdge(request.body as GraphEdgeInput);
-      logWrite(request, "create_edge");
-      response.status(201).json(edge);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.put("/api/edges/:id", writeAccess, async (request, response) => {
-    try {
-      const edge = await repository.updateEdge(readParam(request, "id"), request.body as GraphEdgeInput);
-      logWrite(request, "update_edge");
-      response.json(edge);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.delete("/api/edges/:id", writeAccess, async (request, response) => {
-    try {
-      await repository.deleteEdge(readParam(request, "id"));
-      logWrite(request, "delete_edge");
-      response.status(204).send();
     } catch (error) {
       sendError(response, error);
     }
@@ -376,85 +363,6 @@ export function createApp(options: CreateAppOptions = {}) {
 
   router.get("/sources/:id", (request, response) => {
     response.redirect(302, `${basePath === "/" ? "" : basePath}/api/sources/${encodeURIComponent(readParam(request, "id"))}`);
-  });
-
-  router.post("/api/sources", writeAccess, async (request, response) => {
-    try {
-      const source = await repository.createSource(request.body as SourceInput);
-      logWrite(request, "create_source");
-      response.status(201).json(source);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.put("/api/sources/:id", writeAccess, async (request, response) => {
-    try {
-      const source = await repository.updateSource(readParam(request, "id"), request.body as SourceInput);
-      logWrite(request, "update_source");
-      response.json(source);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.delete("/api/sources/:id", writeAccess, async (request, response) => {
-    try {
-      await repository.deleteSource(readParam(request, "id"));
-      logWrite(request, "delete_source");
-      response.status(204).send();
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.post("/api/saved-views", writeAccess, async (request, response) => {
-    const body = request.body as Partial<SavedViewInput>;
-    if (!body.name || !body.scope) {
-      response.status(400).json({ error: "name and scope are required" });
-      return;
-    }
-
-    const savedView = await repository.createSavedView({
-      name: body.name,
-      scope: body.scope,
-      filter: body.filter ?? {},
-      layout: body.layout ?? {},
-      style: body.style ?? {},
-    });
-
-    logWrite(request, "create_saved_view");
-    response.status(201).json(savedView);
-  });
-
-  router.put("/api/saved-views/:id", writeAccess, async (request, response) => {
-    const body = request.body as Partial<SavedViewInput>;
-    if (!body.name || !body.scope) {
-      response.status(400).json({ error: "name and scope are required" });
-      return;
-    }
-
-    try {
-      const savedView = await repository.updateSavedView(readParam(request, "id"), {
-        name: body.name,
-        scope: body.scope,
-        filter: body.filter ?? {},
-        layout: body.layout ?? {},
-        style: body.style ?? {},
-      });
-      logWrite(request, "update_saved_view");
-      response.json(savedView);
-    } catch (error) {
-      response.status(404).json({
-        error: error instanceof Error ? error.message : "saved view not found",
-      });
-    }
-  });
-
-  router.delete("/api/saved-views/:id", writeAccess, async (request, response) => {
-    await repository.deleteSavedView(readParam(request, "id"));
-    logWrite(request, "delete_saved_view");
-    response.status(204).send();
   });
 
   router.use(express.static(staticDirectory));

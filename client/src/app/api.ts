@@ -4,12 +4,13 @@ import type {
   GraphBootstrapPayload,
   GraphNode,
   GraphNodeInput,
+  NodeReviewInput,
   SavedView,
   SavedViewInput,
   Source,
   SourceInput,
 } from "../../../shared/domain";
-import { appPath, bootstrapPath } from "./config";
+import { appPath, bootstrapPath, reviewApiPath } from "./config";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -82,6 +83,16 @@ export function updateNode(id: string, input: GraphNodeInput): Promise<GraphNode
 export function deleteNode(id: string): Promise<void> {
   return request<void>(appPath(`/api/nodes/${id}`), {
     method: "DELETE",
+  });
+}
+
+export function updateNodeReview(
+  id: string,
+  input: NodeReviewInput,
+): Promise<GraphNode> {
+  return request<GraphNode>(reviewApiPath(`/nodes/${id}/review`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
   });
 }
 

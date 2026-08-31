@@ -688,6 +688,23 @@ body {
   overflow-wrap: anywhere;
 }
 
+.entity-review-control {
+  width: 100%;
+}
+
+.entity-review-note {
+  width: 100%;
+}
+
+.entity-review-error {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.entity-review-error .ant-alert-message {
+  overflow-wrap: anywhere;
+}
+
 .source-record-link {
   display: inline-flex;
   align-items: center;

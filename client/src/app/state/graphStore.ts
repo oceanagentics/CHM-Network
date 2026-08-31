@@ -5,6 +5,7 @@ import { create } from "zustand";
 
 import type {
   GraphBootstrapPayload,
+  GraphNode,
   SavedView,
   ViewMode,
 } from "../../../../shared/domain";
@@ -66,6 +67,7 @@ interface GraphState {
   searchFilters: GraphSearchFilters;
   setBootstrap: (payload: GraphBootstrapPayload) => void;
   setSavedViews: (savedViews: SavedView[]) => void;
+  updateNode: (node: GraphNode) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setViewMode: (viewMode: ViewMode) => void;
@@ -106,6 +108,24 @@ export const useGraphStore = create<GraphState>((set) => ({
       error: null,
     }),
   setSavedViews: (savedViews) => set({ savedViews }),
+  updateNode: (node) =>
+    set((state) => {
+      if (!state.graph?.nodeById[node.id]) {
+        return {};
+      }
+
+      return {
+        graph: indexGraph({
+          nodes: state.graph.nodes.map((existingNode) =>
+            existingNode.id === node.id ? node : existingNode,
+          ),
+          edges: state.graph.edges,
+          sources: state.graph.sources,
+          ryuRoutes: state.graph.ryuRoutes,
+          savedViews: state.graph.savedViews,
+        }),
+      };
+    }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
   setDisplayMode: (displayMode) => set({ displayMode }),

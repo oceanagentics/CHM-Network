@@ -1,15 +1,28 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   CloseOutlined,
   InfoCircleOutlined,
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Flex, List, Tabs, Tag, Tooltip, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Flex,
+  Input,
+  List,
+  Select,
+  Tabs,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 
 import type {
   GraphEdge,
   GraphNode,
+  ReviewState,
   RyuRoute,
   SourceRef,
   SourcedMetric,
@@ -18,6 +31,8 @@ import type {
   SystemGalleryItem,
   SystemIdentifierScheme,
 } from "../../../../shared/domain";
+import { updateNodeReview } from "../api";
+import { canReviewNodes } from "../config";
 import { useGraphStore } from "../state/graphStore";
 
 type DetailTabKey = "user" | "raw";
@@ -43,6 +58,28 @@ function tagColor(value: string): string | undefined {
   }
 
   return undefined;
+}
+
+const reviewStates: ReviewState[] = [
+  "unreviewed",
+  "agent_researched",
+  "needs_human_review",
+  "human_reviewed",
+  "needs_revision",
+];
+const reviewStateOptions = reviewStates.map((value) => ({ label: labelize(value), value }));
+
+function formatDateTime(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString();
 }
 
 function InlineField({
@@ -372,6 +409,106 @@ function relationshipLabel(relationship: GraphEdge, currentEntityId: string) {
   return `${labelize(relationship.kind)} (${direction})`;
 }
 
+function ReviewSection({ entity }: { entity: GraphNode }) {
+  const updateNode = useGraphStore((state) => state.updateNode);
+  const [reviewState, setReviewState] = useState<ReviewState>(entity.reviewState);
+  const [reviewerNote, setReviewerNote] = useState(entity.reviewerNote ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setReviewState(entity.reviewState);
+    setReviewerNote(entity.reviewerNote ?? "");
+    setError(null);
+    setSaving(false);
+  }, [entity.id, entity.reviewState, entity.reviewerNote]);
+
+  const normalizedReviewerNote = reviewerNote.trim() || null;
+  const hasChanges =
+    reviewState !== entity.reviewState ||
+    normalizedReviewerNote !== (entity.reviewerNote ?? null);
+
+  async function saveReview() {
+    if (!hasChanges) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const updatedNode = await updateNodeReview(entity.id, {
+        reviewState,
+        reviewerNote: normalizedReviewerNote,
+      });
+      updateNode(updatedNode);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Review update failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <DetailSection title="Review">
+      <div className="entity-detail-grid">
+        <InlineField label="Review state">
+          {canReviewNodes ? (
+            <Select
+              className="entity-review-control"
+              options={reviewStateOptions}
+              size="small"
+              value={reviewState}
+              onChange={(value) => setReviewState(value)}
+            />
+          ) : (
+            <Tag bordered={false} color={tagColor(entity.reviewState)}>
+              {labelize(entity.reviewState)}
+            </Tag>
+          )}
+        </InlineField>
+        {canReviewNodes ? (
+          <InlineField label="Reviewer note">
+            <Input.TextArea
+              autoSize={{ minRows: 3, maxRows: 7 }}
+              className="entity-review-note"
+              value={reviewerNote}
+              onChange={(event) => setReviewerNote(event.target.value)}
+            />
+          </InlineField>
+        ) : entity.reviewerNote ? (
+          <InlineField label="Reviewer note">{entity.reviewerNote}</InlineField>
+        ) : null}
+        {canReviewNodes || entity.reviewer ? (
+          <InlineField label="Reviewer">
+            {entity.reviewer ?? <EmptyValue />}
+          </InlineField>
+        ) : null}
+        {canReviewNodes || entity.lastReviewed ? (
+          <InlineField label="Last reviewed">
+            {formatDateTime(entity.lastReviewed) ?? <EmptyValue />}
+          </InlineField>
+        ) : null}
+      </div>
+      {canReviewNodes ? (
+        <Flex align="center" justify="space-between" gap={8}>
+          {error ? (
+            <Alert className="entity-review-error" message={error} showIcon type="error" />
+          ) : <span />}
+          <Button
+            disabled={!hasChanges}
+            loading={saving}
+            size="small"
+            type="primary"
+            onClick={saveReview}
+          >
+            Save review
+          </Button>
+        </Flex>
+      ) : null}
+    </DetailSection>
+  );
+}
+
 function RawSystemDump({
   entity,
   relationships,
@@ -393,6 +530,9 @@ function RawSystemDump({
       description: entity.description,
       record_depth: entity.recordDepth,
       review_state: entity.reviewState,
+      reviewer_note: entity.reviewerNote,
+      reviewer: entity.reviewer,
+      last_reviewed: entity.lastReviewed,
       review: entity.review,
       details: entity.details,
       properties: entity.properties,
@@ -506,11 +646,6 @@ export function EntityDetailsPanel({
               {labelize(entity.recordDepth)}
             </Tag>
           </InlineField>
-          <InlineField label="Review state">
-            <Tag bordered={false} color={tagColor(entity.reviewState)}>
-              {labelize(entity.reviewState)}
-            </Tag>
-          </InlineField>
           {isSystem && system ? (
             <>
               <InlineField label="Role">
@@ -556,6 +691,8 @@ export function EntityDetailsPanel({
           )}
         </div>
       </DetailSection>
+
+      <ReviewSection entity={entity} />
 
       {isSystem && system ? (
         <>

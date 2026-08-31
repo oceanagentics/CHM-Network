@@ -10,7 +10,7 @@
 - Follow `documentation/RICH_RESEARCH_RECORDS.md` for standing rich research and record-backfill instructions.
 - Use `documentation/mvp.md` as the current Deeptime/Ryu MCP portal working plan.
 - Use `documentation/osusources.md` as the current Oregon/OSU source plan.
-- Use `documentation/cloud-run-migration.md` for Cloud Run, CHM routing, and Cloud SQL migration work.
+- Use `documentation/cloud-run-migration.md` for Cloud Run, CHM routing, and Cloud SQL launch work.
 - Treat `documentation/mvp.md` and `documentation/osusources.md` as active project plans for today's Deeptime/Ryu work, not permanent modeling policy.
 
 ## Research Import Workflow
@@ -21,29 +21,15 @@
 - Do not create or maintain a separate merged central CSV registry.
 
 ## Write Surfaces
-### In-app editor
-- Start the API: `npm --workspace server run start`
-- Start the client: `npm --workspace client run dev -- --host 127.0.0.1 --port 5173`
-- Open `http://127.0.0.1:5173`
-- Use the left-rail `Editor` panel.
-- Modes:
-  - `Nodes`
-  - `Edges`
-  - `Sources`
-- Selecting a node opens that node.
-- Selecting an edge opens that edge.
-- Saving or deleting refetches `/api/graph/bootstrap` and redraws the graph.
-
-### API write endpoints
-- `POST /api/nodes`
-- `PUT /api/nodes/:id`
-- `DELETE /api/nodes/:id`
-- `POST /api/edges`
-- `PUT /api/edges/:id`
-- `DELETE /api/edges/:id`
-- `POST /api/sources`
-- `PUT /api/sources/:id`
-- `DELETE /api/sources/:id`
+### Browser Review API
+- CHM is the public IAP-protected entry app.
+- CHM proxies only `PATCH /api/explorer/nodes/:id/review` to the private Explorer API.
+- Explorer handles that as `PATCH /explorer/api/nodes/:id/review`.
+- The request body may contain only `reviewState` and `reviewerNote`.
+- Explorer sets `reviewer` from the CHM-forwarded IAP email and sets `lastReviewed` when the review state or note is accepted.
+- The browser client should call the CHM proxy path `/api/explorer/nodes/:id/review`, not the public Explorer `/explorer/api/...` path.
+- The details UI shows `recordDepth` and `reviewState` for all users. Authenticated/author mode renders the review state dropdown and reviewer-note form.
+- Do not expose general node, edge, source, saved-view, or schema mutation routes through the browser API.
 
 ## Current Minimal Model
 ### Node kinds
@@ -111,13 +97,16 @@
 - Public entry: `https://chm.oceanagentics.org/explorer`
 - CHM owns the domain, load balancer, IAP, and path routing.
 - Explorer owns the app image, runtime behavior, Postgres schema, and graph data model.
-- Browser-facing `explorer` uses read credentials; private `explorer-api` uses write credentials; migration jobs use migration credentials.
+- Browser-facing `explorer` uses read credentials; private `explorer-api` uses write credentials; schema/setup work uses the dedicated schema-capable credentials only when an explicit database change is being applied.
 
 ## Cloud Run Publishing
 - Build the Explorer image with `cloudbuild.yaml` into Artifact Registry repository `chm-apps`.
-- CHM Terraform deploys the image to the browser-facing `explorer` service and private `explorer-api` service.
-- Run schema changes through the `explorer-migrate` Cloud Run job.
-- Verify database visibility through the read-only `explorer-db-check` Cloud Run job.
+- Use commit-only updates for review, handoff, and release traceability; commits do not publish by themselves unless an external trigger is explicitly configured.
+- Use routine app publishes for UI, API, runtime, and other app-only changes: commit, build an immutable image, deploy it to both `explorer` and `explorer-api`, and smoke test.
+- Prefer CHM Terraform image rollouts when Terraform should remain the deployment record: build the image first, then apply Terraform with the new Explorer image digest.
+- Use broader Terraform changes only for shared CHM infrastructure, routing, IAP, service accounts, secrets, Cloud SQL, runtime environment, or schema-change wiring.
+- Do not keep standing Cloud Run jobs for initial database setup or read checks.
+- Handle future schema changes deliberately when they are needed; keep the current SQL as the reference for the production Postgres shape.
 
 ## Graph View Layers
 - Keep graph view code split into two top-level phases: graph build and graph display.

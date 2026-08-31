@@ -25,7 +25,8 @@ For system nodes:
 - Use `nodes.url`, `nodes.summary`, and `nodes.description` for the primary public URL and prose profile.
 - Use `nodes.record_depth` to track `stub`, `thin`, or `rich`.
 - Use `nodes.review_state` for review queues, such as `unreviewed`, `agent_researched`, `needs_human_review`, `human_reviewed`, or `needs_revision`.
-- Use `nodes.review_json` for non-query review metadata such as reviewer history.
+- Use `nodes.review_json` only for `reviewerNote`, `reviewer`, and `lastReviewed`.
+- The details UI shows `recordDepth` and `reviewState` for all users. In authenticated/author mode, it lets users update only `reviewState` and `reviewerNote`; `reviewer` and `lastReviewed` are set by the server.
 - Use `nodes.details_json` for human-facing rich details: aliases, operator summary, role, discipline family, geographic scope, descriptors, metrics, access paths, identifiers, usage, and gallery items.
 - Use `nodes.properties_json` only for extra node properties that do not fit the common fields or `details_json`.
 - Use `ryu_routes` only for approved machine access routes that agents or other apps should call.
@@ -219,7 +220,6 @@ Do not delete unrelated rows for other systems. Do not change existing user or a
 Run these checks before finishing:
 
 ```sh
-npm --workspace server run migrate:postgres
 npm --workspace server run export:public
 npm run build
 ```

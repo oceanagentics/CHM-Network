@@ -137,6 +137,9 @@ export interface GraphNode {
   description: string | null;
   recordDepth: RecordDepth;
   reviewState: ReviewState;
+  reviewerNote: string | null;
+  reviewer: string | null;
+  lastReviewed: string | null;
   review: Record<string, unknown>;
   details: NodeDetails;
   properties: Record<string, unknown>;
@@ -283,6 +286,11 @@ export interface GraphNodeInput {
   review?: Record<string, unknown>;
   details?: NodeDetails;
   properties?: Record<string, unknown>;
+}
+
+export interface NodeReviewInput {
+  reviewState?: ReviewState;
+  reviewerNote?: string | null;
 }
 
 export interface GraphEdgeInput {

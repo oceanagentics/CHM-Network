@@ -6,10 +6,8 @@
     "dev": "node --watch --import tsx src/server.ts",
     "build": "tsc -p tsconfig.json --noEmit",
     "export:public": "node --import tsx src/exportPublicBootstrap.ts",
-    "migrate:postgres": "node --import tsx src/runPostgresMigrations.ts",
     "mcp:arcgis-rest": "node --import tsx src/mcpArcgisRestServer.ts",
     "mcp:portal": "node --import tsx src/mcpPortalServer.ts",
-    "seed:postgres": "node --import tsx src/seedPostgresBootstrap.ts",
     "test": "node --import tsx --test src/**/*.test.ts",
     "validate:urls": "node --import tsx src/validateUrls.ts",
     "start": "node --import tsx src/server.ts"

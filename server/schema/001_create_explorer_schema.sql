@@ -152,14 +152,24 @@ BEGIN
     REVOKE CREATE ON SCHEMA public FROM explorer_write;
     GRANT USAGE ON SCHEMA public TO explorer_write;
     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO explorer_write;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO explorer_write;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO explorer_write;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO explorer_write;
   END IF;
 
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'explorer_migration') THEN
-    GRANT CONNECT ON DATABASE explorer TO explorer_migration;
-    GRANT USAGE, CREATE ON SCHEMA public TO explorer_migration;
-    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO explorer_migration;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO explorer_migration;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'explorer_schema_admin') THEN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'cloudsqlsuperuser') THEN
+      REVOKE cloudsqlsuperuser FROM explorer_schema_admin;
+    END IF;
+
+    ALTER ROLE explorer_schema_admin NOCREATEDB NOCREATEROLE;
+
+    GRANT CONNECT ON DATABASE explorer TO explorer_schema_admin;
+    GRANT USAGE, CREATE ON SCHEMA public TO explorer_schema_admin;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO explorer_schema_admin;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO explorer_schema_admin;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO explorer_schema_admin;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO explorer_schema_admin;
   END IF;
 END $$;
 
