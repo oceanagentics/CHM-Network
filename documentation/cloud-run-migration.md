@@ -56,9 +56,9 @@ The details panel shows record and review state for selected nodes:
   `lastReviewed` in the embedded review form.
 - The form sends only `reviewState` and `reviewerNote`; Explorer sets
   `reviewer` from CHM/IAP identity and `lastReviewed` server-side.
-- The public build checks `/explorer/admin/api/health` on startup. If the browser
-  already has a valid CHM/IAP session, `/explorer` redirects to
-  `/explorer/admin` while preserving the current query string and hash. Anonymous
+- The public build checks the `chm_admin_hint` cookie before mounting React. If
+  the cookie is present, `/explorer` redirects to `/explorer/admin` while
+  preserving the current query string and hash. Without the cookie, anonymous
   users remain on the public read-only view.
 - Unauthenticated public Explorer deployments should omit `IAP_JWT_AUDIENCE`;
   that makes Explorer redact reviewer notes, reviewer identity, last-reviewed
