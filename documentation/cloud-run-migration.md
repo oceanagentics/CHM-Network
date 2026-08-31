@@ -72,19 +72,21 @@ review fields without edit controls.
 
 Last verified on 2026-08-31:
 
-- Source commit: `fa36202`
-- Image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer@sha256:070e49ba801cfa05f285ca18130c7b3ec7b835e5c28946457b334dcca94b7777`
-- Browser-facing Cloud Run revision: `explorer-00010-vw6`
-- Private API Cloud Run revision: `explorer-api-00009-27n`
+- Source commit: `a44fef4`
+- Image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer@sha256:cb1395e8fbf3707089f57367a5e5b3809a5f3a222a6387c729752aaf69e1edba`
+- Browser-facing Cloud Run revision: `explorer-00011-kxh`
+- Private API Cloud Run revision: `explorer-api-00010-spd`
 - IAP backend service ID: `4582439918390522076`
 - Seeded Cloud SQL rows: `102` sources, `117` nodes, `139` edges, `10`
   routes, and `2` saved views
-- Private review write probe: `fishbase` updated as
-  `reviewer=danny@oceanagentics.com` with
-  `lastReviewed=2026-08-31T15:05:30.989Z`. Before deploying the three-state
-  review contract, normalize any existing `unreviewed` rows to
-  `agent_researched` and any existing `needs_human_review` rows to
-  `needs_revision`, then replace the Postgres check constraint.
+- Three-state review schema normalization completed on 2026-08-31. Before:
+  `99` `unreviewed`, `16` `agent_researched`, and `2`
+  `needs_human_review`. After: `115` `agent_researched` and `2`
+  `needs_revision`.
+- Private review write probe: `fishbase` updated to
+  `reviewState=human_reviewed`, `reviewer=danny@oceanagentics.com`, and
+  `lastReviewed=2026-08-31T19:45:32.457Z`; removed review state
+  `needs_human_review` returned `400 invalid reviewState`.
 
 ## Build Image
 
