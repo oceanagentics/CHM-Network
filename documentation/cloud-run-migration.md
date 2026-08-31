@@ -47,11 +47,16 @@ The details panel shows record and review state for selected nodes:
 
 - `recordDepth` is read-only and visible to all users.
 - `reviewState` is visible to all users.
+- Valid `reviewState` values are `agent_researched`, `human_reviewed`, and
+  `needs_revision`.
 - Authenticated/author builds render `reviewState` as a dropdown.
 - Authenticated/author builds show `reviewerNote`, `reviewer`, and
   `lastReviewed` in the embedded review form.
 - The form sends only `reviewState` and `reviewerNote`; Explorer sets
   `reviewer` from CHM/IAP identity and `lastReviewed` server-side.
+- Unauthenticated public Explorer deployments should omit `IAP_JWT_AUDIENCE`;
+  that makes Explorer redact reviewer notes, reviewer identity, last-reviewed
+  timestamps, raw review JSON, and local source paths from the bootstrap API.
 
 The browser review helper calls the CHM proxy path by default:
 
@@ -74,9 +79,12 @@ Last verified on 2026-08-31:
 - IAP backend service ID: `4582439918390522076`
 - Seeded Cloud SQL rows: `102` sources, `117` nodes, `139` edges, `10`
   routes, and `2` saved views
-- Private review write probe: `fishbase` updated to
-  `reviewState=needs_human_review`, `reviewer=danny@oceanagentics.com`, and
-  `lastReviewed=2026-08-31T15:05:30.989Z`
+- Private review write probe: `fishbase` updated as
+  `reviewer=danny@oceanagentics.com` with
+  `lastReviewed=2026-08-31T15:05:30.989Z`. Before deploying the three-state
+  review contract, normalize any existing `unreviewed` rows to
+  `agent_researched` and any existing `needs_human_review` rows to
+  `needs_revision`, then replace the Postgres check constraint.
 
 ## Build Image
 

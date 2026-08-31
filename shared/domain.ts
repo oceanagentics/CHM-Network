@@ -15,9 +15,7 @@ export type ViewMode = "governance" | "country" | "technical";
 export type RecordDepth = "stub" | "thin" | "rich";
 
 export type ReviewState =
-  | "unreviewed"
   | "agent_researched"
-  | "needs_human_review"
   | "human_reviewed"
   | "needs_revision";
 

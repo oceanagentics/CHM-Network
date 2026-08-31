@@ -11,7 +11,7 @@ import type {
   Source,
 } from "../../shared/domain";
 import type { GraphRepository } from "./graphRepository";
-import { createApp, type RyuRuntimeMode } from "./server";
+import { createApp, toPublicBootstrap, type RyuRuntimeMode } from "./server";
 
 const bootstrap: GraphBootstrapPayload = {
   nodes: [],
@@ -32,7 +32,7 @@ function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
     summary: null,
     description: null,
     recordDepth: "stub",
-    reviewState: "unreviewed",
+    reviewState: "agent_researched",
     reviewerNote: null,
     reviewer: null,
     lastReviewed: null,
@@ -155,6 +155,44 @@ test("serves root health outside the Explorer base path", async () => {
   });
 });
 
+test("redacts private review fields from public bootstrap payloads", () => {
+  const publicBootstrap = toPublicBootstrap({
+    ...bootstrap,
+    nodes: [
+      createFakeNode({
+        reviewerNote: "Private reviewer note",
+        reviewer: "danny@oceanagentics.com",
+        lastReviewed: "2026-08-31T00:00:00.000Z",
+        review: {
+          reviewerNote: "Private reviewer note",
+          reviewer: "danny@oceanagentics.com",
+          lastReviewed: "2026-08-31T00:00:00.000Z",
+        },
+      }),
+    ],
+    sources: [
+      {
+        id: "source-1",
+        title: "Source",
+        sourceType: "web",
+        url: "https://example.com",
+        localPath: "/private/source.md",
+        publisher: null,
+        publishedAt: null,
+        accessedAt: null,
+        note: null,
+      },
+    ],
+  });
+
+  assert.equal(publicBootstrap.nodes[0].reviewState, "agent_researched");
+  assert.equal(publicBootstrap.nodes[0].reviewerNote, null);
+  assert.equal(publicBootstrap.nodes[0].reviewer, null);
+  assert.equal(publicBootstrap.nodes[0].lastReviewed, null);
+  assert.deepEqual(publicBootstrap.nodes[0].review, {});
+  assert.equal(publicBootstrap.sources[0].localPath, null);
+});
+
 test("serves Explorer API under /explorer", async () => {
   await withServer("public", async (baseUrl) => {
     const response = await fetch(`${baseUrl}/explorer/api/graph/bootstrap`);
@@ -260,6 +298,23 @@ test("rejects client-controlled review fields", async () => {
 
     assert.equal(response.status, 400);
     assert.deepEqual(await response.json(), { error: "unsupported review fields: reviewer" });
+  });
+});
+
+test("rejects removed review states", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({ reviewState: "needs_human_review" }),
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "invalid reviewState" });
   });
 });
 

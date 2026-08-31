@@ -50,9 +50,6 @@ function tagColor(value: string): string | undefined {
   if (value === "thin" || value === "agent_researched") {
     return "blue";
   }
-  if (value === "needs_human_review") {
-    return "orange";
-  }
   if (value === "needs_revision") {
     return "red";
   }
@@ -61,9 +58,7 @@ function tagColor(value: string): string | undefined {
 }
 
 const reviewStates: ReviewState[] = [
-  "unreviewed",
   "agent_researched",
-  "needs_human_review",
   "human_reviewed",
   "needs_revision",
 ];
@@ -475,15 +470,13 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
               onChange={(event) => setReviewerNote(event.target.value)}
             />
           </InlineField>
-        ) : entity.reviewerNote ? (
-          <InlineField label="Reviewer note">{entity.reviewerNote}</InlineField>
         ) : null}
-        {canReviewNodes || entity.reviewer ? (
+        {canReviewNodes ? (
           <InlineField label="Reviewer">
             {entity.reviewer ?? <EmptyValue />}
           </InlineField>
         ) : null}
-        {canReviewNodes || entity.lastReviewed ? (
+        {canReviewNodes ? (
           <InlineField label="Last reviewed">
             {formatDateTime(entity.lastReviewed) ?? <EmptyValue />}
           </InlineField>
@@ -608,7 +601,8 @@ export function EntityDetailsPanel({
         relationship.kind === "part_of" && relationship.sourceNodeId === entity.id,
     )?.targetNodeId ?? null;
   const isSystem = Boolean(system);
-  const title = isSystem ? (
+  const showRawFields = isSystem && canReviewNodes;
+  const title = showRawFields ? (
     <Flex className="entity-details-header-title" align="center" gap={12}>
       <span className="entity-details-title-text">{entity.name}</span>
       <Tabs
@@ -818,7 +812,7 @@ export function EntityDetailsPanel({
         ) : null)
       }
     >
-      {isSystem && system && activeDetailTab === "raw" ? (
+      {showRawFields && system && activeDetailTab === "raw" ? (
         <RawSystemDump
           entity={entity}
           relationships={relationships}

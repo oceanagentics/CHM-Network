@@ -68,9 +68,7 @@ const nodeKinds = ["country", "organization", "system"] as const;
 const edgeKinds = ["governs", "operates", "part_of", "publishes_to", "syncs_to"] as const;
 const recordDepths = ["stub", "thin", "rich"] as const;
 const reviewStates = [
-  "unreviewed",
   "agent_researched",
-  "needs_human_review",
   "human_reviewed",
   "needs_revision",
 ] as const;

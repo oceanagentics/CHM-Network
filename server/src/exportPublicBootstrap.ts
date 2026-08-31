@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { GraphBootstrapPayload } from "../../shared/domain";
+import { toPublicBootstrap } from "./server";
 import { createGraphRepository } from "./repositoryFactory";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,16 +10,6 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 const outputDir = path.join(repoRoot, "client", "public");
 const outputPath = path.join(outputDir, "bootstrap.public.json");
-
-function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstrapPayload {
-  return {
-    ...payload,
-    sources: payload.sources.map((source) => ({
-      ...source,
-      localPath: null,
-    })),
-  };
-}
 
 async function main() {
   const repository = createGraphRepository();

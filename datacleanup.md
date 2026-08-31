@@ -300,7 +300,7 @@ Terminology rule: name each item from the Postgres table, column, and JSON path 
 - App object:
   - `GraphNode.recordDepth`
   - `GraphNode.reviewState`
-- Current database counts:
+- Historical database counts before the review-state contract was simplified:
   - `stub / unreviewed`: 49
   - `thin / unreviewed`: 50
   - `thin / agent_researched`: 6

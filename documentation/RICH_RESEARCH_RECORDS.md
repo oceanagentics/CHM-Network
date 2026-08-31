@@ -24,7 +24,7 @@ For system nodes:
 
 - Use `nodes.url`, `nodes.summary`, and `nodes.description` for the primary public URL and prose profile.
 - Use `nodes.record_depth` to track `stub`, `thin`, or `rich`.
-- Use `nodes.review_state` for review queues, such as `unreviewed`, `agent_researched`, `needs_human_review`, `human_reviewed`, or `needs_revision`.
+- Use `nodes.review_state` for review queues: `agent_researched`, `human_reviewed`, or `needs_revision`.
 - Use `nodes.review_json` only for `reviewerNote`, `reviewer`, and `lastReviewed`.
 - The details UI shows `recordDepth` and `reviewState` for all users. In authenticated/author mode, it lets users update only `reviewState` and `reviewerNote`; `reviewer` and `lastReviewed` are set by the server.
 - Use `nodes.details_json` for human-facing rich details: aliases, operator summary, role, discipline family, geographic scope, descriptors, metrics, access paths, identifiers, usage, and gallery items.
@@ -75,7 +75,7 @@ Use these node fields:
 - `summary`: one sentence saying what the database is and what kind of data it provides.
 - `description`: one substantial paragraph covering scope, data categories, headline size, operator or manager, governance/consortium context, access model, contribution model, and important caveats.
 - `record_depth`: `rich` only when the system has a full researched record, not merely imported identifiers or tags.
-- `review_state`: set `agent_researched` after an agent completes a rich backfill; use `needs_human_review` when review is specifically requested.
+- `review_state`: set `agent_researched` after an agent completes a rich backfill, `human_reviewed` after human acceptance, or `needs_revision` when follow-up changes are required.
 
 Use `nodes.details_json` for:
 

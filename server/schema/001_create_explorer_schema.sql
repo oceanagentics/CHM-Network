@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   summary text,
   description text,
   record_depth text NOT NULL DEFAULT 'stub' CHECK (record_depth IN ('stub', 'thin', 'rich')),
-  review_state text NOT NULL DEFAULT 'unreviewed' CHECK (review_state IN ('unreviewed', 'agent_researched', 'needs_human_review', 'human_reviewed', 'needs_revision')),
+  review_state text NOT NULL DEFAULT 'agent_researched' CHECK (review_state IN ('agent_researched', 'human_reviewed', 'needs_revision')),
   review_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   details_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   properties_json jsonb NOT NULL DEFAULT '{}'::jsonb,

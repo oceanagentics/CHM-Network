@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { NodeReviewInput, RyuSystemQuery } from "../../shared/domain";
+import type { GraphBootstrapPayload, NodeReviewInput, RyuSystemQuery } from "../../shared/domain";
 import type { GraphRepository } from "./graphRepository";
 import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
 import { createGraphRepository } from "./repositoryFactory";
@@ -141,6 +141,23 @@ function sendError(response: Response, error: unknown) {
 
 function sendHealth(_request: Request, response: Response) {
   response.json({ ok: true });
+}
+
+export function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstrapPayload {
+  return {
+    ...payload,
+    nodes: payload.nodes.map((node) => ({
+      ...node,
+      reviewerNote: null,
+      reviewer: null,
+      lastReviewed: null,
+      review: {},
+    })),
+    sources: payload.sources.map((source) => ({
+      ...source,
+      localPath: null,
+    })),
+  };
 }
 
 function readParam(request: Request, key: string): string {
@@ -283,6 +300,8 @@ export function createApp(options: CreateAppOptions = {}) {
   const staticDirectory = resolveStaticDirectory(options.staticDirectory ?? process.env.RYU_STATIC_DIR);
   const indexPath = path.join(staticDirectory, "index.html");
   const writeAccess = requireWriteAccess(mode, trustedCallerServiceAccounts);
+  const iapAudience = process.env.IAP_JWT_AUDIENCE;
+  const shouldRedactBootstrap = mode === "public" && !iapAudience;
 
   app.disable("x-powered-by");
   app.set("trust proxy", true);
@@ -297,14 +316,15 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.use(express.json());
   app.get("/healthz", sendHealth);
-  app.use(requireIap(process.env.IAP_JWT_AUDIENCE));
+  app.use(requireIap(iapAudience));
 
   router.get("/api/health", sendHealth);
   router.get("/health", sendHealth);
   router.get("/healthz", sendHealth);
 
   router.get("/api/graph/bootstrap", async (_request, response) => {
-    response.json(await repository.getBootstrap());
+    const bootstrap = await repository.getBootstrap();
+    response.json(shouldRedactBootstrap ? toPublicBootstrap(bootstrap) : bootstrap);
   });
 
   router.get("/api/ryu/systems", async (request, response) => {
