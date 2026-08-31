@@ -4,6 +4,12 @@ steps:
       - build
       - --build-arg
       - APP_BASE_PATH=${_APP_BASE_PATH}
+      - --build-arg
+      - VITE_APP_MODE=${_VITE_APP_MODE}
+      - --build-arg
+      - VITE_CAN_REVIEW_NODES=${_VITE_CAN_REVIEW_NODES}
+      - --build-arg
+      - VITE_REVIEW_API_BASE_PATH=${_VITE_REVIEW_API_BASE_PATH}
       - -t
       - ${_IMAGE}
       - .
@@ -18,4 +24,7 @@ options:
 
 substitutions:
   _APP_BASE_PATH: /explorer
+  _VITE_APP_MODE: author
+  _VITE_CAN_REVIEW_NODES: "true"
+  _VITE_REVIEW_API_BASE_PATH: /api/explorer
   _IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer:latest

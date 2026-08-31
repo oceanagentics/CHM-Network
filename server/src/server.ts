@@ -5,7 +5,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { GraphBootstrapPayload, NodeReviewInput, RyuSystemQuery } from "../../shared/domain";
+import type {
+  GraphBootstrapPayload,
+  NodeReviewInput,
+  RyuSystemQuery,
+  RyuSystemRecord,
+  Source,
+} from "../../shared/domain";
 import type { GraphRepository } from "./graphRepository";
 import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
 import { createGraphRepository } from "./repositoryFactory";
@@ -143,6 +149,13 @@ function sendHealth(_request: Request, response: Response) {
   response.json({ ok: true });
 }
 
+function withoutLocalPath<T extends { localPath: string | null }>(source: T): T {
+  return {
+    ...source,
+    localPath: null,
+  };
+}
+
 export function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstrapPayload {
   return {
     ...payload,
@@ -153,10 +166,16 @@ export function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstra
       lastReviewed: null,
       review: {},
     })),
-    sources: payload.sources.map((source) => ({
-      ...source,
-      localPath: null,
-    })),
+    sources: payload.sources.map(withoutLocalPath),
+    ryuRoutes: [],
+  };
+}
+
+function toPublicPortalSystem(system: RyuSystemRecord): RyuSystemRecord {
+  return {
+    ...system,
+    routes: [],
+    sources: system.sources.map(withoutLocalPath),
   };
 }
 
@@ -301,7 +320,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const indexPath = path.join(staticDirectory, "index.html");
   const writeAccess = requireWriteAccess(mode, trustedCallerServiceAccounts);
   const iapAudience = process.env.IAP_JWT_AUDIENCE;
-  const shouldRedactBootstrap = mode === "public" && !iapAudience;
+  const shouldRedactPublicFields = mode === "public" && !iapAudience;
 
   app.disable("x-powered-by");
   app.set("trust proxy", true);
@@ -324,27 +343,31 @@ export function createApp(options: CreateAppOptions = {}) {
 
   router.get("/api/graph/bootstrap", async (_request, response) => {
     const bootstrap = await repository.getBootstrap();
-    response.json(shouldRedactBootstrap ? toPublicBootstrap(bootstrap) : bootstrap);
+    response.json(shouldRedactPublicFields ? toPublicBootstrap(bootstrap) : bootstrap);
   });
 
   router.get("/api/ryu/systems", async (request, response) => {
-    response.json(await repository.listPortalSystems(readSystemQuery(request.query)));
+    const systems = await repository.listPortalSystems(readSystemQuery(request.query));
+    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
   });
 
   router.get("/api/ryu/systems/search", async (request, response) => {
-    response.json(await repository.searchPortalSystems(readSystemQuery(request.query)));
+    const systems = await repository.searchPortalSystems(readSystemQuery(request.query));
+    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
   });
 
   router.post("/api/ryu/systems/search", async (request, response) => {
-    response.json(await repository.searchPortalSystems(readSystemQuery(request.body)));
+    const systems = await repository.searchPortalSystems(readSystemQuery(request.body));
+    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
   });
 
   router.get("/api/ryu/systems/:id", async (request, response) => {
     try {
-      response.json(await repository.getPortalSystem(
+      const system = await repository.getPortalSystem(
         request.params.id,
         readSystemQuery(request.query),
-      ));
+      );
+      response.json(shouldRedactPublicFields ? toPublicPortalSystem(system) : system);
     } catch (error) {
       sendError(response, error);
     }
@@ -375,7 +398,8 @@ export function createApp(options: CreateAppOptions = {}) {
 
   router.get("/api/sources/:id", async (request, response) => {
     try {
-      response.json(await repository.getSource(readParam(request, "id")));
+      const source = await repository.getSource(readParam(request, "id"));
+      response.json(shouldRedactPublicFields ? withoutLocalPath<Source>(source) : source);
     } catch (error) {
       sendError(response, error);
     }

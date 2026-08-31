@@ -101,7 +101,7 @@ class FakeRepository implements GraphRepository {
       title: "Source",
       sourceType: "web",
       url: null,
-      localPath: null,
+      localPath: `/private/${id}.md`,
       publisher: null,
       publishedAt: null,
       accessedAt: null,
@@ -183,6 +183,24 @@ test("redacts private review fields from public bootstrap payloads", () => {
         note: null,
       },
     ],
+    ryuRoutes: [
+      {
+        id: "route-1",
+        nodeId: "node-1",
+        status: "active",
+        mode: "api",
+        priority: 1,
+        capabilities: ["review"],
+        target: "https://private.example.com/route",
+        upstream: "private-upstream",
+        format: "json",
+        contractRef: null,
+        caveat: null,
+        properties: {},
+        createdAt: "2026-08-31T00:00:00.000Z",
+        updatedAt: "2026-08-31T00:00:00.000Z",
+      },
+    ],
   });
 
   assert.equal(publicBootstrap.nodes[0].reviewState, "agent_researched");
@@ -191,6 +209,7 @@ test("redacts private review fields from public bootstrap payloads", () => {
   assert.equal(publicBootstrap.nodes[0].lastReviewed, null);
   assert.deepEqual(publicBootstrap.nodes[0].review, {});
   assert.equal(publicBootstrap.sources[0].localPath, null);
+  assert.deepEqual(publicBootstrap.ryuRoutes, []);
 });
 
 test("serves Explorer API under /explorer", async () => {
@@ -207,6 +226,16 @@ test("does not expose Explorer API at the root when base path is /explorer", asy
     const response = await fetch(`${baseUrl}/api/graph/bootstrap`);
 
     assert.equal(response.status, 404);
+  });
+});
+
+test("redacts source local paths from public source endpoints", async () => {
+  await withServer("public", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/sources/source-1`);
+
+    assert.equal(response.status, 200);
+    const body = await response.json() as Source;
+    assert.equal(body.localPath, null);
   });
 });
 
