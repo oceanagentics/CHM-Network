@@ -15,7 +15,7 @@ This is a pre-launch data-model correction, not a compatibility migration for a 
 Use this checklist to track the one-go implementation.
 
 - [x] Confirm current repo schema and representative bootstrap JSON shapes.
-- [ ] Confirm production Cloud SQL schema immediately before the migration job runs.
+- [x] Confirm production Cloud SQL schema immediately before the migration job runs.
 - [x] Add a checked-in migration runner for this change.
 - [x] Add hardened `supported_locales` and `node_localizations` DDL.
 - [x] Backfill one source localization per node.
@@ -29,13 +29,17 @@ Use this checklist to track the one-go implementation.
 - [x] Implement locale-aware search over resolved display localizations, with optional all-language search.
 - [x] Regenerate the public bootstrap from the migrated local export artifact.
 - [x] Build and test locally.
-- [ ] Run the Cloud Run migration job, deploy, and smoke test production.
+- [x] Run the Cloud Run migration job, deploy, and smoke test production.
 
 Implementation status on 2026-09-01:
 
-- Branch `codex/language-migration` contains the local schema, API, client, search, bootstrap, CHM proxy, and documentation changes.
+- Main branch commit `226fc2c` contains the local schema, API, client, search, bootstrap, CHM proxy, and documentation changes.
 - The checked-in migration command is `npm --workspace server run migrate:language`.
-- Production execution still requires a Cloud SQL preflight, a short-lived Cloud Run migration job, image rollout, and browser/API smoke tests against `chm.oceanagentics.org`.
+- Cloud SQL backup `1788227781465` was created before the destructive migration.
+- Cloud Run job execution `explorer-lang-migration-226fc2c-klgm5` completed successfully and backfilled `117` localization rows.
+- Terraform rolled `explorer`, `explorer-admin`, `explorer-api`, and CHM to the language-migration images, and a final Terraform plan reported no changes.
+- Public smoke checks passed for `https://chm.oceanagentics.org/explorer/`, `https://chm.oceanagentics.com/explorer/`, and both public bootstrap API hostnames. The public bootstrap returned `117` nodes, `139` edges, `102` sources, `0` redacted routes, no obsolete node text fields, no reviewer metadata, and only `read`, `submit`, and `partner_sync` access types.
+- Internal private-API smoke execution `explorer-api-smoke-226fc2c-ncg2h` reached the new localization review endpoint as `chm-sa` and received the expected `401 missing_chm_user_context` guard response. The temporary migration and smoke jobs were deleted after verification.
 
 ## Language Policy
 
