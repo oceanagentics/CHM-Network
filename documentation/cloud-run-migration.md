@@ -79,12 +79,12 @@ review fields without edit controls.
 
 Last verified on 2026-08-31:
 
-- Source commit: `4fac03e`
-- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:01b8723c4532b5798bc87ebae4361ae70e17057d3f20b5055ca76de9b3cb842a`
-- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:5426e7dba0a8124e81e53ddeebb2ce3d3620ce0a3249c693982ba73188b56fed`
-- Public Cloud Run revision: `explorer-00013-6c6`
-- Admin Cloud Run revision: `explorer-admin-00003-n7c`
-- Private API Cloud Run revision: `explorer-api-00012-v62`
+- Source commit: `4198b8c`
+- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:16f866c2170bd91b53784c995eec2eeee2d71d2910aae5b2e7d2580d60bd8742`
+- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:9bdeddb6a704a80b91cbd80289e255616a2504732235ce2f07cc4c9e37c4d98e`
+- Public Cloud Run revision: `explorer-00014-hwg`
+- Admin Cloud Run revision: `explorer-admin-00004-rxr`
+- Private API Cloud Run revision: `explorer-api-00013-rwh`
 - Admin IAP backend service ID: `5570063593656309274`
 - Seeded Cloud SQL rows: `102` sources, `117` nodes, `139` edges, `10`
   routes, and `2` saved views
