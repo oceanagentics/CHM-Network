@@ -126,11 +126,13 @@ gcloud builds submit \
   .
 ```
 
-A 2026-09-01 benchmark of this paired public/admin path built both images in
-`3m29s`, down from `4m22s` for separate public/admin submissions on the same
-default Cloud Build worker. The Dockerfile keeps mode-specific Vite build
-arguments after `npm ci` and the server build so public/admin variants reuse
-dependency and server layers.
+A 2026-09-01 benchmark of this paired public/admin path built both warmed-cache
+images in `49s`, down from `4m22s` for separate public/admin submissions using
+the prior Dockerfile layout on the same default Cloud Build worker. The first
+optimized production-style run took `4m14s` because it rebuilt and pushed cache
+tags from the old Dockerfile layout. The Dockerfile keeps mode-specific Vite
+build arguments after `npm ci` and the server build so public/admin variants
+reuse dependency and server layers.
 
 For API/server-only changes, build the API service image instead:
 
