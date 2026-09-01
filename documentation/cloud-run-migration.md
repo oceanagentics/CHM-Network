@@ -112,24 +112,25 @@ Last verified on 2026-09-01:
 
 ## Build Image
 
-Build Explorer images into the shared CHM Artifact Registry repo with the
-service-specific `latest` tag as the Docker cache source. Unchanged dependency
-layers are reused when `package-lock.json` has not changed.
+Build Explorer images into the shared CHM Artifact Registry repo with cache
+image substitutions so unchanged dependency layers are reused when
+`package-lock.json` has not changed.
 
 ```sh
 SHA=$(git rev-parse --short HEAD)
 
 gcloud builds submit \
   --region us-east4 \
-  --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:latest,_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
-  .
-gcloud builds submit \
-  --region us-east4 \
-  --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:latest,_APP_BASE_PATH=/explorer/admin,_VITE_APP_MODE=author,_VITE_CAN_REVIEW_NODES=true,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  --config cloudbuild.release.yaml \
+  --substitutions _PUBLIC_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:${SHA},_PUBLIC_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:latest,_ADMIN_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:${SHA},_ADMIN_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:latest \
   .
 ```
+
+A 2026-09-01 benchmark of this paired public/admin path built both images in
+`3m29s`, down from `4m22s` for separate public/admin submissions on the same
+default Cloud Build worker. The Dockerfile keeps mode-specific Vite build
+arguments after `npm ci` and the server build so public/admin variants reuse
+dependency and server layers.
 
 For API/server-only changes, build the API service image instead:
 

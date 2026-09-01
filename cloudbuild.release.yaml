@@ -1,0 +1,97 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: pull-public-cache
+    waitFor:
+      - "-"
+    entrypoint: bash
+    args:
+      - -c
+      - docker pull "${_PUBLIC_CACHE_IMAGE}" || true
+
+  - name: gcr.io/cloud-builders/docker
+    id: pull-admin-cache
+    waitFor:
+      - "-"
+    entrypoint: bash
+    args:
+      - -c
+      - docker pull "${_ADMIN_CACHE_IMAGE}" || true
+
+  - name: gcr.io/cloud-builders/docker
+    id: build-public
+    waitFor:
+      - pull-public-cache
+      - pull-admin-cache
+    args:
+      - build
+      - --cache-from
+      - ${_PUBLIC_CACHE_IMAGE}
+      - --build-arg
+      - APP_BASE_PATH=/explorer
+      - --build-arg
+      - VITE_APP_MODE=public
+      - --build-arg
+      - VITE_CAN_REVIEW_NODES=false
+      - --build-arg
+      - VITE_REVIEW_API_BASE_PATH=/api/explorer
+      - -t
+      - ${_PUBLIC_IMAGE}
+      - -t
+      - ${_PUBLIC_CACHE_IMAGE}
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    id: build-admin
+    waitFor:
+      - build-public
+    args:
+      - build
+      - --cache-from
+      - ${_ADMIN_CACHE_IMAGE}
+      - --build-arg
+      - APP_BASE_PATH=/explorer/admin
+      - --build-arg
+      - VITE_APP_MODE=author
+      - --build-arg
+      - VITE_CAN_REVIEW_NODES=true
+      - --build-arg
+      - VITE_REVIEW_API_BASE_PATH=/api/explorer
+      - -t
+      - ${_ADMIN_IMAGE}
+      - -t
+      - ${_ADMIN_CACHE_IMAGE}
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    id: push-public-cache
+    waitFor:
+      - build-admin
+    entrypoint: bash
+    args:
+      - -c
+      - if [ "${_PUSH_CACHE_IMAGES}" = "true" ] && [ "${_PUBLIC_CACHE_IMAGE}" != "${_PUBLIC_IMAGE}" ]; then docker push "${_PUBLIC_CACHE_IMAGE}"; fi
+
+  - name: gcr.io/cloud-builders/docker
+    id: push-admin-cache
+    waitFor:
+      - build-admin
+    entrypoint: bash
+    args:
+      - -c
+      - if [ "${_PUSH_CACHE_IMAGES}" = "true" ] && [ "${_ADMIN_CACHE_IMAGE}" != "${_ADMIN_IMAGE}" ]; then docker push "${_ADMIN_CACHE_IMAGE}"; fi
+
+images:
+  - ${_PUBLIC_IMAGE}
+  - ${_ADMIN_IMAGE}
+
+serviceAccount: projects/chm-network/serviceAccounts/explorer-build-sa@chm-network.iam.gserviceaccount.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _PUBLIC_IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:latest
+  _PUBLIC_CACHE_IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:latest
+  _ADMIN_IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:latest
+  _ADMIN_CACHE_IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:latest
+  _PUSH_CACHE_IMAGES: "true"
