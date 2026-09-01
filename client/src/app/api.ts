@@ -4,11 +4,12 @@ import type {
   GraphBootstrapPayload,
   GraphNode,
   GraphNodeInput,
-  NodeReviewInput,
+  NodeLocalizationReviewInput,
   SavedView,
   SavedViewInput,
   Source,
   SourceInput,
+  SupportedLocale,
 } from "../../../shared/domain";
 import { appPath, bootstrapPath, reviewApiPath } from "./config";
 
@@ -86,11 +87,12 @@ export function deleteNode(id: string): Promise<void> {
   });
 }
 
-export function updateNodeReview(
+export function updateNodeLocalizationReview(
   id: string,
-  input: NodeReviewInput,
+  locale: SupportedLocale,
+  input: NodeLocalizationReviewInput,
 ): Promise<GraphNode> {
-  return request<GraphNode>(reviewApiPath(`/nodes/${id}/review`), {
+  return request<GraphNode>(reviewApiPath(`/nodes/${id}/localizations/${locale}/review`), {
     method: "PATCH",
     body: JSON.stringify(input),
   });

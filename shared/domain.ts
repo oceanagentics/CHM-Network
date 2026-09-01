@@ -19,6 +19,8 @@ export type ReviewState =
   | "human_reviewed"
   | "needs_revision";
 
+export type SupportedLocale = "ar" | "zh" | "en" | "fr" | "ru" | "es";
+
 export interface Source {
   id: string;
   title: string;
@@ -49,20 +51,30 @@ export interface SystemDataDescriptor {
   id: string;
   category: SystemDataDescriptorCategory;
   label: string;
-  description: string | null;
   source: SourceRef | null;
 }
 
-export type SystemAccessType = "read" | "submit" | "partner_sync" | "none";
+export interface LocalizedSystemDataDescriptor {
+  id: string;
+  description: string | null;
+}
+
+export type SystemAccessType = "read" | "submit" | "partner_sync";
 
 export interface SystemAccessPath {
   id: string;
   type: SystemAccessType;
   method: string;
-  label: string;
   url: string;
-  description: string;
   source: SourceRef;
+}
+
+export interface LocalizedSystemAccessPath {
+  id: string;
+  label: string | null;
+  description: string | null;
+  instructions?: string | null;
+  caveats?: string[];
 }
 
 export interface SystemGalleryItem {
@@ -70,10 +82,15 @@ export interface SystemGalleryItem {
   type: "image" | "embed";
   url: string;
   thumbnailUrl: string | null;
-  title: string | null;
-  caption: string | null;
   source: SourceRef;
   sortOrder: number;
+}
+
+export interface LocalizedSystemGalleryItem {
+  id: string;
+  title: string | null;
+  caption: string | null;
+  altText?: string | null;
 }
 
 export type SystemMetricKey =
@@ -92,17 +109,13 @@ export interface SourcedMetric {
   key: SystemMetricKey;
   value: number;
   unit: string;
-  description: string | null;
   observedAt: string | null;
   source: SourceRef;
 }
 
-export interface SystemIdentifierScheme {
+export interface LocalizedSourcedMetric {
   id: string;
-  scheme: string;
-  appliesTo: string | null;
   description: string | null;
-  source: SourceRef | null;
 }
 
 export interface NodeDataDetails {
@@ -111,38 +124,85 @@ export interface NodeDataDetails {
   storageSize: SourcedMetric | null;
 }
 
-export interface NodeDetails {
+export interface LocalizedNodeDataDetails {
+  descriptors: LocalizedSystemDataDescriptor[];
+  recordCount: LocalizedSourcedMetric | null;
+  storageSize: LocalizedSourcedMetric | null;
+}
+
+export interface NodeLocalizationDetails extends Record<string, unknown> {
   aliases: string[];
-  operator: SystemOperatorRef | null;
-  role: string | null;
-  disciplineFamily: string | null;
-  geographicScope: string | null;
-  gallery: SystemGalleryItem[];
-  data: NodeDataDetails;
-  access: SystemAccessPath[];
-  identifiers: SystemIdentifierScheme[];
-  usage: SourcedMetric[];
+  gallery: LocalizedSystemGalleryItem[];
+  data: LocalizedNodeDataDetails;
+  access: LocalizedSystemAccessPath[];
+  usage: LocalizedSourcedMetric[];
+}
+
+export interface NodeProperties extends Record<string, unknown> {
+  operator?: SystemOperatorRef | null;
+  role?: string | null;
+  disciplineFamily?: string | null;
+  geographicScope?: string | null;
+  gallery?: SystemGalleryItem[];
+  data?: NodeDataDetails;
+  access?: SystemAccessPath[];
+  usage?: SourcedMetric[];
+}
+
+export interface NodeLocalization {
+  locale: SupportedLocale;
+  title: string;
+  summary: string | null;
+  description: string | null;
+  details: NodeLocalizationDetails;
+  sourceExcerpt: string | null;
+  translatedFromLocale: SupportedLocale | null;
+  contentUpdatedAt: string;
+  reviewState: ReviewState;
+  reviewerNote: string | null;
+  reviewer: string | null;
+  lastReviewed: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NodeLocalizationMap = Partial<Record<SupportedLocale, NodeLocalization>>;
+
+export interface ResolvedNodeLocalization {
+  requestedLocale: SupportedLocale;
+  displayLocale: SupportedLocale | null;
+  isLocaleFallback: boolean;
+  hasLocalization: boolean;
+  title: string;
+  summary: string | null;
+  description: string | null;
+  details: NodeLocalizationDetails;
+  sourceExcerpt: string | null;
+  translatedFromLocale: SupportedLocale | null;
+  contentUpdatedAt: string | null;
+  reviewState: ReviewState | null;
+  reviewerNote: string | null;
+  reviewer: string | null;
+  lastReviewed: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface GraphNode {
   id: string;
   kind: GraphNodeKind;
-  name: string;
   countryCode: string | null;
   subtype: string | null;
   url: string | null;
-  summary: string | null;
-  description: string | null;
   recordDepth: RecordDepth;
-  reviewState: ReviewState;
-  reviewerNote: string | null;
-  reviewer: string | null;
-  lastReviewed: string | null;
-  review: Record<string, unknown>;
-  details: NodeDetails;
-  properties: Record<string, unknown>;
+  properties: NodeProperties;
   createdAt: string;
   updatedAt: string;
+  localizations: NodeLocalizationMap;
+  availableLocales: SupportedLocale[];
+  requestedLocale: SupportedLocale;
+  displayLocale: SupportedLocale | null;
+  isLocaleFallback: boolean;
 }
 
 export interface GraphEdge {
@@ -217,10 +277,13 @@ export interface RyuSystemOperator {
 
 export interface RyuSystemRecord {
   ryuSystemId: string;
-  name: string;
+  title: string;
   operator: RyuSystemOperator | null;
   summary: string | null;
   description: string | null;
+  requestedLocale: SupportedLocale;
+  displayLocale: SupportedLocale | null;
+  isLocaleFallback: boolean;
   url: string | null;
   domains: string[];
   geographies: string[];
@@ -229,7 +292,7 @@ export interface RyuSystemRecord {
   sources: RyuPortalSource[];
   caveats: string[];
   recordDepth: RecordDepth;
-  reviewState: ReviewState;
+  reviewState: ReviewState | null;
   updatedAt: string;
 }
 
@@ -273,20 +336,15 @@ export interface SavedViewInput {
 
 export interface GraphNodeInput {
   kind: GraphNodeKind;
-  name: string;
   countryCode?: string | null;
   subtype?: string | null;
   url?: string | null;
-  summary?: string | null;
-  description?: string | null;
   recordDepth?: RecordDepth;
-  reviewState?: ReviewState;
-  review?: Record<string, unknown>;
-  details?: NodeDetails;
-  properties?: Record<string, unknown>;
+  properties?: NodeProperties;
+  localizations?: NodeLocalizationMap;
 }
 
-export interface NodeReviewInput {
+export interface NodeLocalizationReviewInput {
   reviewState?: ReviewState;
   reviewerNote?: string | null;
 }

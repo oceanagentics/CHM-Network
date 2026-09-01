@@ -23,12 +23,12 @@
 ## Write Surfaces
 ### Browser Review API
 - CHM is the public IAP-protected entry app.
-- CHM proxies only `PATCH /api/explorer/nodes/:id/review` to the private Explorer API.
-- Explorer handles that as `PATCH /explorer/api/nodes/:id/review`.
+- CHM proxies only `PATCH /api/explorer/nodes/:id/localizations/:locale/review` to the private Explorer API.
+- Explorer handles that as `PATCH /explorer/api/nodes/:id/localizations/:locale/review`.
 - The request body may contain only `reviewState` and `reviewerNote`.
 - Explorer sets `reviewer` from the CHM-forwarded IAP email and sets `lastReviewed` when the review state or note is accepted.
-- The browser client should call the CHM proxy path `/api/explorer/nodes/:id/review`, not the public Explorer `/explorer/api/...` path.
-- The details UI shows `recordDepth` and `reviewState` for all users. Authenticated/author mode renders the review state dropdown and reviewer-note form.
+- The browser client should call the CHM proxy path `/api/explorer/nodes/:id/localizations/:locale/review`, not the public Explorer `/explorer/api/...` path.
+- The details UI shows `recordDepth` plus the resolved localization's `reviewState` for all users. Authenticated/author mode renders the review state dropdown and reviewer-note form for that localization.
 - Do not expose general node, edge, source, saved-view, or schema mutation routes through the browser API.
 
 ## Current Minimal Model
@@ -60,14 +60,16 @@
 
 ## Provenance and Metadata
 - Store source rows in `sources`.
-- Store rich, human-facing system details in `nodes.details_json`, with embedded source refs on the relevant detail items.
+- Store user-facing system prose in `node_localizations`, with embedded source refs on the relevant localized detail items.
+- Store language-neutral operational facts in `nodes.properties_json`.
+- Do not add or preserve identifier lists in the record model.
 - Edge metadata such as `transferMethod`, `format`, `standard`, and `artifact` belongs in `edges.properties_json`.
 - Keep node/edge edits minimal in the editor; rich research backfills should update the JSON record deliberately.
 
 ## Ryu Access Routes
 - Treat `ryu_routes` as the first-class operational route index for agents.
-- Keep `nodes.details_json.access` descriptive and evidence-facing; use `ryu_routes` to decide how an agent should actually retrieve data.
-- Use `ryu_routes` only for machine access routes; human lookup, web UI, manual request, researcher-library, and raw-source context stays in `nodes.details_json.access`.
+- Keep `nodes.properties_json.access` as access mechanics and `node_localizations.details_json.access` as localized human guidance; use `ryu_routes` to decide how an agent should actually retrieve data.
+- Use `ryu_routes` only for machine access routes; human lookup, web UI, manual request, researcher-library, and raw-source context stays in the localized access/details surface, not `ryu_routes`.
 - For node/system research and rich record backfills, follow `documentation/RICH_RESEARCH_RECORDS.md` for the full `ryu` shape and research rules.
 - Keep `ryu_routes` compact: route id, status, mode, priority, capabilities, target, upstream, format, contract_ref, and caveat.
 - Do not store MCP/API tool contracts inline; `contract_ref` points to the relevant MCP, API, or service contract.

@@ -25,14 +25,21 @@ import type {
   ReviewState,
   RyuRoute,
   SourceRef,
-  SourcedMetric,
-  SystemAccessPath,
   SystemDataDescriptor,
-  SystemGalleryItem,
-  SystemIdentifierScheme,
 } from "../../../../shared/domain";
-import { updateNodeReview } from "../api";
+import { updateNodeLocalizationReview } from "../api";
 import { appPath, canReviewNodes } from "../config";
+import {
+  localizedMetricById,
+  nodeTitle,
+  resolveMetric,
+  resolveNodeDisplay,
+  systemAccessPaths,
+  systemGallery,
+  type ResolvedSourcedMetric,
+  type ResolvedSystemAccessPath,
+  type ResolvedSystemGalleryItem,
+} from "../localization";
 import { useGraphStore } from "../state/graphStore";
 
 type DetailTabKey = "user" | "raw";
@@ -192,7 +199,7 @@ function formatBytes(value: number) {
   return `${size.toLocaleString(undefined, { maximumFractionDigits: unitIndex === 0 ? 0 : 1 })} ${units[unitIndex]}`;
 }
 
-function formatMetricValue(metric: SourcedMetric) {
+function formatMetricValue(metric: ResolvedSourcedMetric) {
   if (metric.key === "storage_size_bytes" || metric.unit === "bytes") {
     return formatBytes(metric.value);
   }
@@ -200,7 +207,7 @@ function formatMetricValue(metric: SourcedMetric) {
   return `${metric.value.toLocaleString()} ${metric.unit}`;
 }
 
-function MetricValue({ metric }: { metric: SourcedMetric | null }) {
+function MetricValue({ metric }: { metric: ResolvedSourcedMetric | null }) {
   if (!metric) {
     return <EmptyValue />;
   }
@@ -219,7 +226,7 @@ function MetricValue({ metric }: { metric: SourcedMetric | null }) {
   );
 }
 
-function AccessDescription({ path }: { path: SystemAccessPath }) {
+function AccessDescription({ path }: { path: ResolvedSystemAccessPath }) {
   return (
     <Flex vertical gap={4}>
       <Flex align="center" gap={6} wrap>
@@ -269,7 +276,7 @@ function RyuRouteDescription({ route }: { route: RyuRoute }) {
   );
 }
 
-function Gallery({ items }: { items: SystemGalleryItem[] }) {
+function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (items.length === 0) {
@@ -348,15 +355,21 @@ function Gallery({ items }: { items: SystemGalleryItem[] }) {
 }
 
 function SystemIntro({ system }: { system: GraphNode }) {
+  const locale = useGraphStore((state) => state.locale);
+  const localization = resolveNodeDisplay(system, locale);
+
   return (
     <section className="entity-system-intro">
       <Flex className="entity-system-heading" vertical gap={4}>
         <Typography.Title className="entity-system-name" level={3}>
-          {system.name}
+          {localization.title}
         </Typography.Title>
         <Typography.Text className="entity-system-operator">
-          {system.details.operator?.name ?? "Operator not recorded"}
+          {system.properties.operator?.name ?? "Operator not recorded"}
         </Typography.Text>
+        {localization.isLocaleFallback ? (
+          <Tag bordered={false}>Showing {localization.displayLocale}</Tag>
+        ) : null}
         {system.url ? (
           <Typography.Link
             className="entity-system-url"
@@ -372,39 +385,18 @@ function SystemIntro({ system }: { system: GraphNode }) {
           </Typography.Text>
         )}
       </Flex>
-      {system.summary ? (
+      {localization.summary ? (
         <Typography.Paragraph className="entity-detail-note entity-system-short-description">
-          {system.summary}
+          {localization.summary}
         </Typography.Paragraph>
       ) : null}
-      <Gallery items={system.details.gallery} />
-      {system.description ? (
+      <Gallery items={systemGallery(system, localization)} />
+      {localization.description ? (
         <Typography.Paragraph className="entity-detail-note entity-system-long-description">
-          {system.description}
+          {localization.description}
         </Typography.Paragraph>
       ) : null}
     </section>
-  );
-}
-
-function IdentifierDescription({ scheme }: { scheme: SystemIdentifierScheme }) {
-  return (
-    <Flex vertical gap={2}>
-      <Typography.Text>{labelize(scheme.scheme)}</Typography.Text>
-      {scheme.appliesTo ? (
-        <Typography.Text type="secondary">
-          Applies to {scheme.appliesTo}
-        </Typography.Text>
-      ) : null}
-      {scheme.description ? (
-        <Typography.Text type="secondary">{scheme.description}</Typography.Text>
-      ) : null}
-      {scheme.source ? (
-        <Typography.Text type="secondary">
-          Source: <SourceLink source={scheme.source} />
-        </Typography.Text>
-      ) : null}
-    </Flex>
   );
 }
 
@@ -416,35 +408,43 @@ function relationshipLabel(relationship: GraphEdge, currentEntityId: string) {
 
 function ReviewSection({ entity }: { entity: GraphNode }) {
   const updateNode = useGraphStore((state) => state.updateNode);
-  const [reviewState, setReviewState] = useState<ReviewState>(entity.reviewState);
-  const [reviewerNote, setReviewerNote] = useState(entity.reviewerNote ?? "");
+  const locale = useGraphStore((state) => state.locale);
+  const localization = resolveNodeDisplay(entity, locale);
+  const reviewLocale = localization.displayLocale;
+  const currentReviewState = localization.reviewState ?? "agent_researched";
+  const [reviewState, setReviewState] = useState<ReviewState>(currentReviewState);
+  const [reviewerNote, setReviewerNote] = useState(localization.reviewerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setReviewState(entity.reviewState);
-    setReviewerNote(entity.reviewerNote ?? "");
+    setReviewState(currentReviewState);
+    setReviewerNote(localization.reviewerNote ?? "");
     setError(null);
     setSaving(false);
-  }, [entity.id, entity.reviewState, entity.reviewerNote]);
+  }, [currentReviewState, entity.id, localization.displayLocale, localization.reviewerNote]);
 
   const normalizedReviewerNote = reviewerNote.trim() || null;
   const hasChanges =
-    reviewState !== entity.reviewState ||
-    normalizedReviewerNote !== (entity.reviewerNote ?? null);
+    reviewState !== currentReviewState ||
+    normalizedReviewerNote !== (localization.reviewerNote ?? null);
 
   async function saveReview() {
-    if (!hasChanges) {
+    if (!hasChanges || !reviewLocale) {
       return;
     }
 
     setSaving(true);
     setError(null);
     try {
-      const updatedNode = await updateNodeReview(entity.id, {
-        reviewState,
-        reviewerNote: normalizedReviewerNote,
-      });
+      const updatedNode = await updateNodeLocalizationReview(
+        entity.id,
+        reviewLocale,
+        {
+          reviewState,
+          reviewerNote: normalizedReviewerNote,
+        },
+      );
       updateNode(updatedNode);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Review update failed");
@@ -456,6 +456,13 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
   return (
     <DetailSection title="Review">
       <div className="entity-detail-grid">
+        <InlineField label="Displayed locale">
+          {reviewLocale ? (
+            <Tag bordered={false}>{reviewLocale}</Tag>
+          ) : (
+            <EmptyValue>No localization</EmptyValue>
+          )}
+        </InlineField>
         <InlineField label="Review state">
           {canReviewNodes ? (
             <Select
@@ -466,8 +473,8 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
               onChange={(value) => setReviewState(value)}
             />
           ) : (
-            <Tag bordered={false} color={tagColor(entity.reviewState)}>
-              {labelize(entity.reviewState)}
+            <Tag bordered={false} color={tagColor(currentReviewState)}>
+              {labelize(currentReviewState)}
             </Tag>
           )}
         </InlineField>
@@ -483,12 +490,12 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
         ) : null}
         {canReviewNodes ? (
           <InlineField label="Reviewer">
-            {entity.reviewer ?? <EmptyValue />}
+            {localization.reviewer ?? <EmptyValue />}
           </InlineField>
         ) : null}
         {canReviewNodes ? (
           <InlineField label="Last reviewed">
-            {formatDateTime(entity.lastReviewed) ?? <EmptyValue />}
+            {formatDateTime(localization.lastReviewed) ?? <EmptyValue />}
           </InlineField>
         ) : null}
       </div>
@@ -498,7 +505,7 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
             <Alert className="entity-review-error" message={error} showIcon type="error" />
           ) : <span />}
           <Button
-            disabled={!hasChanges}
+            disabled={!hasChanges || !reviewLocale}
             loading={saving}
             size="small"
             type="primary"
@@ -525,22 +532,18 @@ function RawSystemDump({
     nodes: {
       id: entity.id,
       kind: entity.kind,
-      name: entity.name,
       country_code: entity.countryCode,
       subtype: entity.subtype,
       url: entity.url,
-      summary: entity.summary,
-      description: entity.description,
       record_depth: entity.recordDepth,
-      review_state: entity.reviewState,
-      reviewer_note: entity.reviewerNote,
-      reviewer: entity.reviewer,
-      last_reviewed: entity.lastReviewed,
-      review: entity.review,
-      details: entity.details,
       properties: entity.properties,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt,
+      localizations: entity.localizations,
+      available_locales: entity.availableLocales,
+      requested_locale: entity.requestedLocale,
+      display_locale: entity.displayLocale,
+      is_locale_fallback: entity.isLocaleFallback,
     },
     ryu_routes: ryuRoutes.map((route) => ({
       id: route.id,
@@ -588,6 +591,7 @@ export function EntityDetailsPanel({
 }) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTabKey>("user");
   const graph = useGraphStore((state) => state.graph);
+  const locale = useGraphStore((state) => state.locale);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const resetSelection = useGraphStore((state) => state.resetSelection);
   const entity = selectedEntityId && graph ? graph.nodeById[selectedEntityId] : null;
@@ -604,6 +608,21 @@ export function EntityDetailsPanel({
     (relationshipId) => graph.edgeById[relationshipId],
   );
   const system = entity.kind === "system" ? entity : null;
+  const localization = resolveNodeDisplay(entity, locale);
+  const systemLocalization = system ? resolveNodeDisplay(system, locale) : null;
+  const localizedMetrics = systemLocalization
+    ? localizedMetricById(systemLocalization.details.usage)
+    : {};
+  const systemData = system?.properties.data ?? {
+    descriptors: [],
+    recordCount: null,
+    storageSize: null,
+  };
+  const resolvedAccessPaths = system && systemLocalization
+    ? systemAccessPaths(system, systemLocalization)
+    : [];
+  const readAccessPaths = resolvedAccessPaths.filter((path) => path.type === "read");
+  const writeAccessPaths = resolvedAccessPaths.filter((path) => path.type !== "read");
   const ryuRoutes = system ? graph.ryuRoutesByNodeId[entity.id] ?? [] : [];
   const parentSystemId =
     relationships.find(
@@ -614,7 +633,7 @@ export function EntityDetailsPanel({
   const showRawFields = isSystem && canReviewNodes;
   const title = showRawFields ? (
     <Flex className="entity-details-header-title" align="center" gap={12}>
-      <span className="entity-details-title-text">{entity.name}</span>
+      <span className="entity-details-title-text">{localization.title}</span>
       <Tabs
         activeKey={activeDetailTab}
         className="entity-details-header-tabs"
@@ -634,7 +653,7 @@ export function EntityDetailsPanel({
       />
     </Flex>
   ) : (
-    entity.name
+    localization.title
   );
   const userView = (
     <Flex vertical gap={16}>
@@ -653,32 +672,36 @@ export function EntityDetailsPanel({
           {isSystem && system ? (
             <>
               <InlineField label="Role">
-                {system.details.role ? labelize(system.details.role) : <EmptyValue />}
+                {system.properties.role ? labelize(system.properties.role) : <EmptyValue />}
               </InlineField>
               <InlineField label="Operator country">
-                {system.details.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
+                {system.properties.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
               </InlineField>
               <InlineField label="Discipline">
-                {system.details.disciplineFamily ? (
-                  labelize(system.details.disciplineFamily)
+                {system.properties.disciplineFamily ? (
+                  labelize(system.properties.disciplineFamily)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
               <InlineField label="Geographic scope">
-                {system.details.geographicScope ? (
-                  labelize(system.details.geographicScope)
+                {system.properties.geographicScope ? (
+                  labelize(system.properties.geographicScope)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
               <InlineField label="Part of">
                 {parentSystemId
-                  ? graph.nodeById[parentSystemId]?.name ?? parentSystemId
+                  ? graph.nodeById[parentSystemId]
+                    ? nodeTitle(graph.nodeById[parentSystemId], locale)
+                    : parentSystemId
                   : <EmptyValue />}
               </InlineField>
               <InlineField label="Aliases">
-                {system.details.aliases.length > 0 ? system.details.aliases.join(", ") : <EmptyValue />}
+                {systemLocalization?.details.aliases.length
+                  ? systemLocalization.details.aliases.join(", ")
+                  : <EmptyValue />}
               </InlineField>
             </>
           ) : (
@@ -703,28 +726,50 @@ export function EntityDetailsPanel({
           <DetailSection title="Data">
             <div className="entity-detail-grid">
               <InlineField label="Data types">
-                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "type")} />
+                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "type")} />
               </InlineField>
               <InlineField label="Formats">
-                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "format")} />
+                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "format")} />
               </InlineField>
               <InlineField label="Standards">
-                <DescriptorTags descriptors={descriptorList(system.details.data.descriptors, "standard")} />
+                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "standard")} />
               </InlineField>
               <InlineField label="Records">
-                <MetricValue metric={system.details.data.recordCount} />
+                <MetricValue
+                  metric={resolveMetric(
+                    systemData.recordCount,
+                    systemLocalization?.details.data.recordCount,
+                  )}
+                />
               </InlineField>
               <InlineField label="Database size">
-                <MetricValue metric={system.details.data.storageSize} />
+                <MetricValue
+                  metric={resolveMetric(
+                    systemData.storageSize,
+                    systemLocalization?.details.data.storageSize,
+                  )}
+                />
               </InlineField>
             </div>
           </DetailSection>
 
-          <DetailSection title="Access">
-            <List<SystemAccessPath>
+          <DetailSection title="Read access">
+            <List<ResolvedSystemAccessPath>
               className="entity-detail-list"
-              dataSource={system.details.access}
-              locale={{ emptyText: "No access path recorded" }}
+              dataSource={readAccessPaths}
+              locale={{ emptyText: "No read access path recorded" }}
+              renderItem={(path) => (
+                <List.Item><AccessDescription path={path} /></List.Item>
+              )}
+              size="small"
+            />
+          </DetailSection>
+
+          <DetailSection title="Write / contribution access">
+            <List<ResolvedSystemAccessPath>
+              className="entity-detail-list"
+              dataSource={writeAccessPaths}
+              locale={{ emptyText: "No write or contribution path recorded" }}
               renderItem={(path) => (
                 <List.Item><AccessDescription path={path} /></List.Item>
               )}
@@ -745,22 +790,12 @@ export function EntityDetailsPanel({
             </DetailSection>
           ) : null}
 
-          <DetailSection title="Identifiers">
-            <List<SystemIdentifierScheme>
-              className="entity-detail-list"
-              dataSource={system.details.identifiers}
-              locale={{ emptyText: "No identifier scheme recorded" }}
-              renderItem={(scheme) => (
-                <List.Item><IdentifierDescription scheme={scheme} /></List.Item>
-              )}
-              size="small"
-            />
-          </DetailSection>
-
           <DetailSection title="Usage">
-            <List<SourcedMetric>
+            <List<ResolvedSourcedMetric>
               className="entity-detail-list"
-              dataSource={system.details.usage}
+              dataSource={(system.properties.usage ?? []).map((metric) =>
+                resolveMetric(metric, localizedMetrics[metric.id]),
+              ).filter((metric): metric is ResolvedSourcedMetric => Boolean(metric))}
               locale={{ emptyText: "No usage metric recorded" }}
               renderItem={(metric) => (
                 <List.Item>
@@ -790,7 +825,9 @@ export function EntityDetailsPanel({
             return (
               <List.Item>
                 <Flex vertical gap={2}>
-                  <Typography.Text>{otherEntity?.name ?? otherEntityId}</Typography.Text>
+                  <Typography.Text>
+                    {otherEntity ? nodeTitle(otherEntity, locale) : otherEntityId}
+                  </Typography.Text>
                   <Typography.Text type="secondary">
                     {relationshipLabel(relationship, entity.id)}
                   </Typography.Text>

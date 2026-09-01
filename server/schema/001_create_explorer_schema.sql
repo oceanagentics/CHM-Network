@@ -22,19 +22,34 @@ CREATE TABLE IF NOT EXISTS sources (
 
 CREATE INDEX IF NOT EXISTS idx_sources_type ON sources(source_type);
 
+CREATE TABLE IF NOT EXISTS supported_locales (
+  locale text PRIMARY KEY
+    CHECK (locale IN ('ar', 'zh', 'en', 'fr', 'ru', 'es')),
+  language_name text NOT NULL CHECK (btrim(language_name) <> ''),
+  direction text NOT NULL CHECK (direction IN ('ltr', 'rtl')),
+  sort_order integer NOT NULL UNIQUE CHECK (sort_order > 0)
+);
+
+INSERT INTO supported_locales (locale, language_name, direction, sort_order)
+VALUES
+  ('ar', 'Arabic', 'rtl', 1),
+  ('zh', 'Chinese', 'ltr', 2),
+  ('en', 'English', 'ltr', 3),
+  ('fr', 'French', 'ltr', 4),
+  ('ru', 'Russian', 'ltr', 5),
+  ('es', 'Spanish', 'ltr', 6)
+ON CONFLICT (locale) DO UPDATE
+SET language_name = EXCLUDED.language_name,
+    direction = EXCLUDED.direction,
+    sort_order = EXCLUDED.sort_order;
+
 CREATE TABLE IF NOT EXISTS nodes (
   id text PRIMARY KEY,
   kind text NOT NULL CHECK (kind IN ('country', 'organization', 'system')),
-  name text NOT NULL,
   country_code text CHECK (country_code IS NULL OR length(country_code) = 3),
   subtype text,
   url text,
-  summary text,
-  description text,
   record_depth text NOT NULL DEFAULT 'stub' CHECK (record_depth IN ('stub', 'thin', 'rich')),
-  review_state text NOT NULL DEFAULT 'agent_researched' CHECK (review_state IN ('agent_researched', 'human_reviewed', 'needs_revision')),
-  review_json jsonb NOT NULL DEFAULT '{}'::jsonb,
-  details_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   properties_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -43,11 +58,67 @@ CREATE TABLE IF NOT EXISTS nodes (
 CREATE INDEX IF NOT EXISTS idx_nodes_kind ON nodes(kind);
 CREATE INDEX IF NOT EXISTS idx_nodes_country_kind ON nodes(country_code, kind);
 CREATE INDEX IF NOT EXISTS idx_nodes_record_depth ON nodes(record_depth);
-CREATE INDEX IF NOT EXISTS idx_nodes_review_state ON nodes(review_state);
 
 DROP TRIGGER IF EXISTS trg_nodes_updated_at ON nodes;
 CREATE TRIGGER trg_nodes_updated_at
 BEFORE UPDATE ON nodes
+FOR EACH ROW
+WHEN (NEW.updated_at = OLD.updated_at)
+EXECUTE FUNCTION set_updated_at_timestamp();
+
+CREATE TABLE IF NOT EXISTS node_localizations (
+  node_id text NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+  locale text NOT NULL REFERENCES supported_locales(locale),
+  title text NOT NULL CHECK (btrim(title) <> ''),
+  summary text,
+  description text,
+  details_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  source_excerpt text,
+  translated_from_locale text REFERENCES supported_locales(locale)
+    CHECK (translated_from_locale IS NULL OR translated_from_locale <> locale),
+  content_updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  review_state text NOT NULL DEFAULT 'agent_researched'
+    CHECK (review_state IN ('agent_researched', 'human_reviewed', 'needs_revision')),
+  reviewer_note text,
+  reviewer text,
+  last_reviewed timestamptz,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (node_id, locale)
+);
+
+CREATE INDEX IF NOT EXISTS idx_node_localizations_locale
+  ON node_localizations(locale);
+CREATE INDEX IF NOT EXISTS idx_node_localizations_review_state
+  ON node_localizations(review_state);
+CREATE INDEX IF NOT EXISTS idx_node_localizations_locale_review_state
+  ON node_localizations(locale, review_state);
+
+CREATE OR REPLACE FUNCTION set_node_localization_content_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  IF NEW.title IS DISTINCT FROM OLD.title
+    OR NEW.summary IS DISTINCT FROM OLD.summary
+    OR NEW.description IS DISTINCT FROM OLD.description
+    OR NEW.details_json IS DISTINCT FROM OLD.details_json
+    OR NEW.source_excerpt IS DISTINCT FROM OLD.source_excerpt
+    OR NEW.translated_from_locale IS DISTINCT FROM OLD.translated_from_locale THEN
+    NEW.content_updated_at = CURRENT_TIMESTAMP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_node_localizations_content_updated_at ON node_localizations;
+CREATE TRIGGER trg_node_localizations_content_updated_at
+BEFORE UPDATE ON node_localizations
+FOR EACH ROW
+EXECUTE FUNCTION set_node_localization_content_updated_at();
+
+DROP TRIGGER IF EXISTS trg_node_localizations_updated_at ON node_localizations;
+CREATE TRIGGER trg_node_localizations_updated_at
+BEFORE UPDATE ON node_localizations
 FOR EACH ROW
 WHEN (NEW.updated_at = OLD.updated_at)
 EXECUTE FUNCTION set_updated_at_timestamp();

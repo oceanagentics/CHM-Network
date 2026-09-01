@@ -84,18 +84,27 @@ export function SystemDirectoryView({
 }) {
   const graph = useGraphStore((state) => state.graph);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
+  const locale = useGraphStore((state) => state.locale);
+  const searchAllLanguages = useGraphStore((state) => state.searchAllLanguages);
   const setSelectedEntityId = useGraphStore((state) => state.setSelectedEntityId);
   const query = useGraphStore((state) => state.searchQuery);
   const filters = useGraphStore((state) => state.searchFilters);
   const setSearchQuery = useGraphStore((state) => state.setSearchQuery);
+  const setSearchAllLanguages = useGraphStore((state) => state.setSearchAllLanguages);
   const setSearchFilters = useGraphStore((state) => state.setSearchFilters);
   const resetSearchFilters = useGraphStore((state) => state.resetSearchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [mode, setMode] = useState<DirectoryMode>("cards");
 
   const resolvedSearch = useMemo(
-    () => (graph ? resolveGraphSearch(graph, { query, filters }) : null),
-    [filters, graph, query],
+    () => (graph
+      ? resolveGraphSearch(
+          graph,
+          { query, filters, searchAllLanguages },
+          locale,
+        )
+      : null),
+    [filters, graph, locale, query, searchAllLanguages],
   );
   const records = resolvedSearch?.systemRecords ?? [];
   const filteredRecords = resolvedSearch?.filteredSystemRecords ?? [];
@@ -130,10 +139,13 @@ export function SystemDirectoryView({
       key: "system",
       render: (_: unknown, record: SystemSearchRecord) => (
         <Flex vertical gap={2}>
-          <Typography.Text strong>{record.entity.name}</Typography.Text>
+          <Typography.Text strong>{record.title}</Typography.Text>
           <Typography.Text type="secondary">
-            {record.system.summary}
+            {record.summary}
           </Typography.Text>
+          {record.localization.isLocaleFallback ? (
+            <Tag bordered={false}>Showing {record.localization.displayLocale}</Tag>
+          ) : null}
           <MatchReasons reasons={record.matchReasons} />
         </Flex>
       ),
@@ -200,10 +212,18 @@ export function SystemDirectoryView({
           <Input
             allowClear
             className="systems-search"
-            placeholder="Search nodes, data types, access, identifiers, sources"
+            placeholder="Search nodes, data types, access, sources"
             prefix={<SearchOutlined />}
             value={query}
             onChange={(event) => setSearchQuery(event.target.value)}
+          />
+          <Segmented
+            value={searchAllLanguages ? "all" : "displayed"}
+            options={[
+              { label: "Displayed", value: "displayed" },
+              { label: "All languages", value: "all" },
+            ]}
+            onChange={(value) => setSearchAllLanguages(value === "all")}
           />
           <Button
             block={isRail}
@@ -280,15 +300,6 @@ export function SystemDirectoryView({
                 options={filterOptions.accessMethods}
                 onChange={(value) => patchFilters({ accessMethods: value })}
               />
-              <Select
-                allowClear
-                mode="multiple"
-                maxTagCount="responsive"
-                placeholder="Identifiers"
-                value={filters.identifierSchemes}
-                options={filterOptions.identifierSchemes}
-                onChange={(value) => patchFilters({ identifierSchemes: value })}
-              />
             </div>
           </div>
         ) : null}
@@ -311,15 +322,18 @@ export function SystemDirectoryView({
                 <Flex vertical gap={12}>
                   <Flex align="flex-start" justify="space-between" gap={8}>
                     <Flex vertical gap={2}>
-                      <Typography.Text strong>{record.entity.name}</Typography.Text>
+                      <Typography.Text strong>{record.title}</Typography.Text>
                       <Typography.Text type="secondary">
                         {record.operatorName || "Unknown operator"}
                       </Typography.Text>
                     </Flex>
+                    {record.localization.isLocaleFallback ? (
+                      <Tag bordered={false}>Showing {record.localization.displayLocale}</Tag>
+                    ) : null}
                   </Flex>
-                  {record.system.summary ? (
+                  {record.summary ? (
                     <Typography.Paragraph className="systems-card-description">
-                      {record.system.summary}
+                      {record.summary}
                     </Typography.Paragraph>
                   ) : null}
                   <MatchReasons reasons={record.matchReasons} />

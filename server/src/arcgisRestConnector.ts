@@ -186,7 +186,7 @@ function parseConnectorLayerId(value: string): { routeId: string; arcgisLayerId:
 
 function inferFamily(system: RyuSystemRecord, route: RyuPortalRoute): string {
   const text = normalizeSearchText([
-    system.name,
+    system.title,
     ...system.domains,
     ...system.capabilities,
     ...route.capabilities,
@@ -209,7 +209,7 @@ function inferFamily(system: RyuSystemRecord, route: RyuPortalRoute): string {
 
 function inferSemantics(system: RyuSystemRecord, route: RyuPortalRoute, layerTitle: string): string {
   const text = normalizeSearchText([
-    system.name,
+    system.title,
     ...system.capabilities,
     ...route.capabilities,
     route.routeId,

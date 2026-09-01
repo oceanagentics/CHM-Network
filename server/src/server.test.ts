@@ -4,12 +4,15 @@ import { test } from "node:test";
 import type {
   GraphBootstrapPayload,
   GraphNode,
-  NodeReviewInput,
+  NodeLocalization,
+  NodeLocalizationReviewInput,
   RyuSystemQuery,
   RyuSystemRecord,
   SavedView,
   Source,
+  SupportedLocale,
 } from "../../shared/domain";
+import { defaultLocale, emptyLocalizationDetails } from "../../shared/localization";
 import type { GraphRepository } from "./graphRepository";
 import { createApp, toPublicBootstrap, type RyuRuntimeMode } from "./server";
 
@@ -21,24 +24,38 @@ const bootstrap: GraphBootstrapPayload = {
   savedViews: [],
 };
 
-function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
+function createFakeLocalization(
+  overrides: Partial<NodeLocalization> = {},
+): NodeLocalization {
   return {
-    id: "node-1",
-    kind: "system",
-    name: "Test System",
-    countryCode: null,
-    subtype: null,
-    url: null,
+    locale: defaultLocale,
+    title: "Test System",
     summary: null,
     description: null,
-    recordDepth: "stub",
+    details: emptyLocalizationDetails(),
+    sourceExcerpt: null,
+    translatedFromLocale: null,
+    contentUpdatedAt: "2026-08-27T00:00:00.000Z",
     reviewState: "agent_researched",
     reviewerNote: null,
     reviewer: null,
     lastReviewed: null,
-    review: {},
-    details: {
-      aliases: [],
+    createdAt: "2026-08-27T00:00:00.000Z",
+    updatedAt: "2026-08-27T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
+  const localization = createFakeLocalization();
+  return {
+    id: "node-1",
+    kind: "system",
+    countryCode: null,
+    subtype: null,
+    url: null,
+    recordDepth: "stub",
+    properties: {
       operator: null,
       role: null,
       disciplineFamily: null,
@@ -46,12 +63,17 @@ function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
       gallery: [],
       data: { descriptors: [], recordCount: null, storageSize: null },
       access: [],
-      identifiers: [],
       usage: [],
     },
-    properties: {},
     createdAt: "2026-08-27T00:00:00.000Z",
     updatedAt: "2026-08-27T00:00:00.000Z",
+    localizations: {
+      en: localization,
+    },
+    availableLocales: ["en"],
+    requestedLocale: "en",
+    displayLocale: "en",
+    isLocaleFallback: false,
     ...overrides,
   };
 }
@@ -75,19 +97,29 @@ class FakeRepository implements GraphRepository {
     throw new Error(`system not found: ${id}`);
   }
 
-  updateNodeReview(id: string, input: NodeReviewInput, reviewer: string): GraphNode {
+  updateNodeLocalizationReview(
+    id: string,
+    locale: SupportedLocale,
+    input: NodeLocalizationReviewInput,
+    reviewer: string,
+  ): GraphNode {
     const lastReviewed = "2026-08-27T01:00:00.000Z";
+    const existingLocalization =
+      this.node.localizations[locale] ?? createFakeLocalization({ locale });
+    const nextLocalization = createFakeLocalization({
+      ...existingLocalization,
+      reviewState: input.reviewState ?? existingLocalization.reviewState,
+      reviewerNote: input.reviewerNote ?? existingLocalization.reviewerNote,
+      reviewer,
+      lastReviewed,
+      updatedAt: lastReviewed,
+    });
     this.node = createFakeNode({
       ...this.node,
       id,
-      reviewState: input.reviewState ?? this.node.reviewState,
-      reviewerNote: input.reviewerNote ?? this.node.reviewerNote,
-      reviewer,
-      lastReviewed,
-      review: {
-        reviewerNote: input.reviewerNote ?? this.node.reviewerNote,
-        reviewer,
-        lastReviewed,
+      localizations: {
+        ...this.node.localizations,
+        [locale]: nextLocalization,
       },
       updatedAt: lastReviewed,
     });
@@ -160,13 +192,12 @@ test("redacts private review fields from public bootstrap payloads", () => {
     ...bootstrap,
     nodes: [
       createFakeNode({
-        reviewerNote: "Private reviewer note",
-        reviewer: "danny@oceanagentics.com",
-        lastReviewed: "2026-08-31T00:00:00.000Z",
-        review: {
-          reviewerNote: "Private reviewer note",
-          reviewer: "danny@oceanagentics.com",
-          lastReviewed: "2026-08-31T00:00:00.000Z",
+        localizations: {
+          en: createFakeLocalization({
+            reviewerNote: "Private reviewer note",
+            reviewer: "danny@oceanagentics.com",
+            lastReviewed: "2026-08-31T00:00:00.000Z",
+          }),
         },
       }),
     ],
@@ -203,11 +234,10 @@ test("redacts private review fields from public bootstrap payloads", () => {
     ],
   });
 
-  assert.equal(publicBootstrap.nodes[0].reviewState, "agent_researched");
-  assert.equal(publicBootstrap.nodes[0].reviewerNote, null);
-  assert.equal(publicBootstrap.nodes[0].reviewer, null);
-  assert.equal(publicBootstrap.nodes[0].lastReviewed, null);
-  assert.deepEqual(publicBootstrap.nodes[0].review, {});
+  assert.equal(publicBootstrap.nodes[0].localizations.en?.reviewState, "agent_researched");
+  assert.equal(publicBootstrap.nodes[0].localizations.en?.reviewerNote, null);
+  assert.equal(publicBootstrap.nodes[0].localizations.en?.reviewer, null);
+  assert.equal(publicBootstrap.nodes[0].localizations.en?.lastReviewed, null);
   assert.equal(publicBootstrap.sources[0].localPath, null);
   assert.deepEqual(publicBootstrap.ryuRoutes, []);
 });
@@ -241,7 +271,7 @@ test("redacts source local paths from public source endpoints", async () => {
 
 test("rejects review writes in public mode", async () => {
   await withServer("public", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reviewState: "human_reviewed" }),
@@ -254,7 +284,7 @@ test("rejects review writes in public mode", async () => {
 
 test("requires CHM user context for review writes in api mode", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -270,7 +300,7 @@ test("requires CHM user context for review writes in api mode", async () => {
 
 test("requires CHM user email for reviewer identity", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -287,7 +317,7 @@ test("requires CHM user email for reviewer identity", async () => {
 
 test("allows CHM service review writes in api mode", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -303,16 +333,16 @@ test("allows CHM service review writes in api mode", async () => {
 
     assert.equal(response.status, 200);
     const body = await response.json() as GraphNode;
-    assert.equal(body.reviewState, "human_reviewed");
-    assert.equal(body.reviewerNote, "Checked against source.");
-    assert.equal(body.reviewer, "danny@oceanagentics.com");
-    assert.equal(body.lastReviewed, "2026-08-27T01:00:00.000Z");
+    assert.equal(body.localizations.en?.reviewState, "human_reviewed");
+    assert.equal(body.localizations.en?.reviewerNote, "Checked against source.");
+    assert.equal(body.localizations.en?.reviewer, "danny@oceanagentics.com");
+    assert.equal(body.localizations.en?.lastReviewed, "2026-08-27T01:00:00.000Z");
   });
 });
 
 test("rejects client-controlled review fields", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -332,7 +362,7 @@ test("rejects client-controlled review fields", async () => {
 
 test("rejects removed review states", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

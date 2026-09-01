@@ -7,8 +7,10 @@ import type {
   GraphBootstrapPayload,
   GraphNode,
   SavedView,
+  SupportedLocale,
   ViewMode,
 } from "../../../../shared/domain";
+import { defaultLocale } from "../../../../shared/localization";
 import { indexGraph, type IndexedGraph } from "../graph/indexGraph";
 import { emptySearchFilters, type GraphSearchFilters } from "../search";
 import {
@@ -63,7 +65,9 @@ interface GraphState {
   selectedRelationshipId: string | null;
   savedViews: SavedView[];
   viewport: ViewportSnapshot | null;
+  locale: SupportedLocale;
   searchQuery: string;
+  searchAllLanguages: boolean;
   searchFilters: GraphSearchFilters;
   setBootstrap: (payload: GraphBootstrapPayload) => void;
   setSavedViews: (savedViews: SavedView[]) => void;
@@ -78,7 +82,9 @@ interface GraphState {
   setSelectedEntityId: (selectedEntityId: string | null) => void;
   setSelectedRelationshipId: (selectedRelationshipId: string | null) => void;
   setViewport: (viewport: ViewportSnapshot | null) => void;
+  setLocale: (locale: SupportedLocale) => void;
   setSearchQuery: (searchQuery: string) => void;
+  setSearchAllLanguages: (searchAllLanguages: boolean) => void;
   setSearchFilters: (searchFilters: GraphSearchFilters) => void;
   resetSearchFilters: () => void;
   resetSearch: () => void;
@@ -98,7 +104,9 @@ export const useGraphStore = create<GraphState>((set) => ({
   selectedRelationshipId: null,
   savedViews: [],
   viewport: null,
+  locale: defaultLocale,
   searchQuery: "",
+  searchAllLanguages: false,
   searchFilters: emptySearchFilters(),
   setBootstrap: (payload) =>
     set({
@@ -150,12 +158,15 @@ export const useGraphStore = create<GraphState>((set) => ({
   setSelectedRelationshipId: (selectedRelationshipId) =>
     set({ selectedRelationshipId, selectedEntityId: null }),
   setViewport: (viewport) => set({ viewport }),
+  setLocale: (locale) => set({ locale }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchAllLanguages: (searchAllLanguages) => set({ searchAllLanguages }),
   setSearchFilters: (searchFilters) => set({ searchFilters }),
   resetSearchFilters: () => set({ searchFilters: emptySearchFilters() }),
   resetSearch: () =>
     set({
       searchQuery: "",
+      searchAllLanguages: false,
       searchFilters: emptySearchFilters(),
     }),
   resetSelection: () => set({ selectedEntityId: null, selectedRelationshipId: null }),

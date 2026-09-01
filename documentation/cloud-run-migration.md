@@ -14,7 +14,7 @@ runtime database.
 - `RYU_MODE=public`: browser-facing production mode. Read routes are available
   and the review endpoint returns `403 writes_disabled`.
 - `RYU_MODE=api`: private browser-review API mode. `PATCH
-  /explorer/api/nodes/:id/review` requires CHM-forwarded user context and, when
+  /explorer/api/nodes/:id/localizations/:locale/review` requires CHM-forwarded user context and, when
   configured, a trusted caller service account header. No general node, edge,
   source, saved-view, or schema mutation routes are exposed.
 
@@ -45,10 +45,10 @@ Postgres setup SQL removes Cloud SQL's default elevated role membership from
 This section describes the currently deployed Explorer review UI and private
 review API.
 
-The details panel shows record and review state for selected nodes:
+The details panel shows record and localization review state for selected nodes:
 
 - `recordDepth` is read-only and visible to all users.
-- `reviewState` is visible to all users.
+- The resolved localization's `reviewState` is visible to all users.
 - Valid `reviewState` values are `agent_researched`, `human_reviewed`, and
   `needs_revision`.
 - Authenticated/author builds render `reviewState` as a dropdown.
@@ -62,13 +62,13 @@ The details panel shows record and review state for selected nodes:
   users remain on the public read-only view.
 - Unauthenticated public Explorer deployments should omit `IAP_JWT_AUDIENCE`;
   that makes Explorer redact reviewer notes, reviewer identity, last-reviewed
-  timestamps, raw review JSON, route targets, and local source paths from public
+  timestamps, route targets, and local source paths from public
   APIs.
 
 The browser review helper calls the CHM proxy path by default:
 
 ```text
-/api/explorer/nodes/:id/review
+/api/explorer/nodes/:id/localizations/:locale/review
 ```
 
 Set `VITE_REVIEW_API_BASE_PATH` only if the CHM proxy path changes. Set
@@ -190,12 +190,12 @@ Expected result for the write check is `403` with `{"error":"writes_disabled"}`.
 Private review path through CHM:
 
 ```text
-PATCH /api/explorer/nodes/:id/review
+PATCH /api/explorer/nodes/:id/localizations/:locale/review
 ```
 
 The body may contain only `reviewState` and `reviewerNote`. CHM forwards the
 IAP email to Explorer, and Explorer stores that email as `reviewer` plus a
-server-side `lastReviewed` timestamp in `nodes.review_json`.
+server-side `lastReviewed` timestamp in `node_localizations`.
 
 For the internal-only `explorer-api` service, CHM must call from Direct VPC
 egress with `all-traffic` through a subnet that has Private Google Access

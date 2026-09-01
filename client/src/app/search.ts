@@ -1,11 +1,19 @@
 import type {
   GraphEdge,
   GraphNode,
+  ResolvedNodeLocalization,
   RyuRoute,
   SourceRef,
+  SupportedLocale,
   SystemDataDescriptorCategory,
 } from "../../../shared/domain";
 import type { IndexedGraph } from "./graph/indexGraph";
+import {
+  nodeTitle,
+  resolveNodeDisplay,
+  systemAccessPaths,
+  systemGallery,
+} from "./localization";
 
 export type ClaimFilterKey = SystemDataDescriptorCategory;
 
@@ -16,12 +24,12 @@ export type GraphSearchFilters = {
   dataClaims: Record<ClaimFilterKey, string[]>;
   accessTypes: string[];
   accessMethods: string[];
-  identifierSchemes: string[];
 };
 
 export type GraphSearchIntent = {
   query: string;
   filters: GraphSearchFilters;
+  searchAllLanguages?: boolean;
 };
 
 export type SearchMatchReason = {
@@ -35,12 +43,18 @@ export type SearchMatchReason = {
 export type EntitySearchResult = {
   entity: GraphNode;
   score: number;
+  displayLocale: SupportedLocale | null;
+  matchedLocale: SupportedLocale | null;
+  isLocaleFallback: boolean;
   reasons: SearchMatchReason[];
 };
 
 export type SystemSearchRecord = {
   entity: GraphNode;
   system: GraphNode;
+  title: string;
+  summary: string | null;
+  localization: ResolvedNodeLocalization;
   operatorName: string;
   countryCode: string;
   role: string;
@@ -52,7 +66,6 @@ export type SystemSearchRecord = {
   accessTypes: string[];
   accessMethods: string[];
   accessLabels: string[];
-  identifierSchemes: string[];
   sourceTitles: string[];
   connectedNames: string[];
   relationships: GraphEdge[];
@@ -78,11 +91,13 @@ type SearchFieldDefinition = {
     entity: GraphNode,
     graph: IndexedGraph,
     context: SearchContext,
+    localization: ResolvedNodeLocalization,
   ) => unknown[];
 };
 
 type SearchContext = {
   systemRecordById: Record<string, SystemSearchRecord>;
+  locale: SupportedLocale;
 };
 
 export const claimFilterLabels: Record<ClaimFilterKey, string> = {
@@ -113,7 +128,6 @@ export const emptySearchFilters = (): GraphSearchFilters => ({
   },
   accessTypes: [],
   accessMethods: [],
-  identifierSchemes: [],
 });
 
 export function labelize(value: string): string {
@@ -124,13 +138,25 @@ export function labelize(value: string): string {
 
 export function normalizeSearchValue(value: string): string {
   return value
+    .normalize("NFKC")
+    .toLocaleLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+    .normalize("NFKC");
 }
 
-function tokenize(value: string): string[] {
-  return normalizeSearchValue(value).split(/[^a-z0-9]+/).filter(Boolean);
+function tokenize(value: string, locale?: SupportedLocale): string[] {
+  const normalized = normalizeSearchValue(value);
+  const segmenter = typeof Intl !== "undefined" && "Segmenter" in Intl
+    ? new Intl.Segmenter(locale, { granularity: "word" })
+    : null;
+  const tokens = segmenter
+    ? Array.from(segmenter.segment(normalized))
+        .filter((segment) => segment.isWordLike)
+        .map((segment) => segment.segment)
+    : normalized.match(/[\p{L}\p{N}]+/gu) ?? [];
+
+  return [...new Set(tokens.filter(Boolean))];
 }
 
 function collectText(value: unknown): string[] {
@@ -168,7 +194,6 @@ export function countActiveFilters(filters: GraphSearchFilters): number {
     filters.disciplineFamily,
     filters.accessTypes,
     filters.accessMethods,
-    filters.identifierSchemes,
     ...Object.values(filters.dataClaims),
   ].filter((value) => value.length > 0).length;
 }
@@ -180,18 +205,31 @@ function getRelationships(entityId: string, graph: IndexedGraph): GraphEdge[] {
   ].map((edgeId) => graph.edgeById[edgeId]);
 }
 
-function getConnectedNames(entity: GraphNode, graph: IndexedGraph): string[] {
+function getConnectedNames(
+  entity: GraphNode,
+  graph: IndexedGraph,
+  locale: SupportedLocale,
+): string[] {
+  const entityTitle = nodeTitle(entity, locale);
   return uniqueSorted(
     getRelationships(entity.id, graph)
       .flatMap((edge) => [
-        graph.nodeById[edge.sourceNodeId]?.name,
-        graph.nodeById[edge.targetNodeId]?.name,
+        graph.nodeById[edge.sourceNodeId]
+          ? nodeTitle(graph.nodeById[edge.sourceNodeId], locale)
+          : null,
+        graph.nodeById[edge.targetNodeId]
+          ? nodeTitle(graph.nodeById[edge.targetNodeId], locale)
+          : null,
       ])
-      .filter((name): name is string => Boolean(name) && name !== entity.name),
+      .filter((name): name is string => Boolean(name) && name !== entityTitle),
   );
 }
 
-function getCountryValues(entity: GraphNode, graph: IndexedGraph): string[] {
+function getCountryValues(
+  entity: GraphNode,
+  graph: IndexedGraph,
+  locale: SupportedLocale,
+): string[] {
   if (!entity.countryCode) {
     return [];
   }
@@ -204,20 +242,21 @@ function getCountryValues(entity: GraphNode, graph: IndexedGraph): string[] {
 
   return collectText([
     entity.countryCode,
-    country?.name,
+    country ? nodeTitle(country, locale) : null,
     countryAliasesByCode[entity.countryCode],
   ]);
 }
 
 function sourceRefs(system: GraphNode): SourceRef[] {
   return [
-    ...system.details.gallery.map((item) => item.source),
-    ...system.details.data.descriptors.flatMap((descriptor) => descriptor.source ? [descriptor.source] : []),
-    ...(system.details.data.recordCount ? [system.details.data.recordCount.source] : []),
-    ...(system.details.data.storageSize ? [system.details.data.storageSize.source] : []),
-    ...system.details.access.map((path) => path.source),
-    ...system.details.identifiers.flatMap((scheme) => scheme.source ? [scheme.source] : []),
-    ...system.details.usage.map((metric) => metric.source),
+    ...(system.properties.gallery ?? []).map((item) => item.source),
+    ...(system.properties.data?.descriptors ?? []).flatMap((descriptor) =>
+      descriptor.source ? [descriptor.source] : [],
+    ),
+    ...(system.properties.data?.recordCount ? [system.properties.data.recordCount.source] : []),
+    ...(system.properties.data?.storageSize ? [system.properties.data.storageSize.source] : []),
+    ...(system.properties.access ?? []).map((path) => path.source),
+    ...(system.properties.usage ?? []).map((metric) => metric.source),
   ];
 }
 
@@ -237,7 +276,7 @@ function descriptorLabels(
   category: SystemDataDescriptorCategory,
 ): string[] {
   return uniqueSorted(
-    system.details.data.descriptors
+    (system.properties.data?.descriptors ?? [])
       .filter((descriptor) => descriptor.category === category)
       .map((descriptor) => descriptor.label),
   );
@@ -247,24 +286,26 @@ function descriptorValues(
   system: GraphNode | undefined,
   category: SystemDataDescriptorCategory,
 ): string[] {
-  return system?.details.data.descriptors
+  return system?.properties.data?.descriptors
     .filter((descriptor) => descriptor.category === category)
-    .flatMap((descriptor) => [
-      descriptor.label,
-      descriptor.description,
-      descriptor.source?.title,
-    ])
+    .flatMap((descriptor) => [descriptor.label, descriptor.source?.title])
     .filter((value): value is string => Boolean(value)) ?? [];
 }
 
-function buildSystemRecord(entity: GraphNode, graph: IndexedGraph): SystemSearchRecord | null {
+function buildSystemRecord(
+  entity: GraphNode,
+  graph: IndexedGraph,
+  locale: SupportedLocale,
+): SystemSearchRecord | null {
   if (entity.kind !== "system") {
     return null;
   }
 
   const system = entity;
+  const localization = resolveNodeDisplay(system, locale);
+  const accessPaths = systemAccessPaths(system, localization);
   const relationships = getRelationships(entity.id, graph);
-  const connectedNames = getConnectedNames(entity, graph);
+  const connectedNames = getConnectedNames(entity, graph, locale);
   const dataTypes = descriptorLabels(system, "type");
   const dataFormats = descriptorLabels(system, "format");
   const dataStandards = descriptorLabels(system, "standard");
@@ -273,18 +314,20 @@ function buildSystemRecord(entity: GraphNode, graph: IndexedGraph): SystemSearch
   return {
     entity,
     system,
-    operatorName: system.details.operator?.name ?? "",
-    countryCode: system.details.operator?.countryCode ?? system.countryCode ?? entity.countryCode ?? "",
-    role: system.details.role ?? "",
-    disciplineFamily: system.details.disciplineFamily ?? "",
-    geographicScope: system.details.geographicScope ?? "",
+    title: localization.title,
+    summary: localization.summary,
+    localization,
+    operatorName: system.properties.operator?.name ?? "",
+    countryCode: system.properties.operator?.countryCode ?? system.countryCode ?? entity.countryCode ?? "",
+    role: system.properties.role ?? "",
+    disciplineFamily: system.properties.disciplineFamily ?? "",
+    geographicScope: system.properties.geographicScope ?? "",
     dataTypes,
     dataFormats,
     dataStandards,
-    accessTypes: uniqueSorted(system.details.access.map((path) => path.type)),
-    accessMethods: uniqueSorted(system.details.access.map((path) => path.method)),
-    accessLabels: uniqueSorted(system.details.access.map((path) => path.label)),
-    identifierSchemes: uniqueSorted(system.details.identifiers.map((scheme) => scheme.scheme)),
+    accessTypes: uniqueSorted(accessPaths.map((path) => path.type)),
+    accessMethods: uniqueSorted(accessPaths.map((path) => path.method)),
+    accessLabels: uniqueSorted(accessPaths.map((path) => path.label)),
     sourceTitles: uniqueSorted(sourceRefs(system).map((source) => source.title)),
     connectedNames,
     relationships,
@@ -294,14 +337,17 @@ function buildSystemRecord(entity: GraphNode, graph: IndexedGraph): SystemSearch
   };
 }
 
-function buildSystemRecords(graph: IndexedGraph): SystemSearchRecord[] {
+function buildSystemRecords(
+  graph: IndexedGraph,
+  locale: SupportedLocale,
+): SystemSearchRecord[] {
   return graph.nodes
     .filter((entity) => entity.kind === "system")
     .flatMap((entity) => {
-      const record = buildSystemRecord(entity, graph);
+      const record = buildSystemRecord(entity, graph, locale);
       return record ? [record] : [];
     })
-    .sort((left, right) => left.entity.name.localeCompare(right.entity.name));
+    .sort((left, right) => left.title.localeCompare(right.title));
 }
 
 function withCommonFields(
@@ -312,7 +358,7 @@ function withCommonFields(
       field: "name",
       label: "Name",
       weight: 100,
-      getValues: (entity) => [entity.name],
+      getValues: (_entity, _graph, _context, localization) => [localization.title],
     },
     {
       field: "kind",
@@ -324,7 +370,7 @@ function withCommonFields(
       field: "country",
       label: "Country",
       weight: 90,
-      getValues: (entity, graph) => getCountryValues(entity, graph),
+      getValues: (entity, graph, context) => getCountryValues(entity, graph, context.locale),
     },
     {
       field: "subtype",
@@ -341,7 +387,8 @@ const organizationFieldDefinitions = withCommonFields([
     field: "relationships.connectedNames",
     label: "Connected node",
     weight: 35,
-    getValues: (entity, graph) => getConnectedNames(entity, graph),
+    getValues: (entity, graph, context) =>
+      getConnectedNames(entity, graph, context.locale),
   },
   {
     field: "relationships.type",
@@ -364,10 +411,10 @@ const countryFieldDefinitions = withCommonFields([
     field: "children",
     label: "Contained node",
     weight: 30,
-    getValues: (entity, graph) =>
+    getValues: (entity, graph, context) =>
       graph.nodes
         .filter((candidate) => candidate.countryCode === entity.countryCode)
-        .map((candidate) => candidate.name),
+        .map((candidate) => nodeTitle(candidate, context.locale)),
   },
 ]);
 
@@ -384,40 +431,37 @@ const systemFieldDefinitions = withCommonFields([
     field: "system.aliases",
     label: "Alias",
     weight: 90,
-    getValues: (entity, graph) => graph.nodeById[entity.id]?.details.aliases ?? [],
+    getValues: (_entity, _graph, _context, localization) => localization.details.aliases,
   },
   {
     field: "system.role",
     label: "Role",
     weight: 65,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.details.role],
+    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.role],
   },
   {
     field: "system.disciplineFamily",
     label: "Discipline",
     weight: 62,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.details.disciplineFamily],
+    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.disciplineFamily],
   },
   {
     field: "system.geographicScope",
     label: "Geographic scope",
     weight: 58,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.details.geographicScope],
+    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.geographicScope],
   },
   {
     field: "system.shortDescription",
     label: "Summary",
     weight: 48,
-    getValues: (entity, graph) => {
-      const system = graph.nodeById[entity.id];
-      return [system?.summary];
-    },
+    getValues: (_entity, _graph, _context, localization) => [localization.summary],
   },
   {
     field: "system.longDescription",
     label: "Description",
     weight: 24,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.description],
+    getValues: (_entity, _graph, _context, localization) => [localization.description],
   },
   {
     field: "data.descriptors.type",
@@ -447,9 +491,9 @@ const systemFieldDefinitions = withCommonFields([
     getValues: (entity, graph) => {
       const system = graph.nodeById[entity.id];
       return [
-        system?.details.data.recordCount,
-        system?.details.data.storageSize,
-        ...(system?.details.usage ?? []),
+        system?.properties.data?.recordCount,
+        system?.properties.data?.storageSize,
+        ...(system?.properties.usage ?? []),
       ].flatMap((metric) =>
         metric
           ? [
@@ -457,7 +501,6 @@ const systemFieldDefinitions = withCommonFields([
               labelize(metric.key),
               String(metric.value),
               metric.unit,
-              metric.description,
             ]
           : [],
       );
@@ -467,51 +510,39 @@ const systemFieldDefinitions = withCommonFields([
     field: "access.type",
     label: "Access type",
     weight: 62,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.access.flatMap((path) => [
+    getValues: (entity, graph, _context, localization) => {
+      const system = graph.nodeById[entity.id];
+      return systemAccessPaths(system, localization).flatMap((path) => [
         path.type,
         labelize(path.type),
-      ]) ?? [],
+      ]);
+    },
   },
   {
     field: "access.method",
     label: "Access method",
     weight: 64,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.access.flatMap((path) => [
+    getValues: (entity, graph, _context, localization) => {
+      const system = graph.nodeById[entity.id];
+      return systemAccessPaths(system, localization).flatMap((path) => [
         path.method,
         labelize(path.method),
         path.label,
-      ]) ?? [],
+      ]);
+    },
   },
   {
     field: "access.detail",
     label: "Access detail",
     weight: 36,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.access.flatMap((path) => [
+    getValues: (entity, graph, _context, localization) => {
+      const system = graph.nodeById[entity.id];
+      return systemAccessPaths(system, localization).flatMap((path) => [
         path.description,
         path.url,
         path.source.title,
-      ]) ?? [],
-  },
-  {
-    field: "identifiers.scheme",
-    label: "Identifier",
-    weight: 72,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.identifiers.map((scheme) => scheme.scheme) ?? [],
-  },
-  {
-    field: "identifiers.detail",
-    label: "Identifier detail",
-    weight: 34,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.identifiers.flatMap((scheme) => [
-        scheme.appliesTo,
-        scheme.description,
-        scheme.source?.title,
-      ]) ?? [],
+      ]);
+    },
   },
   {
     field: "relationships.connectedNames",
@@ -549,12 +580,14 @@ const systemFieldDefinitions = withCommonFields([
     field: "gallery",
     label: "Gallery",
     weight: 28,
-    getValues: (entity, graph) =>
-      graph.nodeById[entity.id]?.details.gallery.flatMap((item) => [
+    getValues: (entity, graph, _context, localization) => {
+      const system = graph.nodeById[entity.id];
+      return systemGallery(system, localization).flatMap((item) => [
         item.title,
         item.caption,
         item.source.title,
-      ]) ?? [],
+      ]);
+    },
   },
   {
     field: "ryu.routes",
@@ -614,9 +647,13 @@ function editDistanceWithinOne(left: string, right: string): boolean {
   return edits + (left.length - leftIndex) + (right.length - rightIndex) <= 1;
 }
 
-function scoreTokenAgainstValue(token: string, value: string): number | null {
+function scoreTokenAgainstValue(
+  token: string,
+  value: string,
+  locale: SupportedLocale,
+): number | null {
   const normalizedValue = normalizeSearchValue(value);
-  const words = tokenize(value);
+  const words = tokenize(value, locale);
 
   if (words.length === 0) {
     return null;
@@ -667,13 +704,14 @@ function scoreEntity(
   graph: IndexedGraph,
   context: SearchContext,
   tokens: string[],
+  localization: ResolvedNodeLocalization,
 ): EntitySearchResult | null {
   const bestReasonByToken = new Map<string, SearchMatchReason>();
 
   for (const definition of searchFieldDefinitionsByKind[entity.kind]) {
-    for (const value of collectText(definition.getValues(entity, graph, context))) {
+    for (const value of collectText(definition.getValues(entity, graph, context, localization))) {
       for (const token of tokens) {
-        const tokenScore = scoreTokenAgainstValue(token, value);
+        const tokenScore = scoreTokenAgainstValue(token, value, context.locale);
         if (tokenScore == null) {
           continue;
         }
@@ -701,8 +739,61 @@ function scoreEntity(
   return {
     entity,
     score: tokenReasons.reduce((sum, reason) => sum + reason.score, 0),
+    displayLocale: localization.displayLocale,
+    matchedLocale: localization.displayLocale,
+    isLocaleFallback: localization.isLocaleFallback,
     reasons: uniqueReasons(tokenReasons).slice(0, 4),
   };
+}
+
+function localizationCandidates(
+  entity: GraphNode,
+  locale: SupportedLocale,
+  searchAllLanguages: boolean,
+): ResolvedNodeLocalization[] {
+  if (!searchAllLanguages) {
+    return [resolveNodeDisplay(entity, locale)];
+  }
+
+  const localizations = Object.values(entity.localizations).filter(Boolean);
+  if (localizations.length === 0) {
+    return [resolveNodeDisplay(entity, locale)];
+  }
+
+  return localizations.map((localization) => ({
+    requestedLocale: locale,
+    displayLocale: localization.locale,
+    isLocaleFallback: localization.locale !== locale,
+    hasLocalization: true,
+    title: localization.title,
+    summary: localization.summary,
+    description: localization.description,
+    details: localization.details,
+    sourceExcerpt: localization.sourceExcerpt,
+    translatedFromLocale: localization.translatedFromLocale,
+    contentUpdatedAt: localization.contentUpdatedAt,
+    reviewState: localization.reviewState,
+    reviewerNote: localization.reviewerNote,
+    reviewer: localization.reviewer,
+    lastReviewed: localization.lastReviewed,
+    createdAt: localization.createdAt,
+    updatedAt: localization.updatedAt,
+  }));
+}
+
+function scoreEntityCandidates(
+  entity: GraphNode,
+  graph: IndexedGraph,
+  context: SearchContext,
+  tokens: string[],
+  searchAllLanguages: boolean,
+): EntitySearchResult | null {
+  return localizationCandidates(entity, context.locale, searchAllLanguages)
+    .flatMap((localization) => {
+      const result = scoreEntity(entity, graph, context, tokens, localization);
+      return result ? [result] : [];
+    })
+    .sort((left, right) => right.score - left.score)[0] ?? null;
 }
 
 function matchesSelected(values: string[], selected: string[]): boolean {
@@ -733,7 +824,6 @@ function matchesSystemFilters(
     matchesSelected([record.disciplineFamily], filters.disciplineFamily) &&
     matchesAny(record.accessTypes, filters.accessTypes) &&
     matchesAny(record.accessMethods, filters.accessMethods) &&
-    matchesAny(record.identifierSchemes, filters.identifierSchemes) &&
     claimFilterKeys.every((key) =>
       matchesAny(claimList(record, key), filters.dataClaims[key]),
     )
@@ -752,25 +842,32 @@ export function getSystemFilterOptions(records: SystemSearchRecord[]) {
     },
     accessTypes: selectOptions(records.flatMap((record) => record.accessTypes)),
     accessMethods: selectOptions(records.flatMap((record) => record.accessMethods)),
-    identifierSchemes: selectOptions(records.flatMap((record) => record.identifierSchemes)),
   };
 }
 
 export function resolveGraphSearch(
   graph: IndexedGraph,
   intent: GraphSearchIntent,
+  locale: SupportedLocale,
 ): ResolvedGraphSearch {
   const query = intent.query.trim();
-  const tokens = tokenize(query);
-  const systemRecords = buildSystemRecords(graph);
+  const tokens = tokenize(query, locale);
+  const searchAllLanguages = intent.searchAllLanguages === true;
+  const systemRecords = buildSystemRecords(graph, locale);
   const systemRecordById = Object.fromEntries(
     systemRecords.map((record) => [record.entity.id, record]),
   );
-  const context = { systemRecordById };
+  const context = { systemRecordById, locale };
   const entityResults = tokens.length
     ? graph.nodes
         .flatMap((entity) => {
-          const result = scoreEntity(entity, graph, context, tokens);
+          const result = scoreEntityCandidates(
+            entity,
+            graph,
+            context,
+            tokens,
+            searchAllLanguages,
+          );
           return result ? [result] : [];
         })
         .sort((left, right) => right.score - left.score)
@@ -798,7 +895,7 @@ export function resolveGraphSearch(
       if (tokens.length > 0) {
         return right.score - left.score;
       }
-      return left.entity.name.localeCompare(right.entity.name);
+      return left.title.localeCompare(right.title);
     });
   const active = tokens.length > 0 || countActiveFilters(intent.filters) > 0;
   const matchingEntityIds = new Set<string>();

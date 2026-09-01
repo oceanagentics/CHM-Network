@@ -896,7 +896,9 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
   const viewMode = useGraphStore((state) => state.viewMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
+  const locale = useGraphStore((state) => state.locale);
   const searchQuery = useGraphStore((state) => state.searchQuery);
+  const searchAllLanguages = useGraphStore((state) => state.searchAllLanguages);
   const searchFilters = useGraphStore((state) => state.searchFilters);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const selectedRelationshipId = useGraphStore((state) => state.selectedRelationshipId);
@@ -913,8 +915,14 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
   const [labelPlacements, setLabelPlacements] = useState<LabelPlacement[]>([]);
 
   const resolvedSearch = useMemo(
-    () => (graph ? resolveGraphSearch(graph, { query: searchQuery, filters: searchFilters }) : null),
-    [graph, searchFilters, searchQuery],
+    () => (graph
+      ? resolveGraphSearch(
+          graph,
+          { query: searchQuery, filters: searchFilters, searchAllLanguages },
+          locale,
+        )
+      : null),
+    [graph, locale, searchAllLanguages, searchFilters, searchQuery],
   );
 
   const projection = useMemo(() => {
@@ -927,11 +935,12 @@ export function ForceGraphCanvas({ arrangement = "current" }: ForceGraphCanvasPr
       viewMode,
       countryDisplayMode,
       focusEntityId: viewMode === "governance" ? null : focusEntityId,
+      locale,
       searchEntityIds: resolvedSearch?.active
         ? resolvedSearch.matchingEntityIds
         : null,
     });
-  }, [countryDisplayMode, focusEntityId, graph, resolvedSearch, viewMode]);
+  }, [countryDisplayMode, focusEntityId, graph, locale, resolvedSearch, viewMode]);
 
   const graphData = useMemo<ForceGraphData>(
     () => (projection ? buildForceGraphData(projection) : { nodes: [], links: [] }),

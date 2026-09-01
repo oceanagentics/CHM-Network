@@ -1,11 +1,12 @@
 import type {
   GraphBootstrapPayload,
   GraphNode,
-  NodeReviewInput,
+  NodeLocalizationReviewInput,
   RyuSystemQuery,
   RyuSystemRecord,
   SavedView,
   Source,
+  SupportedLocale,
 } from "../../shared/domain";
 
 export type RepositoryResult<T> = T | Promise<T>;
@@ -15,7 +16,12 @@ export interface GraphRepository {
   listPortalSystems(query?: RyuSystemQuery): RepositoryResult<RyuSystemRecord[]>;
   searchPortalSystems(query?: RyuSystemQuery): RepositoryResult<RyuSystemRecord[]>;
   getPortalSystem(id: string, query?: RyuSystemQuery): RepositoryResult<RyuSystemRecord>;
-  updateNodeReview(id: string, input: NodeReviewInput, reviewer: string): RepositoryResult<GraphNode>;
+  updateNodeLocalizationReview(
+    id: string,
+    locale: SupportedLocale,
+    input: NodeLocalizationReviewInput,
+    reviewer: string,
+  ): RepositoryResult<GraphNode>;
   getSource(id: string): RepositoryResult<Source>;
   listSavedViews(): RepositoryResult<SavedView[]>;
   close?(): RepositoryResult<void>;

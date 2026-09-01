@@ -1,7 +1,8 @@
 /**
  * Geometry defines intrinsic node labels, box sizes, and stable layout hints.
  */
-import type { GraphNode } from "../../../../shared/domain";
+import type { GraphNode, SupportedLocale } from "../../../../shared/domain";
+import { nodeTitle } from "../localization";
 
 export interface NodeGeometry {
   width: number;
@@ -58,9 +59,9 @@ function italicSansDisplayText(value: string): string {
   });
 }
 
-export function buildLabel(node: GraphNode): string {
+export function buildLabel(node: GraphNode, locale: SupportedLocale): string {
   const typeLabel = node.subtype ?? node.kind;
-  return `${boldSansDisplayText(node.name)}\n${italicSansDisplayText(typeLabel)}`;
+  return `${boldSansDisplayText(nodeTitle(node, locale))}\n${italicSansDisplayText(typeLabel)}`;
 }
 
 export function getNodeDimensions(kind: GraphNode["kind"], label: string): NodeGeometry {

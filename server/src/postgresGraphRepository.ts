@@ -4,7 +4,8 @@ import type {
   GraphBootstrapPayload,
   GraphEdge,
   GraphNode,
-  NodeReviewInput,
+  NodeLocalization,
+  NodeLocalizationReviewInput,
   RyuPortalRoute,
   RyuRoute,
   RyuSystemOperator,
@@ -12,7 +13,9 @@ import type {
   RyuSystemRecord,
   SavedView,
   Source,
+  SupportedLocale,
 } from "../../shared/domain";
+import { defaultLocale, resolveNodeLocalization } from "../../shared/localization";
 import type { GraphRepository } from "./graphRepository";
 import {
   collectSourceIds,
@@ -20,6 +23,7 @@ import {
   isReviewState,
   mapEdge,
   mapNode,
+  mapNodeLocalization,
   mapPortalRoute,
   mapPortalSource,
   mapRyuRoute,
@@ -27,12 +31,12 @@ import {
   mapSource,
   normalizeString,
   readStringArray,
-  stringifyJson,
   systemSearchScore,
   uniqueStrings,
   valuesMatchAny,
   type RawEdge,
   type RawNode,
+  type RawNodeLocalization,
   type RawRyuRoute,
 } from "./graphRepositorySupport";
 
@@ -47,12 +51,24 @@ function timestampText(value: unknown): string {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
-function mapPostgresNode(row: Record<string, unknown>): GraphNode {
+function mapPostgresNode(
+  row: Record<string, unknown>,
+  localizations: NodeLocalization[] = [],
+): GraphNode {
   return mapNode({
     ...(row as RawNode),
-    review_json: jsonText(row.review_json),
-    details_json: jsonText(row.details_json),
     properties_json: jsonText(row.properties_json),
+    created_at: timestampText(row.created_at),
+    updated_at: timestampText(row.updated_at),
+  }, localizations);
+}
+
+function mapPostgresNodeLocalization(row: Record<string, unknown>): NodeLocalization {
+  return mapNodeLocalization({
+    ...(row as RawNodeLocalization),
+    details_json: jsonText(row.details_json),
+    content_updated_at: timestampText(row.content_updated_at),
+    last_reviewed: row.last_reviewed == null ? null : timestampText(row.last_reviewed),
     created_at: timestampText(row.created_at),
     updated_at: timestampText(row.updated_at),
   });
@@ -97,13 +113,29 @@ export class PostgresGraphRepository implements GraphRepository {
   }
 
   async getBootstrap(): Promise<GraphBootstrapPayload> {
-    const [nodeRows, edgeRows, sourceRows, routeRows] = await Promise.all([
-      this.query("SELECT * FROM nodes ORDER BY name"),
+    const [nodeRows, localizationRows, edgeRows, sourceRows, routeRows] = await Promise.all([
+      this.query("SELECT * FROM nodes ORDER BY id"),
+      this.query("SELECT * FROM node_localizations ORDER BY node_id, locale"),
       this.query("SELECT * FROM edges ORDER BY id"),
       this.query("SELECT * FROM sources ORDER BY title"),
       this.query("SELECT * FROM ryu_routes ORDER BY node_id, priority, id"),
     ]);
-    const nodes = nodeRows.map(mapPostgresNode);
+    const localizationsByNodeId = new Map<string, NodeLocalization[]>();
+    for (const row of localizationRows) {
+      const localization = mapPostgresNodeLocalization(row);
+      const nodeId = String(row.node_id);
+      localizationsByNodeId.set(nodeId, [
+        ...(localizationsByNodeId.get(nodeId) ?? []),
+        localization,
+      ]);
+    }
+    const nodes = nodeRows
+      .map((row) => mapPostgresNode(row, localizationsByNodeId.get(String(row.id)) ?? []))
+      .sort((left, right) =>
+        resolveNodeLocalization(left, defaultLocale).title.localeCompare(
+          resolveNodeLocalization(right, defaultLocale).title,
+        ) || left.id.localeCompare(right.id),
+      );
     const savedViews = filterSavedViews(
       await this.listSavedViews(),
       new Set(nodes.map((node) => node.id)),
@@ -133,7 +165,7 @@ export class PostgresGraphRepository implements GraphRepository {
       }))
       .filter(({ score }) => score > 0)
       .sort((left, right) =>
-        right.score - left.score || left.system.name.localeCompare(right.system.name),
+        right.score - left.score || left.system.title.localeCompare(right.system.title),
       )
       .map(({ system }) => system);
   }
@@ -147,12 +179,13 @@ export class PostgresGraphRepository implements GraphRepository {
     return this.withPortalIncludes(system, query);
   }
 
-  async updateNodeReview(
+  async updateNodeLocalizationReview(
     id: string,
-    input: NodeReviewInput,
+    locale: SupportedLocale,
+    input: NodeLocalizationReviewInput,
     reviewer: string,
   ): Promise<GraphNode> {
-    const existing = await this.getNode(id);
+    const existing = await this.getNodeLocalization(id, locale);
     const normalizedReviewer = normalizeString(reviewer);
     if (!normalizedReviewer) {
       throw new Error("reviewer is required");
@@ -175,19 +208,21 @@ export class PostgresGraphRepository implements GraphRepository {
 
     await this.pool.query(
       `
-        UPDATE nodes
+        UPDATE node_localizations
         SET review_state = $2,
-            review_json = $3::jsonb
-        WHERE id = $1
+            reviewer_note = $3,
+            reviewer = $4,
+            last_reviewed = $5
+        WHERE node_id = $1
+          AND locale = $6
       `,
       [
         id,
         reviewState,
-        stringifyJson({
-          reviewerNote,
-          reviewer: normalizedReviewer,
-          lastReviewed,
-        }),
+        reviewerNote,
+        normalizedReviewer,
+        lastReviewed,
+        locale,
       ],
     );
 
@@ -233,8 +268,9 @@ export class PostgresGraphRepository implements GraphRepository {
     return graph.nodes
       .filter((node) => node.kind === "system")
       .map((node) => {
-        const details = node.details as unknown as Record<string, unknown>;
-        const sourceIds = collectSourceIds(node.details);
+        const localization = resolveNodeLocalization(node, defaultLocale);
+        const details = localization.details as unknown as Record<string, unknown>;
+        const sourceIds = collectSourceIds(localization.details);
         collectSourceIds(node.properties, sourceIds);
         const routes = (routesByNodeId.get(node.id) ?? [])
           .map((route) => mapPortalRoute(route))
@@ -243,30 +279,32 @@ export class PostgresGraphRepository implements GraphRepository {
         const routeSupportsLayerSearch = routes.some((route) =>
           route.supportedTools.includes("search_layers"),
         );
-        const descriptorLabels = node.details.data.descriptors.map((descriptor) => descriptor.label);
-        const accessValues = node.details.access.flatMap((accessPath) => [
+        const descriptorLabels = node.properties.data?.descriptors.map((descriptor) => descriptor.label) ?? [];
+        const accessValues = node.properties.access?.flatMap((accessPath) => [
           accessPath.type,
           accessPath.method,
-          accessPath.label,
-        ]);
+        ]) ?? [];
 
         return {
           ryuSystemId: node.id,
-          name: node.name,
+          title: localization.title,
           operator: this.findSystemOperator(node, graph.edges, nodesById),
-          summary: node.summary,
-          description: node.description,
+          summary: localization.summary,
+          description: localization.description,
+          requestedLocale: localization.requestedLocale,
+          displayLocale: localization.displayLocale,
+          isLocaleFallback: localization.isLocaleFallback,
           url: node.url,
           domains: uniqueStrings([
             ...readStringArray(node.properties, "domains"),
             ...readStringArray(node.properties, "families"),
             node.subtype,
-            node.details.role,
-            node.details.disciplineFamily,
+            node.properties.role,
+            node.properties.disciplineFamily,
           ]),
           geographies: uniqueStrings([
             ...readStringArray(node.properties, "geographies"),
-            node.details.geographicScope,
+            node.properties.geographicScope,
             node.countryCode,
           ]),
           capabilities: uniqueStrings([
@@ -286,7 +324,7 @@ export class PostgresGraphRepository implements GraphRepository {
             ...readStringArray(node.properties, "caveats"),
           ]),
           recordDepth: node.recordDepth,
-          reviewState: node.reviewState,
+          reviewState: localization.reviewState,
           updatedAt: node.updatedAt,
         };
       });
@@ -297,11 +335,11 @@ export class PostgresGraphRepository implements GraphRepository {
     edges: GraphEdge[],
     nodesById: Map<string, GraphNode>,
   ): RyuSystemOperator | null {
-    if (system.details.operator?.id && system.details.operator.name) {
+    if (system.properties.operator?.id && system.properties.operator.name) {
       return {
-        id: system.details.operator.id,
-        name: system.details.operator.name,
-        countryCode: system.details.operator.countryCode,
+        id: system.properties.operator.id,
+        name: system.properties.operator.name,
+        countryCode: system.properties.operator.countryCode,
       };
     }
 
@@ -315,7 +353,7 @@ export class PostgresGraphRepository implements GraphRepository {
 
     return {
       id: operator.id,
-      name: operator.name,
+      name: resolveNodeLocalization(operator, defaultLocale).title,
       countryCode: operator.countryCode,
     };
   }
@@ -358,6 +396,26 @@ export class PostgresGraphRepository implements GraphRepository {
       throw new Error(`node not found: ${id}`);
     }
 
-    return mapPostgresNode(row);
+    const localizationRows = await this.query(
+      "SELECT * FROM node_localizations WHERE node_id = $1 ORDER BY locale",
+      [id],
+    );
+
+    return mapPostgresNode(row, localizationRows.map(mapPostgresNodeLocalization));
+  }
+
+  private async getNodeLocalization(
+    id: string,
+    locale: SupportedLocale,
+  ): Promise<NodeLocalization> {
+    const row = await this.queryOne(
+      "SELECT * FROM node_localizations WHERE node_id = $1 AND locale = $2",
+      [id, locale],
+    );
+    if (!row) {
+      throw new Error(`node localization not found: ${id}/${locale}`);
+    }
+
+    return mapPostgresNodeLocalization(row);
   }
 }

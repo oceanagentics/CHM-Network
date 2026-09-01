@@ -28,6 +28,7 @@ import type {
   GraphNodeInput,
   GraphNodeKind,
   SourceInput,
+  SupportedLocale,
 } from "../../../../shared/domain";
 import {
   createEdge,
@@ -41,6 +42,7 @@ import {
   updateNode,
   updateSource,
 } from "../api";
+import { nodeTitle } from "../localization";
 import { useGraphStore } from "../state/graphStore";
 
 type EditorMode = "entity" | "relationship" | "source";
@@ -156,10 +158,10 @@ function toPropertiesObject(drafts: PropertyDraft[], label: string): Record<stri
   return properties;
 }
 
-function entityToDraft(entity: GraphNode): EntityDraft {
+function entityToDraft(entity: GraphNode, locale: SupportedLocale): EntityDraft {
   return {
     kind: entity.kind,
-    name: entity.name,
+    name: nodeTitle(entity, locale),
     countryCode: entity.countryCode ?? "",
     subtype: entity.subtype ?? "",
     properties: toPropertyDrafts(entity.properties ?? {}),
@@ -204,6 +206,7 @@ interface EditorPanelProps {
 
 export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   const graph = useGraphStore((state) => state.graph);
+  const locale = useGraphStore((state) => state.locale);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const selectedRelationshipId = useGraphStore((state) => state.selectedRelationshipId);
   const setSelectedEntityId = useGraphStore((state) => state.setSelectedEntityId);
@@ -224,7 +227,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     () =>
       graph
         ? [...graph.sources]
-            .sort((a, b) => a.title.localeCompare(b.title))
+          .sort((a, b) => a.title.localeCompare(b.title))
             .map((source) => ({ label: source.title, value: source.id }))
         : [],
     [graph],
@@ -233,10 +236,10 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     () =>
       graph
         ? [...graph.nodes]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((entity) => ({ label: entity.name, value: entity.id, kind: entity.kind }))
+            .sort((a, b) => nodeTitle(a, locale).localeCompare(nodeTitle(b, locale)))
+            .map((entity) => ({ label: nodeTitle(entity, locale), value: entity.id, kind: entity.kind }))
         : [],
-    [graph],
+    [graph, locale],
   );
 
   useEffect(() => {
@@ -251,9 +254,9 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
 
     setMode("entity");
     setIsEditing(false);
-    entityForm.setFieldsValue(entityToDraft(entity));
+    entityForm.setFieldsValue(entityToDraft(entity, locale));
     setMessage(null);
-  }, [entityForm, graph, selectedEntityId]);
+  }, [entityForm, graph, locale, selectedEntityId]);
 
   useEffect(() => {
     if (!graph || !selectedRelationshipId) {
@@ -321,7 +324,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     setMessage(null);
 
     if (viewingEntity) {
-      entityForm.setFieldsValue(entityToDraft(viewingEntity));
+      entityForm.setFieldsValue(entityToDraft(viewingEntity, locale));
       return;
     }
 
@@ -379,7 +382,6 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
         const values = await entityForm.validateFields();
         const payload: GraphNodeInput = {
           kind: values.kind,
-          name: values.name.trim(),
           countryCode: values.countryCode.trim().toUpperCase() || null,
           subtype: values.subtype.trim() || null,
           properties: toPropertiesObject(values.properties ?? [], "entity"),
@@ -479,7 +481,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
   }
 
   const contextMessage = viewingEntity
-    ? `${isEditing ? "Editing" : "Viewing"} node: ${viewingEntity.name}`
+    ? `${isEditing ? "Editing" : "Viewing"} node: ${nodeTitle(viewingEntity, locale)}`
     : viewingRelationship
       ? `${isEditing ? "Editing" : "Viewing"} edge: ${viewingRelationship.kind}`
       : viewingSource
@@ -580,14 +582,18 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
                   key: "source",
                   label: "Source",
                   children:
-                    graph.nodeById[viewingRelationship.sourceNodeId]?.name ??
+                    (graph.nodeById[viewingRelationship.sourceNodeId]
+                      ? nodeTitle(graph.nodeById[viewingRelationship.sourceNodeId], locale)
+                      : null) ??
                     viewingRelationship.sourceNodeId,
                 },
                 {
                   key: "target",
                   label: "Target",
                   children:
-                    graph.nodeById[viewingRelationship.targetNodeId]?.name ??
+                    (graph.nodeById[viewingRelationship.targetNodeId]
+                      ? nodeTitle(graph.nodeById[viewingRelationship.targetNodeId], locale)
+                      : null) ??
                     viewingRelationship.targetNodeId,
                 },
                 { key: "type", label: "Type", children: viewingRelationship.kind },

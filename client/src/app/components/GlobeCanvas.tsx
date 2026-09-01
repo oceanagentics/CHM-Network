@@ -478,6 +478,7 @@ export function GlobeCanvas() {
   const viewMode = useGraphStore((state) => state.viewMode);
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
+  const locale = useGraphStore((state) => state.locale);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
   const selectedRelationshipId = useGraphStore((state) => state.selectedRelationshipId);
   const setSelectedEntityId = useGraphStore((state) => state.setSelectedEntityId);
@@ -496,10 +497,11 @@ export function GlobeCanvas() {
       viewMode,
       countryDisplayMode,
       focusEntityId: viewMode === "governance" ? null : focusEntityId,
+      locale,
     });
 
     return projectGlobeGraph(projection);
-  }, [countryDisplayMode, focusEntityId, graph, viewMode]);
+  }, [countryDisplayMode, focusEntityId, graph, locale, viewMode]);
 
   useEffect(() => {
     if (!container || !globeProjection) {

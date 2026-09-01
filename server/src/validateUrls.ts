@@ -6,6 +6,7 @@ import { TextDecoder } from "node:util";
 import { promisify } from "node:util";
 
 import type { GraphBootstrapPayload } from "../../shared/domain";
+import { defaultLocale, resolveNodeLocalization } from "../../shared/localization";
 import { createGraphRepository } from "./repositoryFactory";
 
 type UrlRecord = {
@@ -65,12 +66,12 @@ function stringField(value: unknown): string | null {
 function nodeUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
   const records: UrlRecord[] = [];
   for (const node of bootstrap.nodes.sort((left, right) => left.id.localeCompare(right.id))) {
-    const details = node.details;
-    if (!isRecord(details)) {
-      continue;
-    }
+    const localization = resolveNodeLocalization(node, defaultLocale);
+    const localizedAccessById = new Map(
+      localization.details.access.map((accessPath) => [accessPath.id, accessPath]),
+    );
 
-    const accessPaths = Array.isArray(details.access) ? details.access : [];
+    const accessPaths = Array.isArray(node.properties.access) ? node.properties.access : [];
     for (const [index, pathRecord] of accessPaths.entries()) {
       if (!isRecord(pathRecord)) {
         continue;
@@ -81,14 +82,14 @@ function nodeUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
         records.push({
           tableName: "nodes",
           recordId: node.id,
-          fieldName: `details.access.${stringField(pathRecord.id) ?? index}.url`,
+          fieldName: `properties.access.${stringField(pathRecord.id) ?? index}.url`,
           url,
-          description: stringField(pathRecord.description),
+          description: localizedAccessById.get(stringField(pathRecord.id) ?? "")?.description ?? null,
         });
       }
     }
 
-    const galleryItems = Array.isArray(details.gallery) ? details.gallery : [];
+    const galleryItems = Array.isArray(node.properties.gallery) ? node.properties.gallery : [];
     for (const [index, itemRecord] of galleryItems.entries()) {
       if (!isRecord(itemRecord)) {
         continue;
@@ -100,7 +101,7 @@ function nodeUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
         records.push({
           tableName: "nodes",
           recordId: node.id,
-          fieldName: `details.gallery.${itemId}.url`,
+          fieldName: `properties.gallery.${itemId}.url`,
           url,
           description: null,
         });
@@ -111,7 +112,7 @@ function nodeUrlRecords(bootstrap: GraphBootstrapPayload): UrlRecord[] {
         records.push({
           tableName: "nodes",
           recordId: node.id,
-          fieldName: `details.gallery.${itemId}.thumbnailUrl`,
+          fieldName: `properties.gallery.${itemId}.thumbnailUrl`,
           url: thumbnailUrl,
           description: null,
         });

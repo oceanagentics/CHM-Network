@@ -176,7 +176,7 @@ CHM owns the shared entry and platform layer:
 - CHM Cloud Run service
 - Application switcher and loader
 - CHM-side app registry
-- CHM-side `PATCH /api/explorer/nodes/:id/review` proxy path
+- CHM-side `PATCH /api/explorer/nodes/:id/localizations/:locale/review` proxy path
 - Shared Artifact Registry repository `chm-apps`
 - Shared Cloud SQL instance `chm`
 - Shared Secret Manager usage pattern
@@ -242,7 +242,7 @@ Browser review path:
 Browser
   -> /explorer/admin behind IAP
   -> CHM validates IAP identity
-  -> CHM PATCH /api/explorer/nodes/:id/review
+  -> CHM PATCH /api/explorer/nodes/:id/localizations/:locale/review
   -> CHM calls private explorer-api as chm-sa
   -> explorer-api validates trusted caller and forwarded user context
   -> Cloud SQL explorer database using explorer_write
@@ -324,7 +324,7 @@ browser click-through for the signed-in review form:
 
 1. Verify CHM-to-Explorer review path after authenticated browser login at
    `/explorer/admin`:
-   - Exercise a real `PATCH /api/explorer/nodes/:id/review` action.
+   - Exercise a real `PATCH /api/explorer/nodes/:id/localizations/:locale/review` action.
    - Confirm `explorer-api` receives the call.
    - Confirm write audit logging includes CHM service account and user identity.
    - Confirm `reviewState`, `reviewerNote`, `reviewer`, and `lastReviewed` land in Cloud SQL through `explorer_write`.

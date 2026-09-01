@@ -14,20 +14,28 @@ This is a pre-launch data-model correction, not a compatibility migration for a 
 
 Use this checklist to track the one-go implementation.
 
-- [ ] Confirm current Cloud SQL schema and representative JSON shapes.
-- [ ] Add a checked-in migration runner for this change.
-- [ ] Add hardened `supported_locales` and `node_localizations` DDL.
-- [ ] Backfill one source localization per node.
-- [ ] Remove node-level `name`, `summary`, `description`, `details_json`, `review_state`, and `review_json`.
-- [ ] Move all user-facing record text and review fields to `node_localizations`.
-- [ ] Remove identifiers from the record model, UI, search, and reviewer docs.
-- [ ] Normalize access types to `read`, `submit`, and `partner_sync`.
-- [ ] Split Access presentation into read and write/contribution groups.
-- [ ] Replace the long-term `GraphNode` API/client contract with language-neutral nodes plus resolved localizations.
-- [ ] Add localization-aware review writes from the start.
-- [ ] Implement locale-aware search over resolved display localizations, with optional all-language search.
-- [ ] Regenerate the public bootstrap from Postgres.
-- [ ] Build, test, run the Cloud Run migration job, deploy, and smoke test.
+- [x] Confirm current repo schema and representative bootstrap JSON shapes.
+- [ ] Confirm production Cloud SQL schema immediately before the migration job runs.
+- [x] Add a checked-in migration runner for this change.
+- [x] Add hardened `supported_locales` and `node_localizations` DDL.
+- [x] Backfill one source localization per node.
+- [x] Remove node-level `name`, `summary`, `description`, `details_json`, `review_state`, and `review_json`.
+- [x] Move all user-facing record text and review fields to `node_localizations`.
+- [x] Remove identifiers from the record model, UI, search, and reviewer docs.
+- [x] Normalize access types to `read`, `submit`, and `partner_sync`.
+- [x] Split Access presentation into read and write/contribution groups.
+- [x] Replace the long-term `GraphNode` API/client contract with language-neutral nodes plus resolved localizations.
+- [x] Add localization-aware review writes from the start.
+- [x] Implement locale-aware search over resolved display localizations, with optional all-language search.
+- [x] Regenerate the public bootstrap from the migrated local export artifact.
+- [x] Build and test locally.
+- [ ] Run the Cloud Run migration job, deploy, and smoke test production.
+
+Implementation status on 2026-09-01:
+
+- Branch `codex/language-migration` contains the local schema, API, client, search, bootstrap, CHM proxy, and documentation changes.
+- The checked-in migration command is `npm --workspace server run migrate:language`.
+- Production execution still requires a Cloud SQL preflight, a short-lived Cloud Run migration job, image rollout, and browser/API smoke tests against `chm.oceanagentics.org`.
 
 ## Language Policy
 

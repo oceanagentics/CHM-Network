@@ -7,11 +7,12 @@ import { fileURLToPath } from "node:url";
 
 import type {
   GraphBootstrapPayload,
-  NodeReviewInput,
+  NodeLocalizationReviewInput,
   RyuSystemQuery,
   RyuSystemRecord,
   Source,
 } from "../../shared/domain";
+import { isSupportedLocale } from "../../shared/localization";
 import type { GraphRepository } from "./graphRepository";
 import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
 import { createGraphRepository } from "./repositoryFactory";
@@ -106,7 +107,7 @@ function readSystemQuery(input: Record<string, unknown>): RyuSystemQuery {
   };
 }
 
-function readNodeReviewInput(input: unknown): NodeReviewInput {
+function readNodeReviewInput(input: unknown): NodeLocalizationReviewInput {
   if (!isRecord(input)) {
     throw new Error("review body is required");
   }
@@ -134,7 +135,7 @@ function readNodeReviewInput(input: unknown): NodeReviewInput {
   }
 
   return {
-    ...(hasReviewState ? { reviewState: input.reviewState as NodeReviewInput["reviewState"] } : {}),
+    ...(hasReviewState ? { reviewState: input.reviewState as NodeLocalizationReviewInput["reviewState"] } : {}),
     ...(hasReviewerNote ? { reviewerNote: normalizeString(input.reviewerNote) } : {}),
   };
 }
@@ -161,10 +162,19 @@ export function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstra
     ...payload,
     nodes: payload.nodes.map((node) => ({
       ...node,
-      reviewerNote: null,
-      reviewer: null,
-      lastReviewed: null,
-      review: {},
+      localizations: Object.fromEntries(
+        Object.entries(node.localizations).map(([locale, localization]) => [
+          locale,
+          localization
+            ? {
+                ...localization,
+                reviewerNote: null,
+                reviewer: null,
+                lastReviewed: null,
+              }
+            : localization,
+        ]),
+      ) as typeof node.localizations,
     })),
     sources: payload.sources.map(withoutLocalPath),
     ryuRoutes: [],
@@ -182,6 +192,15 @@ function toPublicPortalSystem(system: RyuSystemRecord): RyuSystemRecord {
 function readParam(request: Request, key: string): string {
   const value = request.params[key];
   return Array.isArray(value) ? value[0] : value;
+}
+
+function readLocaleParam(request: Request, key: string) {
+  const locale = readParam(request, key);
+  if (!isSupportedLocale(locale)) {
+    throw new Error(`unsupported locale: ${locale}`);
+  }
+
+  return locale;
 }
 
 function normalizeBasePath(value: string | undefined): string {
@@ -377,19 +396,20 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(await repository.listSavedViews());
   });
 
-  router.patch("/api/nodes/:id/review", writeAccess, async (request, response) => {
+  router.patch("/api/nodes/:id/localizations/:locale/review", writeAccess, async (request, response) => {
     const reviewer = readAuditUser(request).email;
     if (!reviewer) {
       return response.status(401).json({ error: "missing_chm_user_email" });
     }
 
     try {
-      const node = await repository.updateNodeReview(
+      const node = await repository.updateNodeLocalizationReview(
         readParam(request, "id"),
+        readLocaleParam(request, "locale"),
         readNodeReviewInput(request.body),
         reviewer,
       );
-      logWrite(request, "update_node_review");
+      logWrite(request, "update_node_localization_review");
       response.json(node);
     } catch (error) {
       sendError(response, error);

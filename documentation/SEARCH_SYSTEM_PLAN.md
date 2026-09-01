@@ -141,7 +141,6 @@ The MVP should stay client-side and reuse the existing bootstrap graph data.
 - Add new field families as data grows:
   - data holdings
   - publication/access pathways
-  - identifiers
   - APIs and access methods
   - governance roles
   - standards

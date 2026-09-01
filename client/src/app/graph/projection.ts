@@ -1,7 +1,8 @@
 /**
  * Structural projection turns scoped graph data into visible nodes and edges.
  */
-import type { GraphEdge, GraphNode, ViewMode } from "../../../../shared/domain";
+import type { GraphEdge, GraphNode, SupportedLocale, ViewMode } from "../../../../shared/domain";
+import { nodeTitle } from "../localization";
 import type { CountryDisplayMode } from "../state/graphStore";
 import { buildLabel, getLayoutBand, getNodeDimensions, type NodeGeometry } from "./geometry";
 import type { IndexedGraph } from "./indexGraph";
@@ -16,6 +17,7 @@ export interface ProjectionInput {
   viewMode: ViewMode;
   countryDisplayMode: CountryDisplayMode;
   focusEntityId: string | null;
+  locale: SupportedLocale;
   searchEntityIds?: ReadonlySet<string> | null;
 }
 
@@ -83,13 +85,14 @@ function buildProjectionNode(
   node: GraphNode,
   governanceBlock: GovernanceBlock,
   layoutBand: number,
+  locale: SupportedLocale,
 ): GraphProjectionNode {
-  const label = buildLabel(node);
+  const label = buildLabel(node, locale);
 
   return {
     id: node.id,
     label,
-    simpleLabel: node.name,
+    simpleLabel: nodeTitle(node, locale),
     kind: node.kind,
     subtype: node.subtype,
     countryCode: node.countryCode,
@@ -119,6 +122,7 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
     graph,
     viewMode,
     focusEntityId,
+    locale,
     searchEntityIds = null,
   } = input;
 
@@ -155,6 +159,7 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
       node,
       getGovernanceBlock(node.id, viewMode, governanceInternationalIds),
       getProjectionLayoutBand(node, viewMode, governanceInternationalIds),
+      locale,
     ),
   );
 

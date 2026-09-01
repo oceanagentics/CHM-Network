@@ -3,7 +3,9 @@ import type {
   GraphEdgeKind,
   GraphNode,
   GraphNodeKind,
-  NodeDetails,
+  NodeLocalization,
+  NodeLocalizationDetails,
+  NodeProperties,
   RecordDepth,
   ReviewState,
   RyuPortalRoute,
@@ -14,24 +16,44 @@ import type {
   RyuSystemRecord,
   SavedView,
   Source,
+  SupportedLocale,
 } from "../../shared/domain";
+import {
+  defaultLocale,
+  emptyLocalizationDetails,
+  normalizeLocale,
+  resolveNodeLocalization,
+  supportedLocales,
+} from "../../shared/localization";
 
 export type JsonValue = Record<string, unknown>;
 
 export type RawNode = {
   id: string;
   kind: GraphNodeKind;
-  name: string;
   country_code: string | null;
   subtype: string | null;
   url: string | null;
+  record_depth: RecordDepth;
+  properties_json: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RawNodeLocalization = {
+  node_id: string;
+  locale: SupportedLocale;
+  title: string;
   summary: string | null;
   description: string | null;
-  record_depth: RecordDepth;
-  review_state: ReviewState;
-  review_json: string | null;
   details_json: string | null;
-  properties_json: string | null;
+  source_excerpt: string | null;
+  translated_from_locale: SupportedLocale | null;
+  content_updated_at: string;
+  review_state: ReviewState;
+  reviewer_note: string | null;
+  reviewer: string | null;
+  last_reviewed: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -73,9 +95,8 @@ const reviewStates = [
   "needs_revision",
 ] as const;
 
-export function emptyNodeDetails(): NodeDetails {
+export function emptyNodeProperties(): NodeProperties {
   return {
-    aliases: [],
     operator: null,
     role: null,
     disciplineFamily: null,
@@ -87,7 +108,6 @@ export function emptyNodeDetails(): NodeDetails {
       storageSize: null,
     },
     access: [],
-    identifiers: [],
     usage: [],
   };
 }
@@ -128,8 +148,8 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function normalizeDetails(value: unknown): NodeDetails {
-  const base = emptyNodeDetails();
+function normalizeLocalizationDetails(value: unknown): NodeLocalizationDetails {
+  const base = emptyLocalizationDetails();
   if (!isRecord(value)) {
     return base;
   }
@@ -137,7 +157,41 @@ function normalizeDetails(value: unknown): NodeDetails {
   const data = isRecord(value.data) ? value.data : {};
 
   return {
+    ...value,
     aliases: Array.isArray(value.aliases) ? value.aliases.filter(isString) : [],
+    gallery: Array.isArray(value.gallery)
+      ? value.gallery as NodeLocalizationDetails["gallery"]
+      : [],
+    data: {
+      descriptors: Array.isArray(data.descriptors)
+        ? data.descriptors as NodeLocalizationDetails["data"]["descriptors"]
+        : [],
+      recordCount: isRecord(data.recordCount)
+        ? data.recordCount as unknown as NodeLocalizationDetails["data"]["recordCount"]
+        : null,
+      storageSize: isRecord(data.storageSize)
+        ? data.storageSize as unknown as NodeLocalizationDetails["data"]["storageSize"]
+        : null,
+    },
+    access: Array.isArray(value.access)
+      ? value.access as NodeLocalizationDetails["access"]
+      : [],
+    usage: Array.isArray(value.usage)
+      ? value.usage as NodeLocalizationDetails["usage"]
+      : [],
+  };
+}
+
+export function normalizeNodeProperties(value: unknown): NodeProperties {
+  const base = emptyNodeProperties();
+  if (!isRecord(value)) {
+    return base;
+  }
+
+  const data = isRecord(value.data) ? value.data : {};
+
+  return {
+    ...value,
     operator: isRecord(value.operator)
       ? {
           id: String(value.operator.id ?? ""),
@@ -148,23 +202,24 @@ function normalizeDetails(value: unknown): NodeDetails {
     role: normalizeString(value.role),
     disciplineFamily: normalizeString(value.disciplineFamily),
     geographicScope: normalizeString(value.geographicScope),
-    gallery: Array.isArray(value.gallery) ? value.gallery as NodeDetails["gallery"] : [],
+    gallery: Array.isArray(value.gallery)
+      ? value.gallery as NodeProperties["gallery"]
+      : [],
     data: {
       descriptors: Array.isArray(data.descriptors)
-        ? data.descriptors as NodeDetails["data"]["descriptors"]
+        ? data.descriptors as NonNullable<NodeProperties["data"]>["descriptors"]
         : [],
       recordCount: isRecord(data.recordCount)
-        ? data.recordCount as unknown as NodeDetails["data"]["recordCount"]
+        ? data.recordCount as unknown as NonNullable<NodeProperties["data"]>["recordCount"]
         : null,
       storageSize: isRecord(data.storageSize)
-        ? data.storageSize as unknown as NodeDetails["data"]["storageSize"]
+        ? data.storageSize as unknown as NonNullable<NodeProperties["data"]>["storageSize"]
         : null,
     },
-    access: Array.isArray(value.access) ? value.access as NodeDetails["access"] : [],
-    identifiers: Array.isArray(value.identifiers)
-      ? value.identifiers as NodeDetails["identifiers"]
+    access: Array.isArray(value.access)
+      ? value.access as NodeProperties["access"]
       : [],
-    usage: Array.isArray(value.usage) ? value.usage as NodeDetails["usage"] : [],
+    usage: Array.isArray(value.usage) ? value.usage as NodeProperties["usage"] : [],
   };
 }
 
@@ -188,33 +243,84 @@ export function isReviewState(value: unknown): value is ReviewState {
   return typeof value === "string" && reviewStates.includes(value as ReviewState);
 }
 
-function readReviewString(review: JsonValue, key: string): string | null {
-  const value = review[key];
+function readNullableString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-export function mapNode(row: RawNode): GraphNode {
-  const review = parseJson(row.review_json);
+function localeSortValue(locale: SupportedLocale): number {
+  const index = supportedLocales.indexOf(locale);
+  return index === -1 ? supportedLocales.length : index;
+}
+
+export function mapNodeLocalization(row: RawNodeLocalization): NodeLocalization {
+  const locale = normalizeLocale(row.locale);
+
+  return {
+    locale,
+    title: row.title,
+    summary: row.summary,
+    description: row.description,
+    details: normalizeLocalizationDetails(parseJson(row.details_json)),
+    sourceExcerpt: row.source_excerpt,
+    translatedFromLocale: row.translated_from_locale
+      ? normalizeLocale(row.translated_from_locale)
+      : null,
+    contentUpdatedAt: row.content_updated_at,
+    reviewState: isReviewState(row.review_state) ? row.review_state : "agent_researched",
+    reviewerNote: readNullableString(row.reviewer_note),
+    reviewer: readNullableString(row.reviewer),
+    lastReviewed: readNullableString(row.last_reviewed),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapNode(
+  row: RawNode,
+  localizations: NodeLocalization[] = [],
+  requestedLocale: SupportedLocale = defaultLocale,
+): GraphNode {
+  const localizationMap = Object.fromEntries(
+    localizations.map((localization) => [localization.locale, localization]),
+  ) as GraphNode["localizations"];
+  const availableLocales = localizations
+    .map((localization) => localization.locale)
+    .sort((left, right) => localeSortValue(left) - localeSortValue(right));
+  const resolvedLocalization = resolveNodeLocalization(
+    {
+      id: row.id,
+      kind: row.kind,
+      countryCode: row.country_code,
+      subtype: row.subtype,
+      url: row.url,
+      recordDepth: row.record_depth,
+      properties: normalizeNodeProperties(parseJson(row.properties_json)),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      localizations: localizationMap,
+      availableLocales,
+      requestedLocale,
+      displayLocale: null,
+      isLocaleFallback: false,
+    },
+    requestedLocale,
+  );
 
   return {
     id: row.id,
     kind: row.kind,
-    name: row.name,
     countryCode: row.country_code,
     subtype: row.subtype,
     url: row.url,
-    summary: row.summary,
-    description: row.description,
     recordDepth: row.record_depth,
-    reviewState: row.review_state,
-    reviewerNote: readReviewString(review, "reviewerNote"),
-    reviewer: readReviewString(review, "reviewer"),
-    lastReviewed: readReviewString(review, "lastReviewed"),
-    review,
-    details: normalizeDetails(parseJson(row.details_json)),
-    properties: parseJson(row.properties_json),
+    properties: normalizeNodeProperties(parseJson(row.properties_json)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    localizations: localizationMap,
+    availableLocales,
+    requestedLocale,
+    displayLocale: resolvedLocalization.displayLocale,
+    isLocaleFallback: resolvedLocalization.isLocaleFallback,
   };
 }
 

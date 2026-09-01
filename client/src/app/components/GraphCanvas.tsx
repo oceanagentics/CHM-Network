@@ -21,15 +21,23 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
   const countryDisplayMode = useGraphStore((state) => state.countryDisplayMode);
   const focusEntityId = useGraphStore((state) => state.focusEntityId);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
+  const locale = useGraphStore((state) => state.locale);
   const searchQuery = useGraphStore((state) => state.searchQuery);
+  const searchAllLanguages = useGraphStore((state) => state.searchAllLanguages);
   const searchFilters = useGraphStore((state) => state.searchFilters);
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const structuralFocusEntityId =
     viewMode === "governance" ? null : focusEntityId;
   const resolvedSearch = useMemo(
-    () => (graph ? resolveGraphSearch(graph, { query: searchQuery, filters: searchFilters }) : null),
-    [graph, searchFilters, searchQuery],
+    () => (graph
+      ? resolveGraphSearch(
+          graph,
+          { query: searchQuery, filters: searchFilters, searchAllLanguages },
+          locale,
+        )
+      : null),
+    [graph, locale, searchAllLanguages, searchFilters, searchQuery],
   );
 
   const projection = useMemo(() => {
@@ -42,11 +50,12 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
       viewMode,
       countryDisplayMode,
       focusEntityId: structuralFocusEntityId,
+      locale,
       searchEntityIds: resolvedSearch?.active
         ? resolvedSearch.matchingEntityIds
         : null,
     });
-  }, [countryDisplayMode, graph, resolvedSearch, structuralFocusEntityId, viewMode]);
+  }, [countryDisplayMode, graph, locale, resolvedSearch, structuralFocusEntityId, viewMode]);
 
   const cytoscapeProjection = useMemo(() => {
     if (!projection) {
@@ -99,6 +108,7 @@ export function GraphCanvas({ displayMode = "diagram" }: GraphCanvasProps) {
       displayMode,
       layoutMode,
       countryDisplayMode,
+      locale,
       nodes: projection?.nodes.map((node) => node.id) ?? [],
       edges:
         projection?.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`) ?? [],

@@ -17,9 +17,12 @@ import {
   Button,
   Flex,
   Layout,
+  Select,
   Spin,
 } from "antd";
 
+import type { SupportedLocale } from "../../../shared/domain";
+import { supportedLocales } from "../../../shared/localization";
 import { fetchBootstrap } from "./api";
 import { EntityDetailsPanel } from "./components/EntityDetailsPanel";
 import { SystemDirectoryView } from "./components/SystemDirectoryView";
@@ -67,6 +70,26 @@ const paneLabels: Record<PaneId, string> = {
 };
 
 const nodeRouteParam = "node";
+const localeLabels = {
+  ar: "Arabic",
+  zh: "Chinese",
+  en: "English",
+  fr: "French",
+  ru: "Russian",
+  es: "Spanish",
+} satisfies Record<SupportedLocale, string>;
+const localeDirections = {
+  ar: "rtl",
+  zh: "ltr",
+  en: "ltr",
+  fr: "ltr",
+  ru: "ltr",
+  es: "ltr",
+} satisfies Record<SupportedLocale, "ltr" | "rtl">;
+const localeOptions = supportedLocales.map((locale) => ({
+  label: localeLabels[locale],
+  value: locale,
+}));
 
 function clampPaneWidth(paneId: ResizablePaneId, width: number): number {
   const size = paneSize[paneId];
@@ -125,6 +148,7 @@ export function App() {
   const loading = useGraphStore((state) => state.loading);
   const error = useGraphStore((state) => state.error);
   const selectedEntityId = useGraphStore((state) => state.selectedEntityId);
+  const locale = useGraphStore((state) => state.locale);
   const setBootstrap = useGraphStore((state) => state.setBootstrap);
   const setError = useGraphStore((state) => state.setError);
   const setLoading = useGraphStore((state) => state.setLoading);
@@ -133,7 +157,13 @@ export function App() {
   const setCountryDisplayMode = useGraphStore((state) => state.setCountryDisplayMode);
   const setFocusEntityId = useGraphStore((state) => state.setFocusEntityId);
   const setSelectedEntityId = useGraphStore((state) => state.setSelectedEntityId);
+  const setLocale = useGraphStore((state) => state.setLocale);
   const resetSelection = useGraphStore((state) => state.resetSelection);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = localeDirections[locale];
+  }, [locale]);
 
   useEffect(() => {
     let mounted = true;
@@ -364,9 +394,23 @@ export function App() {
           ) : (
             <span className="workspace-pane-title">{paneLabels[paneId]}</span>
           )}
+          {paneId === "search" ? renderLocaleControl() : null}
         </Flex>
         {renderPaneActions(paneId)}
       </div>
+    );
+  }
+
+  function renderLocaleControl() {
+    return (
+      <Select
+        aria-label="Language"
+        className="app-locale-select"
+        options={localeOptions}
+        size="small"
+        value={locale}
+        onChange={(value) => setLocale(value)}
+      />
     );
   }
 

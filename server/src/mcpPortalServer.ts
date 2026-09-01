@@ -212,7 +212,7 @@ function wmsLayerRecord(context: WmsRouteContext) {
     ryuSystemId: context.system.ryuSystemId,
     ryuRouteId: context.route.routeId,
     ryuSourceId: sourceId,
-    title: readString(context.wms.label) ?? context.system.name,
+    title: readString(context.wms.label) ?? context.system.title,
     family: readString(context.wms.family) ?? "basemap",
     semantics: readString(context.wms.semantics) ?? "bathymetry_context",
     species: null,
