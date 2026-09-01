@@ -12,9 +12,24 @@ import type {
   RyuSystemRecord,
   Source,
 } from "../../shared/domain";
-import { isSupportedLocale } from "../../shared/localization";
+import { defaultLocale, isSupportedLocale } from "../../shared/localization";
+import type { RecordDtoScope, RecordValidationResult } from "../../shared/recordApi";
 import type { GraphRepository } from "./graphRepository";
 import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
+import {
+  ApiRequestError,
+  hashJson,
+  readBulkRecordValidationInput,
+  readRecordAggregateContentInput,
+  readRecordPatchInput,
+  readRecordReviewInput,
+  readRecordSearchQuery,
+  readValidateOnly,
+  toDefaultRecordDetailDto,
+  toNodeLocalizationReviewInput,
+  toRecordDetailDto,
+  toRecordListDto,
+} from "./recordContracts";
 import { createGraphRepository } from "./repositoryFactory";
 
 export type RyuRuntimeMode = "local" | "public" | "api";
@@ -142,7 +157,12 @@ function readNodeReviewInput(input: unknown): NodeLocalizationReviewInput {
 
 function sendError(response: Response, error: unknown) {
   const message = error instanceof Error ? error.message : "request failed";
-  const status = message.includes("not found") ? 404 : 400;
+  const status =
+    error instanceof ApiRequestError
+      ? error.status
+      : message.includes("not found")
+        ? 404
+        : 400;
   response.status(status).json({ error: message });
 }
 
@@ -238,22 +258,28 @@ function readAuditUser(request: Request) {
     null;
 
   return {
-    email: email?.replace(/^accounts\.google\.com:/, "") ?? null,
+    email: email?.replace(/^accounts\.google\.com:/, "").toLowerCase() ?? null,
     subject: subject?.replace(/^accounts\.google\.com:/, "") ?? null,
   };
 }
 
-function logWrite(request: Request, action: string) {
+function logWrite(request: Request, action: string, details: Record<string, unknown> = {}) {
   const auditUser = readAuditUser(request);
   console.info("Explorer write", {
+    requestId: request.get("x-request-id") ?? request.get("x-cloud-trace-context") ?? null,
     action,
     caller: request.get("x-chm-caller-service-account") ?? null,
     userEmail: auditUser.email,
     userSubject: auditUser.subject,
+    ...details,
   });
 }
 
-function requireWriteAccess(
+function isOceanAgenticsEmail(email: string | null): boolean {
+  return Boolean(email?.endsWith(`@${oceanAgenticsDomain}`));
+}
+
+function requireAuthenticatedEditorAccess(
   mode: RyuRuntimeMode,
   trustedCallerServiceAccounts: string[],
 ): RequestHandler {
@@ -275,8 +301,66 @@ function requireWriteAccess(
     }
 
     const auditUser = readAuditUser(request);
-    if (!auditUser.email && !auditUser.subject) {
+    if (!auditUser.email) {
       return response.status(401).json({ error: "missing_chm_user_context" });
+    }
+    if (!isOceanAgenticsEmail(auditUser.email)) {
+      return response.status(403).json({ error: "forbidden" });
+    }
+
+    return next();
+  };
+}
+
+function requireAdminAccess(
+  mode: RyuRuntimeMode,
+  trustedCallerServiceAccounts: string[],
+  adminUsers: string[],
+): RequestHandler {
+  const editorAccess = requireAuthenticatedEditorAccess(mode, trustedCallerServiceAccounts);
+  return (request, response, next) => {
+    editorAccess(request, response, () => {
+      if (mode === "local") {
+        return next();
+      }
+
+      if (adminUsers.length === 0) {
+        return response.status(403).json({ error: "admin_allowlist_missing" });
+      }
+
+      const auditUser = readAuditUser(request);
+      if (!auditUser.email || !adminUsers.includes(auditUser.email)) {
+        return response.status(403).json({ error: "admin_required" });
+      }
+
+      return next();
+    });
+  };
+}
+
+function requirePrivateRecordReadAccess(
+  mode: RyuRuntimeMode,
+  trustedCallerServiceAccounts: string[],
+): RequestHandler {
+  return (request, response, next) => {
+    if (mode !== "api") {
+      return next();
+    }
+
+    const caller = request.get("x-chm-caller-service-account")?.toLowerCase() ?? "";
+    if (
+      trustedCallerServiceAccounts.length > 0 &&
+      !trustedCallerServiceAccounts.includes(caller)
+    ) {
+      return response.status(403).json({ error: "unauthorized_service_account" });
+    }
+
+    const auditUser = readAuditUser(request);
+    if (!auditUser.email) {
+      return response.status(401).json({ error: "missing_chm_user_context" });
+    }
+    if (!isOceanAgenticsEmail(auditUser.email)) {
+      return response.status(403).json({ error: "forbidden" });
     }
 
     return next();
@@ -322,8 +406,34 @@ export interface CreateAppOptions {
   basePath?: string;
   mode?: RyuRuntimeMode;
   repository?: GraphRepository;
+  adminUsers?: string[];
   staticDirectory?: string;
   trustedCallerServiceAccounts?: string[];
+}
+
+function readRecordDtoScope(mode: RyuRuntimeMode, iapAudience: string | undefined): RecordDtoScope {
+  if (mode === "api" || mode === "local") {
+    return "private";
+  }
+
+  return iapAudience ? "admin" : "public";
+}
+
+function isRecordValidationResult(value: unknown): value is RecordValidationResult {
+  return isRecord(value) && typeof value.valid === "boolean" && Array.isArray(value.issues);
+}
+
+function readQueryString(request: Request, key: string): string | null {
+  const value = request.query[key];
+  if (Array.isArray(value)) {
+    return typeof value[0] === "string" ? value[0] : null;
+  }
+
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function jsonBody(limit: string): RequestHandler {
+  return express.json({ limit });
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -335,11 +445,15 @@ export function createApp(options: CreateAppOptions = {}) {
   const trustedCallerServiceAccounts =
     options.trustedCallerServiceAccounts ??
     readEnvList(process.env.RYU_TRUSTED_CALLER_SERVICE_ACCOUNTS);
+  const adminUsers = options.adminUsers ?? readEnvList(process.env.EXPLORER_ADMIN_USERS);
   const staticDirectory = resolveStaticDirectory(options.staticDirectory ?? process.env.RYU_STATIC_DIR);
   const indexPath = path.join(staticDirectory, "index.html");
-  const writeAccess = requireWriteAccess(mode, trustedCallerServiceAccounts);
+  const editorAccess = requireAuthenticatedEditorAccess(mode, trustedCallerServiceAccounts);
+  const adminAccess = requireAdminAccess(mode, trustedCallerServiceAccounts, adminUsers);
+  const privateRecordReadAccess = requirePrivateRecordReadAccess(mode, trustedCallerServiceAccounts);
   const iapAudience = process.env.IAP_JWT_AUDIENCE;
   const shouldRedactPublicFields = mode === "public" && !iapAudience;
+  const recordDtoScope = readRecordDtoScope(mode, iapAudience);
 
   app.disable("x-powered-by");
   app.set("trust proxy", true);
@@ -352,7 +466,6 @@ export function createApp(options: CreateAppOptions = {}) {
     );
   }
 
-  app.use(express.json());
   app.get("/healthz", sendHealth);
   app.use(requireIap(iapAudience));
 
@@ -375,9 +488,146 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
   });
 
-  router.post("/api/ryu/systems/search", async (request, response) => {
+  router.post("/api/ryu/systems/search", jsonBody("64kb"), async (request, response) => {
     const systems = await repository.searchPortalSystems(readSystemQuery(request.body));
     response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
+  });
+
+  router.get("/api/records", privateRecordReadAccess, async (request, response) => {
+    try {
+      const query = readRecordSearchQuery(request.query);
+      const result = await repository.listRecords(query);
+      response.json(
+        toRecordListDto(result.records, result.nextCursor, recordDtoScope, query.include, query.locale),
+      );
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.get("/api/records/:id", privateRecordReadAccess, async (request, response) => {
+    try {
+      const query = readRecordSearchQuery(request.query);
+      const record = await repository.getRecord(readParam(request, "id"), query);
+      response.json(toDefaultRecordDetailDto(record, recordDtoScope, query.include, query.locale));
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.put("/api/records/:id", editorAccess, jsonBody("1mb"), async (request, response) => {
+    const id = readParam(request, "id");
+    try {
+      const validateOnly = readValidateOnly(request.query.validateOnly);
+      const input = readRecordAggregateContentInput(id, request.body);
+      const result = await repository.upsertRecord(id, input, { validateOnly });
+      logWrite(request, "upsert_record", {
+        targetRecordId: id,
+        validateOnly,
+        validationResult: isRecordValidationResult(result) ? result.valid : true,
+        afterHash: isRecordValidationResult(result) ? null : hashJson(result),
+      });
+      response.json(
+        isRecordValidationResult(result)
+          ? result
+          : toDefaultRecordDetailDto(result, recordDtoScope, [], defaultLocale),
+      );
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.patch("/api/records/:id", editorAccess, jsonBody("256kb"), async (request, response) => {
+    const id = readParam(request, "id");
+    try {
+      const validateOnly = readValidateOnly(request.query.validateOnly);
+      const input = readRecordPatchInput(id, request.body);
+      const result = await repository.patchRecord(id, input, { validateOnly });
+      logWrite(request, "patch_record", {
+        targetRecordId: id,
+        validateOnly,
+        affectedSections: Object.keys(input),
+        validationResult: isRecordValidationResult(result) ? result.valid : true,
+        afterHash: isRecordValidationResult(result) ? null : hashJson(result),
+      });
+      response.json(
+        isRecordValidationResult(result)
+          ? result
+          : toDefaultRecordDetailDto(result, recordDtoScope, [], defaultLocale),
+      );
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.patch("/api/records/:id/review", editorAccess, jsonBody("8kb"), async (request, response) => {
+    const id = readParam(request, "id");
+    try {
+      const input = readRecordReviewInput(request.body);
+      const reviewer = readAuditUser(request).email;
+      if (!reviewer) {
+        return response.status(401).json({ error: "missing_chm_user_context" });
+      }
+
+      await repository.updateNodeLocalizationReview(
+        id,
+        input.locale,
+        toNodeLocalizationReviewInput(input),
+        reviewer,
+      );
+      const query = readRecordSearchQuery({
+        locale: input.locale,
+        include: "localizations,edges,sources,routes",
+      });
+      const record = await repository.getRecord(id, query);
+      logWrite(request, "update_record_review", {
+        targetRecordId: id,
+        locale: input.locale,
+        validationResult: true,
+        afterHash: hashJson(record),
+      });
+      response.json(toDefaultRecordDetailDto(record, recordDtoScope, query.include, input.locale));
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.delete("/api/records/:id", adminAccess, async (request, response) => {
+    const id = readParam(request, "id");
+    try {
+      const validateOnly = readValidateOnly(request.query.validateOnly);
+      const impactHash = readQueryString(request, "impactHash");
+      if (!validateOnly && !impactHash) {
+        throw new ApiRequestError(400, "impactHash is required");
+      }
+      const impact = validateOnly
+        ? await repository.getRecordDeleteImpact(id)
+        : await repository.deleteRecord(id, impactHash ?? "");
+      logWrite(request, "delete_record", {
+        targetRecordId: id,
+        validateOnly,
+        validationResult: true,
+        beforeHash: impact.impactHash,
+      });
+      response.json(impact);
+    } catch (error) {
+      sendError(response, error);
+    }
+  });
+
+  router.post("/api/records:bulk", adminAccess, jsonBody("2mb"), async (request, response) => {
+    try {
+      const input = readBulkRecordValidationInput(request.body);
+      const result = await repository.validateBulkRecords(input);
+      logWrite(request, "validate_records_bulk", {
+        validateOnly: true,
+        validationResult: result.valid,
+        checkedRecords: result.checkedRecords,
+      });
+      response.json(result);
+    } catch (error) {
+      sendError(response, error);
+    }
   });
 
   router.get("/api/ryu/systems/:id", async (request, response) => {
@@ -396,10 +646,10 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(await repository.listSavedViews());
   });
 
-  router.patch("/api/nodes/:id/localizations/:locale/review", writeAccess, async (request, response) => {
+  router.patch("/api/nodes/:id/localizations/:locale/review", editorAccess, jsonBody("8kb"), async (request, response) => {
     const reviewer = readAuditUser(request).email;
     if (!reviewer) {
-      return response.status(401).json({ error: "missing_chm_user_email" });
+      return response.status(401).json({ error: "missing_chm_user_context" });
     }
 
     try {
@@ -437,6 +687,20 @@ export function createApp(options: CreateAppOptions = {}) {
   }
 
   app.use(basePath, router);
+
+  app.use((error: unknown, _request: Request, response: Response, next: express.NextFunction) => {
+    if (response.headersSent) {
+      return next(error);
+    }
+    if (isRecord(error) && error.type === "entity.too.large") {
+      return response.status(413).json({ error: "payload_too_large" });
+    }
+    if (error instanceof SyntaxError) {
+      return response.status(400).json({ error: "invalid_json" });
+    }
+
+    return next(error);
+  });
 
   if (basePath !== "/") {
     app.get("/", (_request, response) => {

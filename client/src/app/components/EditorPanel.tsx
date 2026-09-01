@@ -23,25 +23,11 @@ import {
 
 import type {
   GraphEdge,
-  GraphEdgeInput,
   GraphNode,
-  GraphNodeInput,
   GraphNodeKind,
-  SourceInput,
   SupportedLocale,
 } from "../../../../shared/domain";
-import {
-  createEdge,
-  createNode,
-  createSource,
-  deleteEdge,
-  deleteNode,
-  deleteSource,
-  fetchBootstrap,
-  updateEdge,
-  updateNode,
-  updateSource,
-} from "../api";
+import { fetchBootstrap } from "../api";
 import { nodeTitle } from "../localization";
 import { useGraphStore } from "../state/graphStore";
 
@@ -378,63 +364,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     setMessage(null);
 
     try {
-      if (mode === "entity") {
-        const values = await entityForm.validateFields();
-        const payload: GraphNodeInput = {
-          kind: values.kind,
-          countryCode: values.countryCode.trim().toUpperCase() || null,
-          subtype: values.subtype.trim() || null,
-          properties: toPropertiesObject(values.properties ?? [], "entity"),
-        };
-
-        const entity = selectedEntityId
-          ? await updateNode(selectedEntityId, payload)
-          : await createNode(payload);
-        await refreshGraph();
-        setSelectedEntityId(entity.id);
-        setMode("entity");
-        setIsEditing(false);
-        setMessage({ kind: "success", text: "Node saved." });
-      } else if (mode === "relationship") {
-        const values = await relationshipForm.validateFields();
-        const payload: GraphEdgeInput = {
-          sourceNodeId: values.sourceNodeId,
-          targetNodeId: values.targetNodeId,
-          kind: values.kind,
-          note: values.note.trim() || null,
-          properties: toPropertiesObject(values.properties ?? [], "relationship"),
-        };
-
-        const relationship = selectedRelationshipId
-          ? await updateEdge(selectedRelationshipId, payload)
-          : await createEdge(payload);
-        await refreshGraph();
-        setSelectedRelationshipId(relationship.id);
-        setMode("relationship");
-        setIsEditing(false);
-        setMessage({ kind: "success", text: "Edge saved." });
-      } else {
-        const values = await sourceForm.validateFields();
-        const payload: SourceInput = {
-          title: values.title.trim(),
-          sourceType: values.sourceType.trim(),
-          url: values.url.trim() || null,
-          localPath: values.localPath.trim() || null,
-          publisher: values.publisher.trim() || null,
-          publishedAt: values.publishedAt.trim() || null,
-          accessedAt: values.accessedAt.trim() || null,
-          note: values.note.trim() || null,
-        };
-
-        const source = sourceEditorId
-          ? await updateSource(sourceEditorId, payload)
-          : await createSource(payload);
-        await refreshGraph();
-        setSourceEditorId(source.id);
-        setMode("source");
-        setIsEditing(false);
-        setMessage({ kind: "success", text: "Source saved." });
-      }
+      await Promise.reject(new Error("Legacy editor writes are disabled until this panel uses the record API."));
     } catch (error) {
       setMessage({
         kind: "error",
@@ -450,26 +380,7 @@ export function EditorPanel({ readOnly = false }: EditorPanelProps) {
     setMessage(null);
 
     try {
-      if (mode === "entity" && selectedEntityId) {
-        await deleteNode(selectedEntityId);
-        await refreshGraph();
-        setSelectedEntityId(null);
-        entityForm.setFieldsValue(blankEntityDraft());
-        setMessage({ kind: "success", text: "Node deleted." });
-      } else if (mode === "relationship" && selectedRelationshipId) {
-        await deleteEdge(selectedRelationshipId);
-        await refreshGraph();
-        setSelectedRelationshipId(null);
-        relationshipForm.setFieldsValue(blankRelationshipDraft());
-        setMessage({ kind: "success", text: "Edge deleted." });
-      } else if (mode === "source" && sourceEditorId) {
-        await deleteSource(sourceEditorId);
-        await refreshGraph();
-        setSourceEditorId(null);
-        sourceForm.setFieldsValue(blankSourceDraft());
-        setMessage({ kind: "success", text: "Source deleted." });
-      }
-      setIsEditing(false);
+      await Promise.reject(new Error("Legacy editor deletes are disabled until this panel uses the record API."));
     } catch (error) {
       setMessage({
         kind: "error",

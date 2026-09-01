@@ -13,10 +13,13 @@ runtime database.
   when caller identity headers are supplied.
 - `RYU_MODE=public`: browser-facing production mode. Read routes are available
   and the review endpoint returns `403 writes_disabled`.
-- `RYU_MODE=api`: private browser-review API mode. `PATCH
-  /explorer/api/nodes/:id/localizations/:locale/review` requires CHM-forwarded user context and, when
-  configured, a trusted caller service account header. No general node, edge,
-  source, saved-view, or schema mutation routes are exposed.
+- `RYU_MODE=api`: private Explorer record API mode. Record reads and writes
+  require CHM-forwarded Ocean Agentics user context and, when configured, a
+  trusted caller service account header. The API exposes record-oriented reads,
+  deterministic record upserts, targeted record patches, review updates,
+  admin-gated delete dry-runs/applies, and admin-gated bulk validation. It does
+  not expose raw table mutation, general node/edge/source/saved-view CRUD, or
+  schema mutation routes.
 
 Production Explorer services should set:
 
@@ -71,9 +74,37 @@ The browser review helper calls the CHM proxy path by default:
 /api/explorer/nodes/:id/localizations/:locale/review
 ```
 
+Explorer also exposes the record-oriented private API path
+`PATCH /explorer/api/records/:id/review`, but CHM's browser proxy remains on
+the older localization review path until the proxy boundary is deliberately
+widened.
+
 Set `VITE_REVIEW_API_BASE_PATH` only if the CHM proxy path changes. Set
 `VITE_CAN_REVIEW_NODES=false` for read-only/static builds that should display
 review fields without edit controls.
+
+## Record API
+
+Explorer now has a record-oriented API surface:
+
+- `GET /explorer/api/records`
+- `GET /explorer/api/records/:id`
+- `PUT /explorer/api/records/:id`
+- `PATCH /explorer/api/records/:id`
+- `PATCH /explorer/api/records/:id/review`
+- `DELETE /explorer/api/records/:id`
+- `POST /explorer/api/records:bulk`
+
+The list endpoint is SQL-backed and supports `q`, `kind`, `geography`,
+`dataType`, `recordDepth`, `reviewState`, `locale`, `localeMode`,
+`localeAvailability`, `reviewLocale`, `routeStatus`, `routeCapability`,
+`accessType`, `accessMethod`, `include`, `limit`, and `cursor`.
+
+Content writes reject review and audit fields. Full writes use deterministic
+caller-supplied IDs and transactional upserts; repeated requests with the same
+ID do not need a separate idempotency table. Deletes require an admin allowlist
+and a fresh dry-run `impactHash`. Bulk imports are validation-only in this
+implementation.
 
 ## Current Deployment
 

@@ -6,6 +6,11 @@ Use this guide when researching and backfilling rich database records for Ryu. T
 
 - Treat Cloud SQL/Postgres as the canonical editable graph.
 - Do not create a parallel registry, merged CSV, or alternate bootstrap as a new source of truth.
+- Use the Explorer record API for routine content backfills: deterministic
+  `PUT /api/records/:id` for full record upserts, `PATCH /api/records/:id` for
+  section-aware updates, and `PATCH /api/records/:id/review` for review state
+  changes. Direct Postgres edits should be reserved for deliberate migration or
+  repair work.
 - After DB edits, regenerate the public bootstrap with `npm --workspace server run export:public`.
 - If UI-facing data changed, verify with `npm run build`.
 - `client/public/bootstrap.public.json` is generated output. Keep it in sync, but do not edit it by hand.
@@ -31,6 +36,9 @@ For system nodes:
 - Use `node_localizations.review_state` for review queues: `agent_researched`, `human_reviewed`, or `needs_revision`.
 - Use `node_localizations.reviewer_note`, `reviewer`, and `last_reviewed` for review metadata.
 - The details UI shows `recordDepth` and the resolved localization's `reviewState` for all users. In authenticated/author mode, it lets users update only `reviewState` and `reviewerNote`; `reviewer` and `lastReviewed` are set by the server.
+- Do not set review metadata in record content writes. Review state and reviewer
+  notes belong in the dedicated review endpoint so the server can set reviewer
+  identity and timestamps.
 - Use `ryu_routes` only for approved machine access routes that agents or other apps should call.
 
 Do not reintroduce removed tables or fields:

@@ -150,6 +150,23 @@ PATCH /api/explorer/nodes/:id/localizations/:locale/review
 
 Do not make production data edits by hand from CHM unless they are part of a deliberate Ryu migration runbook.
 
+## Localization Coverage API
+
+Localization coverage is now part of SQL-backed record search, not a separate
+coverage endpoint. Use `GET /api/records` with:
+
+- `localeAvailability=available`: the requested `locale` row exists.
+- `localeAvailability=missing`: the requested `locale` row does not exist.
+- `localeAvailability=partial`: at least one supported locale is missing.
+- `localeAvailability=complete`: all supported locales exist.
+
+Use `reviewLocale=requested`, `reviewLocale=displayed`, or `reviewLocale=any`
+with `reviewState` to decide which localization row is checked. Example:
+
+```text
+GET /api/records?locale=fr&localeAvailability=missing&reviewState=agent_researched&reviewLocale=displayed&include=localizationSummary
+```
+
 ## Target Model
 
 Keep the model to two record-content tables:

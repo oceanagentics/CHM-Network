@@ -12,6 +12,18 @@ import type {
   Source,
   SupportedLocale,
 } from "../../shared/domain";
+import type {
+  BulkRecordValidationInput,
+  BulkRecordValidationResult,
+  RecordAggregate,
+  RecordAggregateContentInput,
+  RecordDeleteImpact,
+  RecordListResult,
+  RecordMutationOptions,
+  RecordPatchInput,
+  RecordSearchQuery,
+  RecordValidationResult,
+} from "../../shared/recordApi";
 import { defaultLocale, emptyLocalizationDetails } from "../../shared/localization";
 import type { GraphRepository } from "./graphRepository";
 import { createApp, toPublicBootstrap, type RyuRuntimeMode } from "./server";
@@ -79,7 +91,13 @@ function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
 }
 
 class FakeRepository implements GraphRepository {
-  private node = createFakeNode();
+  lastRecordQuery: RecordSearchQuery | null = null;
+  private node: GraphNode;
+  private deleted = false;
+
+  constructor(node = createFakeNode()) {
+    this.node = node;
+  }
 
   getBootstrap(): GraphBootstrapPayload {
     return bootstrap;
@@ -95,6 +113,112 @@ class FakeRepository implements GraphRepository {
 
   getPortalSystem(id: string): RyuSystemRecord {
     throw new Error(`system not found: ${id}`);
+  }
+
+  listRecords(query: RecordSearchQuery): RecordListResult {
+    this.lastRecordQuery = query;
+    return {
+      records: this.deleted ? [] : [this.recordAggregate()],
+      nextCursor: null,
+    };
+  }
+
+  getRecord(id: string): RecordAggregate {
+    if (this.deleted || id === "missing") {
+      throw new Error(`record not found: ${id}`);
+    }
+
+    return this.recordAggregate({ id });
+  }
+
+  validateRecordAggregate(
+    id: string,
+    _input: RecordAggregateContentInput,
+  ): RecordValidationResult {
+    return {
+      valid: true,
+      recordId: id,
+      issues: [],
+    };
+  }
+
+  upsertRecord(
+    id: string,
+    input: RecordAggregateContentInput,
+    options: RecordMutationOptions = {},
+  ): RecordAggregate | RecordValidationResult {
+    if (options.validateOnly) {
+      return this.validateRecordAggregate(id, input);
+    }
+
+    this.node = createFakeNode({
+      id,
+      kind: input.record.kind,
+      countryCode: input.record.countryCode ?? null,
+      subtype: input.record.subtype ?? null,
+      url: input.record.url ?? null,
+      recordDepth: input.record.recordDepth ?? "stub",
+      properties: (input.record.properties ?? {}) as GraphNode["properties"],
+    });
+    return this.recordAggregate();
+  }
+
+  patchRecord(
+    id: string,
+    input: RecordPatchInput,
+    options: RecordMutationOptions = {},
+  ): RecordAggregate | RecordValidationResult {
+    if (options.validateOnly) {
+      return { valid: true, recordId: id, issues: [] };
+    }
+
+    this.node = createFakeNode({
+      ...this.node,
+      id,
+      kind: input.record?.kind ?? this.node.kind,
+      countryCode: input.record?.countryCode ?? this.node.countryCode,
+      subtype: input.record?.subtype ?? this.node.subtype,
+      url: input.record?.url ?? this.node.url,
+      recordDepth: input.record?.recordDepth ?? this.node.recordDepth,
+      properties: (input.record?.propertiesReplace ?? this.node.properties) as GraphNode["properties"],
+    });
+    return this.recordAggregate();
+  }
+
+  getRecordDeleteImpact(id: string): RecordDeleteImpact {
+    if (this.deleted) {
+      throw new Error(`record not found: ${id}`);
+    }
+
+    return {
+      recordId: id,
+      nodeRows: 1,
+      localizationRows: 1,
+      inboundEdges: 0,
+      outboundEdges: 0,
+      routeRows: 0,
+      affectedSavedViews: [],
+      orphanedSourceCandidates: [],
+      impactHash: "impact-1",
+    };
+  }
+
+  deleteRecord(id: string, impactHash: string): RecordDeleteImpact {
+    const impact = this.getRecordDeleteImpact(id);
+    if (impact.impactHash !== impactHash) {
+      throw new Error("stale delete impact hash");
+    }
+
+    this.deleted = true;
+    return impact;
+  }
+
+  validateBulkRecords(input: BulkRecordValidationInput): BulkRecordValidationResult {
+    return {
+      valid: true,
+      issues: [],
+      checkedRecords: input.records.length,
+    };
   }
 
   updateNodeLocalizationReview(
@@ -144,16 +268,61 @@ class FakeRepository implements GraphRepository {
   listSavedViews(): SavedView[] {
     return [];
   }
+
+  private recordAggregate(overrides: Partial<GraphNode> = {}): RecordAggregate {
+    return {
+      node: createFakeNode({ ...this.node, ...overrides }),
+      edges: [],
+      sources: [
+        {
+          id: "src-test",
+          title: "Source",
+          sourceType: "web",
+          url: "https://example.com/source",
+          localPath: "/private/source.md",
+          publisher: null,
+          publishedAt: null,
+          accessedAt: null,
+          note: null,
+        },
+      ],
+      routes: [
+        {
+          id: "route-1",
+          nodeId: this.node.id,
+          status: "active",
+          mode: "api",
+          priority: 1,
+          capabilities: ["download"],
+          target: "https://private.example.com",
+          upstream: "internal-upstream",
+          format: "json",
+          contractRef: null,
+          caveat: null,
+          properties: { secret: "do-not-leak" },
+          createdAt: "2026-08-27T00:00:00.000Z",
+          updatedAt: "2026-08-27T00:00:00.000Z",
+        },
+      ],
+      matchReasons: [],
+    };
+  }
 }
 
 async function withServer(
   mode: RyuRuntimeMode,
   fn: (baseUrl: string) => Promise<void>,
+  options: {
+    repository?: FakeRepository;
+    adminUsers?: string[];
+  } = {},
 ) {
+  const repository = options.repository ?? new FakeRepository();
   const app = createApp({
     basePath: "/explorer",
     mode,
-    repository: new FakeRepository(),
+    repository,
+    adminUsers: options.adminUsers ?? [],
     staticDirectory: "client/public",
     trustedCallerServiceAccounts: ["chm-sa@chm-network.iam.gserviceaccount.com"],
   });
@@ -269,6 +438,102 @@ test("redacts source local paths from public source endpoints", async () => {
   });
 });
 
+test("serves public record details with allowlisted DTO fields", async () => {
+  const node = createFakeNode({
+    localizations: {
+      en: createFakeLocalization({
+        reviewerNote: "Private reviewer note",
+        reviewer: "danny@oceanagentics.com",
+        lastReviewed: "2026-08-31T00:00:00.000Z",
+      }),
+    },
+  });
+
+  await withServer("public", async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}/explorer/api/records/node-1?include=localizations,sources,routes`,
+    );
+
+    assert.equal(response.status, 200);
+    const body = await response.json() as Record<string, any>;
+    assert.equal(body.localizations.en.reviewState, "agent_researched");
+    assert.equal("reviewerNote" in body.localizations.en, false);
+    assert.equal("reviewer" in body.localizations.en, false);
+    assert.equal("lastReviewed" in body.localizations.en, false);
+    assert.equal("localPath" in body.sources[0], false);
+    assert.equal("target" in body.routes[0], false);
+    assert.equal("upstream" in body.routes[0], false);
+    assert.equal("properties" in body.routes[0], false);
+  }, { repository: new FakeRepository(node) });
+});
+
+test("requires trusted user context for private record reads", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: {
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+      },
+    });
+
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "missing_chm_user_context" });
+  });
+});
+
+test("serves private record details through trusted CHM context", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: {
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json() as Record<string, any>;
+    assert.equal(body.sources[0].localPath, "/private/source.md");
+    assert.equal(body.routes[0].target, "https://private.example.com");
+    assert.deepEqual(body.routes[0].properties, { secret: "do-not-leak" });
+  });
+});
+
+test("parses the full record search filter set", async () => {
+  const repository = new FakeRepository();
+
+  await withServer("public", async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}/explorer/api/records?q=fish&kind=system,country&geography=global&dataType=geojson&recordDepth=rich&reviewState=agent_researched&locale=fr&localeMode=all_locales&localeAvailability=missing&reviewLocale=any&routeStatus=active&routeCapability=download&accessType=read&accessMethod=api&include=localizations,routes,matchReasons&limit=7`,
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(repository.lastRecordQuery?.q, "fish");
+    assert.deepEqual(repository.lastRecordQuery?.kind, ["system", "country"]);
+    assert.deepEqual(repository.lastRecordQuery?.geography, ["global"]);
+    assert.deepEqual(repository.lastRecordQuery?.dataType, ["geojson"]);
+    assert.deepEqual(repository.lastRecordQuery?.recordDepth, ["rich"]);
+    assert.deepEqual(repository.lastRecordQuery?.reviewState, ["agent_researched"]);
+    assert.equal(repository.lastRecordQuery?.locale, "fr");
+    assert.equal(repository.lastRecordQuery?.localeMode, "all_locales");
+    assert.equal(repository.lastRecordQuery?.localeAvailability, "missing");
+    assert.equal(repository.lastRecordQuery?.reviewLocale, "any");
+    assert.deepEqual(repository.lastRecordQuery?.routeStatus, ["active"]);
+    assert.deepEqual(repository.lastRecordQuery?.routeCapability, ["download"]);
+    assert.deepEqual(repository.lastRecordQuery?.accessType, ["read"]);
+    assert.deepEqual(repository.lastRecordQuery?.accessMethod, ["api"]);
+    assert.deepEqual(repository.lastRecordQuery?.include, ["localizations", "routes", "matchReasons"]);
+    assert.equal(repository.lastRecordQuery?.limit, 7);
+  }, { repository });
+});
+
+test("rejects unsupported record query fields", async () => {
+  await withServer("public", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records?table=nodes`);
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "unsupported query fields: table" });
+  });
+});
+
 test("rejects review writes in public mode", async () => {
   await withServer("public", async (baseUrl) => {
     const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
@@ -280,6 +545,217 @@ test("rejects review writes in public mode", async () => {
     assert.equal(response.status, 403);
     assert.deepEqual(await response.json(), { error: "writes_disabled" });
   });
+});
+
+test("allows record-oriented review writes in api mode", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({
+        locale: "en",
+        reviewState: "human_reviewed",
+        reviewerNote: "Checked.",
+      }),
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json() as Record<string, any>;
+    assert.equal(body.localizations.en.reviewState, "human_reviewed");
+    assert.equal(body.localizations.en.reviewer, "danny@oceanagentics.com");
+  });
+});
+
+test("rejects review fields in content upserts", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({
+        id: "node-1",
+        record: { kind: "system" },
+        localizations: {
+          en: {
+            title: "Test System",
+            reviewState: "human_reviewed",
+          },
+        },
+      }),
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {
+      error: "review/audit fields are not allowed in localizations.en: reviewState",
+    });
+  });
+});
+
+test("validates deterministic record upserts without applying changes", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({
+        id: "node-1",
+        record: { kind: "system" },
+        localizations: {
+          en: {
+            title: "Test System",
+          },
+        },
+      }),
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { valid: true, recordId: "node-1", issues: [] });
+  });
+});
+
+test("rejects ambiguous nested JSON patch fields", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({
+        record: {
+          properties: {},
+        },
+      }),
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "unsupported record fields: properties" });
+  });
+});
+
+test("enforces review route payload limits", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+      body: JSON.stringify({
+        locale: "en",
+        reviewerNote: "x".repeat(9 * 1024),
+      }),
+    });
+
+    assert.equal(response.status, 413);
+    assert.deepEqual(await response.json(), { error: "payload_too_large" });
+  });
+});
+
+test("fails closed when admin allowlist is missing", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
+      method: "DELETE",
+      headers: {
+        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+        "x-chm-user-email": "danny@oceanagentics.com",
+      },
+    });
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: "admin_allowlist_missing" });
+  });
+});
+
+test("allows admin delete dry runs and requires impact hash to apply", async () => {
+  await withServer("api", async (baseUrl) => {
+    const headers = {
+      "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+      "x-chm-user-email": "danny@oceanagentics.com",
+    };
+    const dryRun = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
+      method: "DELETE",
+      headers,
+    });
+
+    assert.equal(dryRun.status, 200);
+    const dryRunBody = await dryRun.json() as Record<string, unknown>;
+    assert.equal(dryRunBody.impactHash, "impact-1");
+
+    const missingHash = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      method: "DELETE",
+      headers,
+    });
+
+    assert.equal(missingHash.status, 400);
+    assert.deepEqual(await missingHash.json(), { error: "impactHash is required" });
+
+    const apply = await fetch(`${baseUrl}/explorer/api/records/node-1?impactHash=impact-1`, {
+      method: "DELETE",
+      headers,
+    });
+
+    assert.equal(apply.status, 200);
+  }, { adminUsers: ["danny@oceanagentics.com"] });
+});
+
+test("requires admin access for bulk validation and refuses bulk apply", async () => {
+  await withServer("api", async (baseUrl) => {
+    const headers = {
+      "Content-Type": "application/json",
+      "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
+      "x-chm-user-email": "danny@oceanagentics.com",
+    };
+    const refused = await fetch(`${baseUrl}/explorer/api/records:bulk`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        validateOnly: false,
+        records: [],
+      }),
+    });
+
+    assert.equal(refused.status, 400);
+    assert.deepEqual(await refused.json(), {
+      error: "bulk records only supports validateOnly=true",
+    });
+
+    const validated = await fetch(`${baseUrl}/explorer/api/records:bulk`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        validateOnly: true,
+        records: [
+          {
+            id: "node-1",
+            record: { kind: "system" },
+            localizations: {
+              en: { title: "Test System" },
+            },
+          },
+        ],
+      }),
+    });
+
+    assert.equal(validated.status, 200);
+    assert.deepEqual(await validated.json(), {
+      valid: true,
+      issues: [],
+      checkedRecords: 1,
+    });
+  }, { adminUsers: ["danny@oceanagentics.com"] });
 });
 
 test("requires CHM user context for review writes in api mode", async () => {
@@ -311,7 +787,7 @@ test("requires CHM user email for reviewer identity", async () => {
     });
 
     assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { error: "missing_chm_user_email" });
+    assert.deepEqual(await response.json(), { error: "missing_chm_user_context" });
   });
 });
 

@@ -4,6 +4,20 @@
 
 Build one extensible search and filter system that drives both the Systems pane and graph visibility. The system should support the current directory workflow, richer future node detail pages, and later natural-language query assistance without coupling search behavior to a single UI component.
 
+## Current Server API Status
+
+Explorer now exposes SQL-backed record search at `GET /api/records`. The
+endpoint supports the full record filter set used by the API refactor plan:
+`q`, `kind`, `geography`, `dataType`, `recordDepth`, `reviewState`, `locale`,
+`localeMode`, `localeAvailability`, `reviewLocale`, `routeStatus`,
+`routeCapability`, `accessType`, `accessMethod`, `include`, `limit`, and
+`cursor`.
+
+The existing Systems pane may continue using bootstrap-backed client search for
+small local graphs, but new agent and service integrations should prefer
+`GET /api/records` so pagination, localization coverage, route filters, and
+access filters execute against Postgres.
+
 ## Design Principles
 
 - Keep search intent shared across panes.

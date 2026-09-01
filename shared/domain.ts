@@ -334,36 +334,7 @@ export interface SavedViewInput {
   style: Record<string, unknown>;
 }
 
-export interface GraphNodeInput {
-  kind: GraphNodeKind;
-  countryCode?: string | null;
-  subtype?: string | null;
-  url?: string | null;
-  recordDepth?: RecordDepth;
-  properties?: NodeProperties;
-  localizations?: NodeLocalizationMap;
-}
-
 export interface NodeLocalizationReviewInput {
   reviewState?: ReviewState;
   reviewerNote?: string | null;
-}
-
-export interface GraphEdgeInput {
-  sourceNodeId: string;
-  targetNodeId: string;
-  kind: GraphEdgeKind;
-  note?: string | null;
-  properties?: Record<string, unknown>;
-}
-
-export interface SourceInput {
-  title: string;
-  sourceType: string;
-  url: string | null;
-  localPath: string | null;
-  publisher: string | null;
-  publishedAt: string | null;
-  accessedAt: string | null;
-  note: string | null;
 }
