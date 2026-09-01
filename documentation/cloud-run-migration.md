@@ -180,7 +180,7 @@ APP_BASE_PATH=/explorer RYU_MODE=public PORT=8788 npm --workspace server run sta
 curl -fsS http://127.0.0.1:8788/healthz
 curl -fsS http://127.0.0.1:8788/explorer/api/graph/bootstrap
 curl -sS -o /tmp/ryu-write-response.json -w '%{http_code}' \
-  -X PATCH http://127.0.0.1:8788/explorer/api/nodes/test-node/review \
+  -X PATCH http://127.0.0.1:8788/explorer/api/nodes/test-node/localizations/en/review \
   -H 'Content-Type: application/json' \
   --data '{"reviewState":"human_reviewed"}'
 ```
@@ -219,7 +219,7 @@ route targets, and source local paths redacted. Unauthenticated
 
 Private backend verification completed on 2026-08-31 with a temporary Cloud Run
 job running as `chm-sa`. The job updated `fishbase` through
-`PATCH /explorer/api/nodes/fishbase/review` and verified expected denials for
+`PATCH /explorer/api/nodes/fishbase/localizations/en/review` and verified expected denials for
 unsupported fields, missing user context, wrong caller headers, and the absent
 general node write route. The temporary job was deleted afterward. The remaining
 manual check is the signed-in browser form click-through through CHM/IAP.
