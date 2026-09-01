@@ -32,7 +32,7 @@ import type {
   SystemIdentifierScheme,
 } from "../../../../shared/domain";
 import { updateNodeReview } from "../api";
-import { canReviewNodes } from "../config";
+import { appPath, canReviewNodes } from "../config";
 import { useGraphStore } from "../state/graphStore";
 
 type DetailTabKey = "user" | "raw";
@@ -55,6 +55,14 @@ function tagColor(value: string): string | undefined {
   }
 
   return undefined;
+}
+
+function resolveGalleryUrl(url: string): string {
+  if (/^(?:[a-z][a-z\d+\-.]*:|\/\/)/i.test(url)) {
+    return url;
+  }
+
+  return url.startsWith("/") ? appPath(url) : url;
 }
 
 const reviewStates: ReviewState[] = [
@@ -269,6 +277,8 @@ function Gallery({ items }: { items: SystemGalleryItem[] }) {
   }
 
   const activeItem = items[Math.min(activeIndex, items.length - 1)];
+  const activeItemUrl = resolveGalleryUrl(activeItem.url);
+  const activeItemThumbnailUrl = resolveGalleryUrl(activeItem.thumbnailUrl ?? activeItem.url);
   const hasMultipleItems = items.length > 1;
   const previousItem = () => {
     setActiveIndex((currentIndex) =>
@@ -285,19 +295,19 @@ function Gallery({ items }: { items: SystemGalleryItem[] }) {
         {activeItem.type === "image" ? (
           <a
             className="entity-gallery-image-link"
-            href={activeItem.url}
+            href={activeItemUrl}
             target="_blank"
             rel="noreferrer"
           >
             <img
-              src={activeItem.thumbnailUrl ?? activeItem.url}
+              src={activeItemThumbnailUrl}
               alt={activeItem.title ?? activeItem.caption ?? "Database sample"}
               loading="lazy"
             />
           </a>
         ) : (
           <iframe
-            src={activeItem.url}
+            src={activeItemUrl}
             title={activeItem.title ?? activeItem.id}
             loading="lazy"
           />
