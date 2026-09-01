@@ -1,7 +1,15 @@
 steps:
   - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - docker pull "${_CACHE_IMAGE}" || true
+
+  - name: gcr.io/cloud-builders/docker
     args:
       - build
+      - --cache-from
+      - ${_CACHE_IMAGE}
       - --build-arg
       - APP_BASE_PATH=${_APP_BASE_PATH}
       - --build-arg
@@ -12,7 +20,15 @@ steps:
       - VITE_REVIEW_API_BASE_PATH=${_VITE_REVIEW_API_BASE_PATH}
       - -t
       - ${_IMAGE}
+      - -t
+      - ${_CACHE_IMAGE}
       - .
+
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - if [ "${_CACHE_IMAGE}" != "${_IMAGE}" ]; then docker push "${_CACHE_IMAGE}"; fi
 
 images:
   - ${_IMAGE}
@@ -28,3 +44,4 @@ substitutions:
   _VITE_CAN_REVIEW_NODES: "true"
   _VITE_REVIEW_API_BASE_PATH: /api/explorer
   _IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer:latest
+  _CACHE_IMAGE: us-east4-docker.pkg.dev/chm-network/chm-apps/explorer:latest

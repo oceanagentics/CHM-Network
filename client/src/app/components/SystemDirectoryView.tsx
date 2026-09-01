@@ -23,7 +23,9 @@ import {
   countActiveFilters,
   getSystemFilterOptions,
   labelize,
+  localizationCoverageFilterOptions,
   resolveGraphSearch,
+  reviewStateFilterOptions,
   type ClaimFilterKey,
   type GraphSearchFilters,
   type SearchMatchReason,
@@ -158,6 +160,20 @@ export function SystemDirectoryView({
         value || <Typography.Text type="secondary">Unknown</Typography.Text>,
     },
     {
+      title: "Localization",
+      key: "localization",
+      render: (_: unknown, record: SystemSearchRecord) => (
+        <Flex gap={4} wrap>
+          <Tag bordered={false}>
+            {record.hasCurrentLocale ? locale : `Missing ${locale}`}
+          </Tag>
+          {record.currentLocaleReviewState ? (
+            <Tag bordered={false}>{labelize(record.currentLocaleReviewState)}</Tag>
+          ) : null}
+        </Flex>
+      ),
+    },
+    {
       title: "Role",
       key: "role",
       render: (_: unknown, record: SystemSearchRecord) =>
@@ -247,6 +263,24 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
+                placeholder="Language coverage"
+                value={filters.localizationCoverage}
+                options={localizationCoverageFilterOptions}
+                onChange={(value) => patchFilters({ localizationCoverage: value })}
+              />
+              <Select
+                allowClear
+                mode="multiple"
+                maxTagCount="responsive"
+                placeholder="Review status"
+                value={filters.reviewState}
+                options={reviewStateFilterOptions}
+                onChange={(value) => patchFilters({ reviewState: value })}
+              />
+              <Select
+                allowClear
+                mode="multiple"
+                maxTagCount="responsive"
                 placeholder="Role"
                 value={filters.role}
                 options={filterOptions.role}
@@ -329,6 +363,12 @@ export function SystemDirectoryView({
                     </Flex>
                     {record.localization.isLocaleFallback ? (
                       <Tag bordered={false}>Showing {record.localization.displayLocale}</Tag>
+                    ) : null}
+                    <Tag bordered={false}>
+                      {record.hasCurrentLocale ? locale : `Missing ${locale}`}
+                    </Tag>
+                    {record.currentLocaleReviewState ? (
+                      <Tag bordered={false}>{labelize(record.currentLocaleReviewState)}</Tag>
                     ) : null}
                   </Flex>
                   {record.summary ? (

@@ -102,11 +102,11 @@
 - Browser-facing `explorer` uses read credentials; private `explorer-api` uses write credentials; schema/setup work uses the dedicated schema-capable credentials only when an explicit database change is being applied.
 
 ## Cloud Run Publishing
-- Build the Explorer image with `cloudbuild.yaml` into Artifact Registry repository `chm-apps`.
+- Build Explorer images with `cloudbuild.yaml` into Artifact Registry repository `chm-apps`; use `_CACHE_IMAGE` so unchanged dependency layers are reused when `package-lock.json` has not changed.
 - Use commit-only updates for review, handoff, and release traceability; commits do not publish by themselves unless an external trigger is explicitly configured.
-- Use routine app publishes for UI, API, runtime, and other app-only changes: commit, build an immutable image, deploy it to both `explorer` and `explorer-api`, and smoke test.
-- Prefer CHM Terraform image rollouts when Terraform should remain the deployment record: build the image first, then apply Terraform with the new Explorer image digest.
-- Use broader Terraform changes only for shared CHM infrastructure, routing, IAP, service accounts, secrets, Cloud SQL, runtime environment, or schema-change wiring.
+- Use routine fast deploys for UI, API, runtime, and other app-only changes: commit, build the affected immutable image, deploy that image to the existing Cloud Run service with `gcloud run deploy --image`, and smoke test.
+- Do not run Terraform for image-only app deploys. Use broader Terraform changes only for shared CHM infrastructure, routing, IAP, service accounts, secrets, Cloud SQL, runtime environment, or schema-change wiring.
+- Public UI image maps to `explorer`, admin UI image maps to `explorer-admin`, and API image maps to `explorer-api`.
 - Do not keep standing Cloud Run jobs for initial database setup or read checks.
 - Handle future schema changes deliberately when they are needed; keep the current SQL as the reference for the production Postgres shape.
 

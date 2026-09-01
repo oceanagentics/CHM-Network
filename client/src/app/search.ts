@@ -2,6 +2,7 @@ import type {
   GraphEdge,
   GraphNode,
   ResolvedNodeLocalization,
+  ReviewState,
   RyuRoute,
   SourceRef,
   SupportedLocale,
@@ -16,6 +17,9 @@ import {
 } from "./localization";
 
 export type ClaimFilterKey = SystemDataDescriptorCategory;
+export type LocalizationCoverageFilter =
+  | "current_locale"
+  | "missing_current_locale";
 
 export type GraphSearchFilters = {
   role: string[];
@@ -24,6 +28,8 @@ export type GraphSearchFilters = {
   dataClaims: Record<ClaimFilterKey, string[]>;
   accessTypes: string[];
   accessMethods: string[];
+  localizationCoverage: LocalizationCoverageFilter[];
+  reviewState: ReviewState[];
 };
 
 export type GraphSearchIntent = {
@@ -66,6 +72,8 @@ export type SystemSearchRecord = {
   accessTypes: string[];
   accessMethods: string[];
   accessLabels: string[];
+  hasCurrentLocale: boolean;
+  currentLocaleReviewState: ReviewState | null;
   sourceTitles: string[];
   connectedNames: string[];
   relationships: GraphEdge[];
@@ -107,6 +115,18 @@ export const claimFilterLabels: Record<ClaimFilterKey, string> = {
 };
 
 export const claimFilterKeys = Object.keys(claimFilterLabels) as ClaimFilterKey[];
+export const localizationCoverageFilterOptions: Array<{
+  label: string;
+  value: LocalizationCoverageFilter;
+}> = [
+  { label: "Current language only", value: "current_locale" },
+  { label: "Missing current language", value: "missing_current_locale" },
+];
+export const reviewStateFilterOptions: Array<{ label: string; value: ReviewState }> = [
+  { label: "Agent researched", value: "agent_researched" },
+  { label: "Human reviewed", value: "human_reviewed" },
+  { label: "Needs revision", value: "needs_revision" },
+];
 
 const countryAliasesByCode: Record<string, string[]> = {
   CAN: ["Canada", "Canadian"],
@@ -128,6 +148,8 @@ export const emptySearchFilters = (): GraphSearchFilters => ({
   },
   accessTypes: [],
   accessMethods: [],
+  localizationCoverage: [],
+  reviewState: [],
 });
 
 export function labelize(value: string): string {
@@ -194,6 +216,8 @@ export function countActiveFilters(filters: GraphSearchFilters): number {
     filters.disciplineFamily,
     filters.accessTypes,
     filters.accessMethods,
+    filters.localizationCoverage,
+    filters.reviewState,
     ...Object.values(filters.dataClaims),
   ].filter((value) => value.length > 0).length;
 }
@@ -303,6 +327,7 @@ function buildSystemRecord(
 
   const system = entity;
   const localization = resolveNodeDisplay(system, locale);
+  const currentLocalization = system.localizations[locale] ?? null;
   const accessPaths = systemAccessPaths(system, localization);
   const relationships = getRelationships(entity.id, graph);
   const connectedNames = getConnectedNames(entity, graph, locale);
@@ -328,6 +353,8 @@ function buildSystemRecord(
     accessTypes: uniqueSorted(accessPaths.map((path) => path.type)),
     accessMethods: uniqueSorted(accessPaths.map((path) => path.method)),
     accessLabels: uniqueSorted(accessPaths.map((path) => path.label)),
+    hasCurrentLocale: Boolean(currentLocalization),
+    currentLocaleReviewState: currentLocalization?.reviewState ?? null,
     sourceTitles: uniqueSorted(sourceRefs(system).map((source) => source.title)),
     connectedNames,
     relationships,
@@ -804,6 +831,28 @@ function matchesAny(values: string[], selected: string[]): boolean {
   return selected.length === 0 || values.some((value) => selected.includes(value));
 }
 
+function matchesLocalizationCoverage(
+  record: SystemSearchRecord,
+  selected: LocalizationCoverageFilter[],
+): boolean {
+  return selected.length === 0 || selected.some((value) => (
+    value === "current_locale"
+      ? record.hasCurrentLocale
+      : !record.hasCurrentLocale
+  ));
+}
+
+function matchesReviewState(
+  record: SystemSearchRecord,
+  selected: ReviewState[],
+): boolean {
+  return (
+    selected.length === 0 ||
+    (record.currentLocaleReviewState != null &&
+      selected.includes(record.currentLocaleReviewState))
+  );
+}
+
 function claimList(record: SystemSearchRecord, key: ClaimFilterKey): string[] {
   if (key === "type") {
     return record.dataTypes;
@@ -824,6 +873,8 @@ function matchesSystemFilters(
     matchesSelected([record.disciplineFamily], filters.disciplineFamily) &&
     matchesAny(record.accessTypes, filters.accessTypes) &&
     matchesAny(record.accessMethods, filters.accessMethods) &&
+    matchesLocalizationCoverage(record, filters.localizationCoverage) &&
+    matchesReviewState(record, filters.reviewState) &&
     claimFilterKeys.every((key) =>
       matchesAny(claimList(record, key), filters.dataClaims[key]),
     )

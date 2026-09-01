@@ -110,20 +110,41 @@ Last verified on 2026-09-01:
 
 ## Build Image
 
-Build the public and admin Explorer container images into the shared CHM
-Artifact Registry repo:
+Build Explorer images into the shared CHM Artifact Registry repo with the
+service-specific `latest` tag as the Docker cache source. Unchanged dependency
+layers are reused when `package-lock.json` has not changed.
+
+```sh
+SHA=$(git rev-parse --short HEAD)
+
+gcloud builds submit \
+  --region us-east4 \
+  --config cloudbuild.yaml \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:latest,_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  .
+gcloud builds submit \
+  --region us-east4 \
+  --config cloudbuild.yaml \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:latest,_APP_BASE_PATH=/explorer/admin,_VITE_APP_MODE=author,_VITE_CAN_REVIEW_NODES=true,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  .
+```
+
+For API/server-only changes, build the API service image instead:
 
 ```sh
 gcloud builds submit \
   --region us-east4 \
   --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:$(git rev-parse --short HEAD),_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:latest,_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
   .
-gcloud builds submit \
-  --region us-east4 \
-  --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:$(git rev-parse --short HEAD),_APP_BASE_PATH=/explorer/admin,_VITE_APP_MODE=author,_VITE_CAN_REVIEW_NODES=true,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
-  .
+```
+
+Then deploy only the affected service:
+
+```sh
+gcloud run deploy explorer --project chm-network --region us-east4 --image us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public:${SHA} --quiet
+gcloud run deploy explorer-admin --project chm-network --region us-east4 --image us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin:${SHA} --quiet
+gcloud run deploy explorer-api --project chm-network --region us-east4 --image us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:${SHA} --quiet
 ```
 
 The Docker build uses `APP_BASE_PATH` so Vite emits asset URLs under the matching
@@ -137,17 +158,18 @@ Use these paths for Explorer/Ryu updates:
 1. Commit-only update: use for source review, handoff, and release traceability.
    A Git commit does not publish Explorer unless an external build/deploy
    trigger is explicitly configured.
-2. Routine app publish: use for UI, API, runtime, and other app-only changes.
-   Commit the Ryu source, build immutable public and admin Explorer images with
-   Cloud Build, deploy the public image to `explorer` and `explorer-api`, deploy
-   the admin image to `explorer-admin`, and run the smoke checks below.
-3. Terraform image rollout: use when CHM Terraform should remain the deployment
-   record. Build the immutable Explorer image first, then apply CHM Terraform
-   with the new image digest for `explorer` and `explorer-api`.
+2. Routine fast deploy: use for UI, API, runtime, and other app-only changes.
+   Commit the Ryu source, build the affected immutable image with Cloud Build,
+   deploy it to the existing Cloud Run service with `gcloud run deploy --image`,
+   and run the smoke checks below. Public UI maps to `explorer`, admin UI maps
+   to `explorer-admin`, and API/server changes map to `explorer-api`.
+3. Terraform change: use only when shared CHM infrastructure, routing, IAP,
+   service accounts, secrets, Cloud SQL, runtime environment, or schema-change
+   wiring needs to change. Do not run Terraform for image-only app deploys.
 
-Do not use the removed VM/static publish flow. Use a broader Terraform change
-only when shared CHM infrastructure, routing, IAP, service accounts, secrets,
-Cloud SQL, runtime environment, or schema-change wiring needs to change.
+Do not use the removed VM/static publish flow. If a fast deploy causes Terraform
+to report image drift later, do not roll the app image back just to satisfy
+Terraform.
 
 ## Postgres Shape And Seed Data
 
