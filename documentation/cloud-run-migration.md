@@ -79,11 +79,11 @@ review fields without edit controls.
 
 Last verified on 2026-09-01:
 
-- Source commit: `226fc2c`
-- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:9742be1c20233a44f4fd235132aa414fa1488bd198562ce396f2c311633e109c`
-- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:f9e46cb5da233cb3becaf014ffc3ba3bb15a94363e05d756b4a3da4a66f19d84`
-- Public Cloud Run revision: `explorer-00015-dc9`
-- Admin Cloud Run revision: `explorer-admin-00005-p9k`
+- Source commit: `2a1584a`
+- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:c8bc35cb5afd4d98024922161ed3e7adce3d1cacff0a46915737abb1a58c8976`
+- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:ced7700839a2b3661ac9e4e9f397dc60479895dcf1306ed09730af42a291723e`
+- Public Cloud Run revision: `explorer-00016-89g`
+- Admin Cloud Run revision: `explorer-admin-00006-pt7`
 - Private API Cloud Run revision: `explorer-api-00014-jb8`
 - Admin IAP backend service ID: `5570063593656309274`
 - Cloud SQL rows after language migration: `102` sources, `117` nodes, `117`
@@ -91,9 +91,11 @@ Last verified on 2026-09-01:
 - Language migration backup: Cloud SQL backup `1788227781465`
 - Language migration execution: `explorer-lang-migration-226fc2c-klgm5`,
   backfilled `117` localization rows
-- Post-deploy public bootstrap smoke: `117` nodes, `139` edges, `102`
-  sources, `0` redacted routes, no obsolete node text fields, no reviewer
-  metadata, and access types limited to `read`, `submit`, and `partner_sync`
+- Post-deploy routed smoke: `/explorer/`, `/explorer/admin/`, and
+  `/explorer/api/graph/bootstrap` returned `200`; the public bootstrap reported
+  `117` nodes, `139` edges, `102` sources, `117` localization rows, locale
+  `en`, review states `116` `agent_researched` and `1` `needs_revision`, `0`
+  public routes, and no obsolete node text/review fields.
 - Internal private-API smoke execution `explorer-api-smoke-226fc2c-ncg2h`
   reached `PATCH /explorer/api/nodes/fishbase/localizations/en/review` as
   `chm-sa` and received the expected `401 missing_chm_user_context` guard
