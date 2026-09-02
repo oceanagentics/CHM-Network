@@ -13,6 +13,9 @@ class FakePoolClient {
 
   async query(sql: string): Promise<{ rows: unknown[]; rowCount: number }> {
     this.calls.push(sql.trim().replace(/\s+/g, " "));
+    if (sql.includes("SELECT id FROM nodes")) {
+      return { rows: [], rowCount: 0 };
+    }
     if (sql.includes("INSERT INTO node_localizations")) {
       throw new Error("localization failure");
     }
@@ -73,6 +76,7 @@ test("rolls back transactional record upserts when a related row write fails", a
   const client = new FakePoolClient();
   const repository = new PostgresGraphRepository({
     connect: async () => client,
+    query: async () => ({ rows: [{ record_updated_at: null }], rowCount: 1 }),
   } as unknown as Pool);
   const input: RecordAggregateContentInput = {
     id: "node-1",
@@ -86,7 +90,10 @@ test("rolls back transactional record upserts when a related row write fails", a
     },
   };
 
-  await assert.rejects(() => repository.upsertRecord("node-1", input), /localization failure/);
+  await assert.rejects(
+    () => repository.upsertRecord("node-1", input, { createOnly: true }),
+    /localization failure/,
+  );
 
   assert.equal(client.calls[0], "BEGIN");
   assert.equal(client.calls.at(-1), "ROLLBACK");

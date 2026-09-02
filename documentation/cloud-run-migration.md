@@ -9,17 +9,17 @@ runtime database.
 
 ## Runtime Modes
 
-- `RYU_MODE=local`: local development mode. The review endpoint is available
-  when caller identity headers are supplied.
+- `RYU_MODE=local`: local development mode. Record read/write routes are
+  available without production auth.
 - `RYU_MODE=public`: browser-facing production mode. Read routes are available
   and the review endpoint returns `403 writes_disabled`.
-- `RYU_MODE=api`: private Explorer record API mode. Record reads and writes
-  require CHM-forwarded Ocean Agentics user context and, when configured, a
-  trusted caller service account header. The API exposes record-oriented reads,
-  deterministic record upserts, targeted record patches, review updates,
-  admin-gated delete dry-runs/applies, and admin-gated bulk validation. It does
-  not expose raw table mutation, general node/edge/source/saved-view CRUD, or
-  schema mutation routes.
+- `RYU_MODE=api`: write-capable Explorer mode. With `IAP_JWT_AUDIENCE` set,
+  human browser access is authenticated directly by Explorer/IAP. Without IAP,
+  private API access requires bearer-token auth. The API exposes
+  record-oriented reads, deterministic record upserts, targeted record patches,
+  review updates, and admin-gated delete dry-runs/applies. It does not expose
+  raw table mutation, general node/edge/source/saved-view CRUD, bulk endpoints,
+  or schema mutation routes.
 
 Production Explorer services should set:
 
@@ -29,16 +29,11 @@ PGHOST=/cloudsql/chm-network:us-east4:chm
 PGDATABASE=explorer
 ```
 
-The public browser-facing `explorer` service should set
-`APP_BASE_PATH=/explorer`, use `PGUSER=explorer_read`, omit
-`IAP_JWT_AUDIENCE`, and run with only read-only data exposure. The
-IAP-protected `explorer-admin` service should set
-`APP_BASE_PATH=/explorer/admin`, use `PGUSER=explorer_read`, and set
-`IAP_JWT_AUDIENCE=/projects/288836337031/global/backendServices/5570063593656309274`.
-The private `explorer-api` service should use `PGUSER=explorer_write`,
-`RYU_TRUSTED_CALLER_SERVICE_ACCOUNTS=chm-sa@chm-network.iam.gserviceaccount.com`,
-internal-only Cloud Run ingress, and Cloud Run IAM invoker access for CHM.
-`explorer-api` is not itself an IAP backend.
+The launch human Explorer service should set `APP_BASE_PATH=/explorer`, use
+`PGUSER=explorer_write`, set `RYU_MODE=api`, and validate IAP directly with
+`IAP_JWT_AUDIENCE`. The private `explorer-api` service should use
+`PGUSER=explorer_write`, set `RYU_MODE=api`, set `APP_BASE_PATH=/`, omit
+`IAP_JWT_AUDIENCE`, and use `RYU_API_TOKENS_JSON` for agent bearer-token auth.
 Postgres setup SQL removes Cloud SQL's default elevated role membership from
 `explorer_read`, `explorer_write`, and `explorer_schema_admin`; only
 `explorer_schema_admin` keeps schema `CREATE` rights.
@@ -57,8 +52,8 @@ The details panel shows record and localization review state for selected nodes:
 - Authenticated/author builds render `reviewState` as a dropdown.
 - Authenticated/author builds show `reviewerNote`, `reviewer`, and
   `lastReviewed` in the embedded review form.
-- The form sends only `reviewState` and `reviewerNote`; Explorer sets
-  `reviewer` from CHM/IAP identity and `lastReviewed` server-side.
+- The form sends `locale`, `reviewState`, and `reviewerNote`; Explorer sets
+  `reviewer` from direct IAP identity and `lastReviewed` server-side.
 - The public build checks the `chm_admin_hint` cookie before mounting React. If
   the cookie is present, `/explorer` redirects to `/explorer/admin` while
   preserving the current query string and hash. Without the cookie, anonymous
@@ -68,32 +63,26 @@ The details panel shows record and localization review state for selected nodes:
   timestamps, route targets, and local source paths from public
   APIs.
 
-The browser review helper calls the CHM proxy path by default:
+The browser review helper calls Explorer directly:
 
 ```text
-/api/explorer/nodes/:id/localizations/:locale/review
+/explorer/admin/api/records/:id/review
 ```
 
-Explorer also exposes the record-oriented private API path
-`PATCH /explorer/api/records/:id/review`, but CHM's browser proxy remains on
-the older localization review path until the proxy boundary is deliberately
-widened.
-
-Set `VITE_REVIEW_API_BASE_PATH` only if the CHM proxy path changes. Set
-`VITE_CAN_REVIEW_NODES=false` for read-only/static builds that should display
-review fields without edit controls.
+Set `VITE_CAN_REVIEW_NODES=false` for read-only/static builds that should
+display review fields without edit controls.
 
 ## Record API
 
-Explorer now has a record-oriented API surface:
+Explorer now has a record-oriented API surface. These routes are relative to
+the service base path:
 
-- `GET /explorer/api/records`
-- `GET /explorer/api/records/:id`
-- `PUT /explorer/api/records/:id`
-- `PATCH /explorer/api/records/:id`
-- `PATCH /explorer/api/records/:id/review`
-- `DELETE /explorer/api/records/:id`
-- `POST /explorer/api/records:bulk`
+- `GET /api/records`
+- `GET /api/records/:id`
+- `PUT /api/records/:id`
+- `PATCH /api/records/:id`
+- `PATCH /api/records/:id/review`
+- `DELETE /api/records/:id`
 
 The list endpoint is SQL-backed and supports `q`, `kind`, `geography`,
 `dataType`, `recordDepth`, `reviewState`, `locale`, `localeMode`,
@@ -102,9 +91,9 @@ The list endpoint is SQL-backed and supports `q`, `kind`, `geography`,
 
 Content writes reject review and audit fields. Full writes use deterministic
 caller-supplied IDs and transactional upserts; repeated requests with the same
-ID do not need a separate idempotency table. Deletes require an admin allowlist
-and a fresh dry-run `impactHash`. Bulk imports are validation-only in this
-implementation.
+ID do not need a separate idempotency table. Applied writes require a
+`recordUpdatedAt` precondition. Deletes require admin access, a fresh dry-run
+`impactHash`, and the same `recordUpdatedAt` precondition.
 
 ## Current Deployment
 
@@ -128,9 +117,8 @@ Last verified on 2026-09-01:
   `en`, review states `116` `agent_researched` and `1` `needs_revision`, `0`
   public routes, and no obsolete node text/review fields.
 - Internal private-API smoke execution `explorer-api-smoke-226fc2c-ncg2h`
-  reached `PATCH /explorer/api/nodes/fishbase/localizations/en/review` as
-  `chm-sa` and received the expected `401 missing_chm_user_context` guard
-  response
+  verified the pre-refactor CHM review bridge. New private API smoke checks
+  should use bearer-token auth against `/api/records`.
 - Three-state review schema normalization completed on 2026-08-31. Before:
   `99` `unreviewed`, `16` `agent_researched`, and `2`
   `needs_human_review`. After normalization and smoke probes, the public
@@ -171,7 +159,7 @@ For API/server-only changes, build the API service image instead:
 gcloud builds submit \
   --region us-east4 \
   --config cloudbuild.yaml \
-  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:latest,_APP_BASE_PATH=/explorer,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false,_VITE_REVIEW_API_BASE_PATH=/api/explorer \
+  --substitutions _IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api:latest,_APP_BASE_PATH=/,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false \
   .
 ```
 
@@ -248,28 +236,21 @@ APP_BASE_PATH=/explorer RYU_MODE=public PORT=8788 npm --workspace server run sta
 curl -fsS http://127.0.0.1:8788/healthz
 curl -fsS http://127.0.0.1:8788/explorer/api/graph/bootstrap
 curl -sS -o /tmp/ryu-write-response.json -w '%{http_code}' \
-  -X PATCH http://127.0.0.1:8788/explorer/api/nodes/test-node/localizations/en/review \
+  -X PATCH http://127.0.0.1:8788/explorer/api/records/test-node/review \
   -H 'Content-Type: application/json' \
-  --data '{"reviewState":"human_reviewed"}'
+  --data '{"locale":"en","reviewState":"human_reviewed"}'
 ```
 
 Expected result for the write check is `403` with `{"error":"writes_disabled"}`.
 
-Private review path through CHM:
+Agent review path:
 
 ```text
-PATCH /api/explorer/nodes/:id/localizations/:locale/review
+PATCH /api/records/:id/review
 ```
 
-The body may contain only `reviewState` and `reviewerNote`. CHM forwards the
-IAP email to Explorer, and Explorer stores that email as `reviewer` plus a
-server-side `lastReviewed` timestamp in `node_localizations`.
-
-For the internal-only `explorer-api` service, CHM must call from Direct VPC
-egress with `all-traffic` through a subnet that has Private Google Access
-enabled. Without that network shape, calls to the `run.app` URI are treated as
-external direct requests and receive a Google platform `404` before reaching
-Explorer.
+Agent requests include `Authorization: Bearer $RYU_API_TOKEN`. Human browser
+requests use direct Explorer/IAP auth instead of CHM-forwarded identity headers.
 
 After CHM routes `/explorer` and `/explorer/admin` to Cloud Run, verify:
 
@@ -285,9 +266,6 @@ bootstrap should return graph JSON with reviewer metadata, raw review JSON,
 route targets, and source local paths redacted. Unauthenticated
 `/explorer/admin` should redirect through IAP before reaching Explorer admin.
 
-Private backend verification completed on 2026-08-31 with a temporary Cloud Run
-job running as `chm-sa`. The job updated `fishbase` through
-`PATCH /explorer/api/nodes/fishbase/localizations/en/review` and verified expected denials for
-unsupported fields, missing user context, wrong caller headers, and the absent
-general node write route. The temporary job was deleted afterward. The remaining
-manual check is the signed-in browser form click-through through CHM/IAP.
+Agent API verification should use a bearer token against
+`https://chm.oceanagentics.org/api/records`. The signed-in browser check should
+exercise direct Explorer/IAP review at `/explorer/admin`.

@@ -15,9 +15,9 @@ import type {
 import type {
   BulkRecordValidationInput,
   BulkRecordValidationResult,
+  RecordDeleteImpact,
   RecordAggregate,
   RecordAggregateContentInput,
-  RecordDeleteImpact,
   RecordListResult,
   RecordMutationOptions,
   RecordPatchInput,
@@ -26,7 +26,14 @@ import type {
 } from "../../shared/recordApi";
 import { defaultLocale, emptyLocalizationDetails } from "../../shared/localization";
 import type { GraphRepository } from "./graphRepository";
-import { createApp, toPublicBootstrap, type RyuRuntimeMode } from "./server";
+import { ApiRequestError } from "./recordContracts";
+import {
+  createApp,
+  hashApiToken,
+  toPublicBootstrap,
+  type ApiTokenRecord,
+  type RyuRuntimeMode,
+} from "./server";
 
 const bootstrap: GraphBootstrapPayload = {
   nodes: [],
@@ -35,6 +42,40 @@ const bootstrap: GraphBootstrapPayload = {
   ryuRoutes: [],
   savedViews: [],
 };
+const writerToken = "ryu_live_writer";
+const reviewerToken = "ryu_live_reviewer";
+const adminToken = "ryu_live_admin";
+const apiTokens: ApiTokenRecord[] = [
+  {
+    name: "writer",
+    scopes: ["writer"],
+    hash: hashApiToken(writerToken),
+    owner: "writer@oceanagentics.com",
+    expiresAt: null,
+  },
+  {
+    name: "reviewer",
+    scopes: ["reviewer"],
+    hash: hashApiToken(reviewerToken),
+    owner: "reviewer@oceanagentics.com",
+    expiresAt: null,
+  },
+  {
+    name: "admin",
+    scopes: ["admin"],
+    hash: hashApiToken(adminToken),
+    owner: "admin@oceanagentics.com",
+    expiresAt: null,
+  },
+];
+const recordUpdatedAt = "2026-08-27T00:00:00.000Z";
+
+function authHeaders(token = writerToken, includePrecondition = false): Record<string, string> {
+  return {
+    Authorization: `Bearer ${token}`,
+    ...(includePrecondition ? { "x-ryu-record-updated-at": recordUpdatedAt } : {}),
+  };
+}
 
 function createFakeLocalization(
   overrides: Partial<NodeLocalization> = {},
@@ -139,6 +180,7 @@ class FakeRepository implements GraphRepository {
       valid: true,
       recordId: id,
       issues: [],
+      recordUpdatedAt: this.deleted ? null : this.recordUpdatedAt(),
     };
   }
 
@@ -150,6 +192,7 @@ class FakeRepository implements GraphRepository {
     if (options.validateOnly) {
       return this.validateRecordAggregate(id, input);
     }
+    this.requireUpsertPrecondition(options);
 
     this.node = createFakeNode({
       id,
@@ -169,8 +212,9 @@ class FakeRepository implements GraphRepository {
     options: RecordMutationOptions = {},
   ): RecordAggregate | RecordValidationResult {
     if (options.validateOnly) {
-      return { valid: true, recordId: id, issues: [] };
+      return { valid: true, recordId: id, issues: [], recordUpdatedAt: this.recordUpdatedAt() };
     }
+    this.requireExistingPrecondition(options);
 
     this.node = createFakeNode({
       ...this.node,
@@ -192,6 +236,7 @@ class FakeRepository implements GraphRepository {
 
     return {
       recordId: id,
+      recordUpdatedAt: this.recordUpdatedAt(),
       nodeRows: 1,
       localizationRows: 1,
       inboundEdges: 0,
@@ -203,11 +248,16 @@ class FakeRepository implements GraphRepository {
     };
   }
 
-  deleteRecord(id: string, impactHash: string): RecordDeleteImpact {
+  deleteRecord(
+    id: string,
+    impactHash: string,
+    options: RecordMutationOptions = {},
+  ): RecordDeleteImpact {
     const impact = this.getRecordDeleteImpact(id);
     if (impact.impactHash !== impactHash) {
       throw new Error("stale delete impact hash");
     }
+    this.requireExistingPrecondition(options);
 
     this.deleted = true;
     return impact;
@@ -226,7 +276,13 @@ class FakeRepository implements GraphRepository {
     locale: SupportedLocale,
     input: NodeLocalizationReviewInput,
     reviewer: string,
+    options: RecordMutationOptions = {},
   ): GraphNode {
+    this.requireExistingPrecondition(options);
+    if (options.validateOnly) {
+      return this.node;
+    }
+
     const lastReviewed = "2026-08-27T01:00:00.000Z";
     const existingLocalization =
       this.node.localizations[locale] ?? createFakeLocalization({ locale });
@@ -267,6 +323,40 @@ class FakeRepository implements GraphRepository {
 
   listSavedViews(): SavedView[] {
     return [];
+  }
+
+  private recordUpdatedAt(): string {
+    return Object.values(this.node.localizations)
+      .map((localization) => localization?.updatedAt)
+      .filter((value): value is string => Boolean(value))
+      .concat(this.node.updatedAt)
+      .sort()
+      .at(-1) ?? this.node.updatedAt;
+  }
+
+  private requireUpsertPrecondition(options: RecordMutationOptions) {
+    if (this.deleted) {
+      if (options.createOnly) {
+        return;
+      }
+      throw new ApiRequestError(428, "createOnly precondition is required");
+    }
+    if (options.createOnly) {
+      throw new ApiRequestError(412, "record already exists");
+    }
+    this.requireExistingPrecondition(options);
+  }
+
+  private requireExistingPrecondition(options: RecordMutationOptions) {
+    if (this.deleted) {
+      throw new Error("record not found: node-1");
+    }
+    if (!options.recordUpdatedAt) {
+      throw new ApiRequestError(428, "recordUpdatedAt precondition is required");
+    }
+    if (options.recordUpdatedAt !== this.recordUpdatedAt()) {
+      throw new ApiRequestError(412, "stale recordUpdatedAt");
+    }
   }
 
   private recordAggregate(overrides: Partial<GraphNode> = {}): RecordAggregate {
@@ -315,6 +405,8 @@ async function withServer(
   options: {
     repository?: FakeRepository;
     adminUsers?: string[];
+    apiTokens?: ApiTokenRecord[];
+    apiWriteRateLimitPerMinute?: number;
   } = {},
 ) {
   const repository = options.repository ?? new FakeRepository();
@@ -323,8 +415,9 @@ async function withServer(
     mode,
     repository,
     adminUsers: options.adminUsers ?? [],
+    apiTokens: options.apiTokens ?? apiTokens,
+    apiWriteRateLimitPerMinute: options.apiWriteRateLimitPerMinute,
     staticDirectory: "client/public",
-    trustedCallerServiceAccounts: ["chm-sa@chm-network.iam.gserviceaccount.com"],
   });
   const server = app.listen(0, "127.0.0.1");
 
@@ -428,13 +521,19 @@ test("does not expose Explorer API at the root when base path is /explorer", asy
   });
 });
 
-test("redacts source local paths from public source endpoints", async () => {
+test("does not expose source lookup as a launch API route", async () => {
   await withServer("public", async (baseUrl) => {
     const response = await fetch(`${baseUrl}/explorer/api/sources/source-1`);
 
-    assert.equal(response.status, 200);
-    const body = await response.json() as Source;
-    assert.equal(body.localPath, null);
+    assert.equal(response.status, 404);
+  });
+});
+
+test("does not expose ryu portal routes as launch API routes", async () => {
+  await withServer("public", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/ryu/systems`);
+
+    assert.equal(response.status, 404);
   });
 });
 
@@ -467,26 +566,48 @@ test("serves public record details with allowlisted DTO fields", async () => {
   }, { repository: new FakeRepository(node) });
 });
 
-test("requires trusted user context for private record reads", async () => {
+test("requires bearer token for private record reads", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
-      headers: {
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-      },
-    });
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`);
 
     assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { error: "missing_chm_user_context" });
+    assert.deepEqual(await response.json(), { error: "missing_bearer_token" });
   });
 });
 
-test("serves private record details through trusted CHM context", async () => {
+test("rejects invalid and expired bearer tokens", async () => {
+  await withServer("api", async (baseUrl) => {
+    const invalid = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: { Authorization: "Bearer nope" },
+    });
+
+    assert.equal(invalid.status, 403);
+    assert.deepEqual(await invalid.json(), { error: "invalid_bearer_token" });
+
+    const expired = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: { Authorization: "Bearer ryu_live_expired" },
+    });
+
+    assert.equal(expired.status, 403);
+    assert.deepEqual(await expired.json(), { error: "expired_bearer_token" });
+  }, {
+    apiTokens: [
+      ...apiTokens,
+      {
+        name: "expired",
+        scopes: ["reader"],
+        hash: hashApiToken("ryu_live_expired"),
+        owner: "expired@oceanagentics.com",
+        expiresAt: "2020-01-01T00:00:00.000Z",
+      },
+    ],
+  });
+});
+
+test("serves private record details through bearer token auth", async () => {
   await withServer("api", async (baseUrl) => {
     const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
-      headers: {
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
-      },
+      headers: authHeaders(),
     });
 
     assert.equal(response.status, 200);
@@ -495,6 +616,23 @@ test("serves private record details through trusted CHM context", async () => {
     assert.equal(body.routes[0].target, "https://private.example.com");
     assert.deepEqual(body.routes[0].properties, { secret: "do-not-leak" });
   });
+});
+
+test("rate limits runaway token reads", async () => {
+  await withServer("api", async (baseUrl) => {
+    const first = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: authHeaders(),
+    });
+    assert.equal(first.status, 200);
+
+    const second = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      headers: authHeaders(),
+    });
+
+    assert.equal(second.status, 429);
+    assert.equal(second.headers.has("retry-after"), true);
+    assert.deepEqual(await second.json(), { error: "rate_limited" });
+  }, { apiWriteRateLimitPerMinute: 1 });
 });
 
 test("parses the full record search filter set", async () => {
@@ -536,10 +674,10 @@ test("rejects unsupported record query fields", async () => {
 
 test("rejects review writes in public mode", async () => {
   await withServer("public", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reviewState: "human_reviewed" }),
+      body: JSON.stringify({ locale: "en", reviewState: "human_reviewed" }),
     });
 
     assert.equal(response.status, 403);
@@ -553,8 +691,7 @@ test("allows record-oriented review writes in api mode", async () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(reviewerToken, true),
       },
       body: JSON.stringify({
         locale: "en",
@@ -566,7 +703,48 @@ test("allows record-oriented review writes in api mode", async () => {
     assert.equal(response.status, 200);
     const body = await response.json() as Record<string, any>;
     assert.equal(body.localizations.en.reviewState, "human_reviewed");
-    assert.equal(body.localizations.en.reviewer, "danny@oceanagentics.com");
+    assert.equal(body.localizations.en.reviewer, "reviewer@oceanagentics.com");
+  });
+});
+
+test("dry-runs record review writes without mutating", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review?validateOnly=true`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(reviewerToken, true),
+      },
+      body: JSON.stringify({
+        locale: "en",
+        reviewState: "human_reviewed",
+        reviewerNote: "Checked.",
+      }),
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json() as Record<string, any>;
+    assert.equal(body.localizations.en.reviewState, "agent_researched");
+    assert.equal(body.localizations.en.reviewer, null);
+  });
+});
+
+test("prevents writer tokens from setting human_reviewed", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(writerToken, true),
+      },
+      body: JSON.stringify({
+        locale: "en",
+        reviewState: "human_reviewed",
+      }),
+    });
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: "review_scope_required" });
   });
 });
 
@@ -576,8 +754,7 @@ test("rejects review fields in content upserts", async () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(writerToken, true),
       },
       body: JSON.stringify({
         id: "node-1",
@@ -604,8 +781,7 @@ test("validates deterministic record upserts without applying changes", async ()
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(),
       },
       body: JSON.stringify({
         id: "node-1",
@@ -619,7 +795,12 @@ test("validates deterministic record upserts without applying changes", async ()
     });
 
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { valid: true, recordId: "node-1", issues: [] });
+    assert.deepEqual(await response.json(), {
+      valid: true,
+      recordId: "node-1",
+      issues: [],
+      recordUpdatedAt,
+    });
   });
 });
 
@@ -629,8 +810,7 @@ test("rejects ambiguous nested JSON patch fields", async () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(writerToken, true),
       },
       body: JSON.stringify({
         record: {
@@ -650,8 +830,7 @@ test("enforces review route payload limits", async () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(writerToken, true),
       },
       body: JSON.stringify({
         locale: "en",
@@ -664,27 +843,21 @@ test("enforces review route payload limits", async () => {
   });
 });
 
-test("fails closed when admin allowlist is missing", async () => {
+test("requires admin token for delete dry runs", async () => {
   await withServer("api", async (baseUrl) => {
     const response = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
       method: "DELETE",
-      headers: {
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
-      },
+      headers: authHeaders(writerToken),
     });
 
     assert.equal(response.status, 403);
-    assert.deepEqual(await response.json(), { error: "admin_allowlist_missing" });
+    assert.deepEqual(await response.json(), { error: "wrong_scope" });
   });
 });
 
 test("allows admin delete dry runs and requires impact hash to apply", async () => {
   await withServer("api", async (baseUrl) => {
-    const headers = {
-      "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-      "x-chm-user-email": "danny@oceanagentics.com",
-    };
+    const headers = authHeaders(adminToken);
     const dryRun = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
       method: "DELETE",
       headers,
@@ -704,148 +877,142 @@ test("allows admin delete dry runs and requires impact hash to apply", async () 
 
     const apply = await fetch(`${baseUrl}/explorer/api/records/node-1?impactHash=impact-1`, {
       method: "DELETE",
-      headers,
+      headers: authHeaders(adminToken, true),
     });
 
     assert.equal(apply.status, 200);
-  }, { adminUsers: ["danny@oceanagentics.com"] });
-});
-
-test("requires admin access for bulk validation and refuses bulk apply", async () => {
-  await withServer("api", async (baseUrl) => {
-    const headers = {
-      "Content-Type": "application/json",
-      "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-      "x-chm-user-email": "danny@oceanagentics.com",
-    };
-    const refused = await fetch(`${baseUrl}/explorer/api/records:bulk`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        validateOnly: false,
-        records: [],
-      }),
-    });
-
-    assert.equal(refused.status, 400);
-    assert.deepEqual(await refused.json(), {
-      error: "bulk records only supports validateOnly=true",
-    });
-
-    const validated = await fetch(`${baseUrl}/explorer/api/records:bulk`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        validateOnly: true,
-        records: [
-          {
-            id: "node-1",
-            record: { kind: "system" },
-            localizations: {
-              en: { title: "Test System" },
-            },
-          },
-        ],
-      }),
-    });
-
-    assert.equal(validated.status, 200);
-    assert.deepEqual(await validated.json(), {
-      valid: true,
-      issues: [],
-      checkedRecords: 1,
-    });
-  }, { adminUsers: ["danny@oceanagentics.com"] });
-});
-
-test("requires CHM user context for review writes in api mode", async () => {
-  await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-      },
-      body: JSON.stringify({ reviewState: "human_reviewed" }),
-    });
-
-    assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { error: "missing_chm_user_context" });
   });
 });
 
-test("requires CHM user email for reviewer identity", async () => {
+test("does not expose bulk validation as a launch API route", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
-      method: "PATCH",
+    const response = await fetch(`${baseUrl}/explorer/api/records:bulk`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-subject": "accounts.google.com:123",
+        ...authHeaders(adminToken),
       },
-      body: JSON.stringify({ reviewState: "human_reviewed" }),
+      body: JSON.stringify({ validateOnly: true, records: [] }),
     });
 
-    assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { error: "missing_chm_user_context" });
+    assert.equal(response.status, 404);
   });
 });
 
-test("allows CHM service review writes in api mode", async () => {
+test("requires recordUpdatedAt on applied record patches", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
-        "x-chm-user-subject": "accounts.google.com:123",
+        ...authHeaders(writerToken),
+      },
+      body: JSON.stringify({ record: { url: "https://example.com" } }),
+    });
+
+    assert.equal(response.status, 428);
+    assert.deepEqual(await response.json(), {
+      error: "recordUpdatedAt precondition is required",
+    });
+  });
+});
+
+test("rejects stale recordUpdatedAt on applied record patches", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${writerToken}`,
+        "x-ryu-record-updated-at": "2026-08-26T00:00:00.000Z",
+      },
+      body: JSON.stringify({ record: { url: "https://example.com" } }),
+    });
+
+    assert.equal(response.status, 412);
+    assert.deepEqual(await response.json(), { error: "stale recordUpdatedAt" });
+  });
+});
+
+test("rate limits runaway token writes", async () => {
+  await withServer("api", async (baseUrl) => {
+    const first = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(writerToken),
+      },
+      body: JSON.stringify({ record: { url: "https://example.com/one" } }),
+    });
+    assert.equal(first.status, 200);
+
+    const second = await fetch(`${baseUrl}/explorer/api/records/node-1?validateOnly=true`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(writerToken),
+      },
+      body: JSON.stringify({ record: { url: "https://example.com/two" } }),
+    });
+
+    assert.equal(second.status, 429);
+    assert.equal(second.headers.has("retry-after"), true);
+    assert.deepEqual(await second.json(), { error: "rate_limited" });
+  }, { apiWriteRateLimitPerMinute: 1 });
+});
+
+test("allows writer review changes below human_reviewed", async () => {
+  await withServer("api", async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(writerToken, true),
       },
       body: JSON.stringify({
-        reviewState: "human_reviewed",
+        locale: "en",
+        reviewState: "needs_revision",
         reviewerNote: "Checked against source.",
       }),
     });
 
     assert.equal(response.status, 200);
-    const body = await response.json() as GraphNode;
-    assert.equal(body.localizations.en?.reviewState, "human_reviewed");
-    assert.equal(body.localizations.en?.reviewerNote, "Checked against source.");
-    assert.equal(body.localizations.en?.reviewer, "danny@oceanagentics.com");
-    assert.equal(body.localizations.en?.lastReviewed, "2026-08-27T01:00:00.000Z");
+    const body = await response.json() as Record<string, any>;
+    assert.equal(body.localizations.en.reviewState, "needs_revision");
+    assert.equal(body.localizations.en.reviewerNote, "Checked against source.");
+    assert.equal(body.localizations.en.reviewer, "writer@oceanagentics.com");
   });
 });
 
 test("rejects client-controlled review fields", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(reviewerToken, true),
       },
       body: JSON.stringify({
+        locale: "en",
         reviewState: "human_reviewed",
         reviewer: "other@example.com",
       }),
     });
 
     assert.equal(response.status, 400);
-    assert.deepEqual(await response.json(), { error: "unsupported review fields: reviewer" });
+    assert.deepEqual(await response.json(), { error: "unsupported body fields: reviewer" });
   });
 });
 
 test("rejects removed review states", async () => {
   await withServer("api", async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/explorer/api/nodes/node-1/localizations/en/review`, {
+    const response = await fetch(`${baseUrl}/explorer/api/records/node-1/review`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(reviewerToken, true),
       },
-      body: JSON.stringify({ reviewState: "needs_human_review" }),
+      body: JSON.stringify({ locale: "en", reviewState: "needs_human_review" }),
     });
 
     assert.equal(response.status, 400);
@@ -859,8 +1026,7 @@ test("does not expose broad node writes", async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-chm-caller-service-account": "chm-sa@chm-network.iam.gserviceaccount.com",
-        "x-chm-user-email": "danny@oceanagentics.com",
+        ...authHeaders(),
       },
       body: JSON.stringify({ kind: "system", name: "Test System" }),
     });

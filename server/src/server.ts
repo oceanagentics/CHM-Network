@@ -1,25 +1,21 @@
 import cors from "cors";
 import express, { type Request, type RequestHandler, type Response } from "express";
 import { OAuth2Client } from "google-auth-library";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type {
   GraphBootstrapPayload,
-  NodeLocalizationReviewInput,
-  RyuSystemQuery,
-  RyuSystemRecord,
-  Source,
 } from "../../shared/domain";
-import { defaultLocale, isSupportedLocale } from "../../shared/localization";
+import { defaultLocale } from "../../shared/localization";
 import type { RecordDtoScope, RecordValidationResult } from "../../shared/recordApi";
 import type { GraphRepository } from "./graphRepository";
-import { isRecord, isReviewState, normalizeString } from "./graphRepositorySupport";
+import { isRecord, normalizeString } from "./graphRepositorySupport";
 import {
   ApiRequestError,
-  hashJson,
-  readBulkRecordValidationInput,
+  buildRecordUpdatedAt,
   readRecordAggregateContentInput,
   readRecordPatchInput,
   readRecordReviewInput,
@@ -83,78 +79,6 @@ function isOceanAgenticsIapPayload(payload: Awaited<ReturnType<typeof validateIa
   );
 }
 
-function readStringList(value: unknown): string[] | undefined {
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => readStringList(item) ?? []);
-  }
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const values = value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return values.length > 0 ? values : undefined;
-}
-
-function readBoolean(value: unknown): boolean | undefined {
-  if (value === "true" || value === true) {
-    return true;
-  }
-  if (value === "false" || value === false) {
-    return false;
-  }
-
-  return undefined;
-}
-
-function readSystemQuery(input: Record<string, unknown>): RyuSystemQuery {
-  return {
-    query: typeof input.query === "string" ? input.query : undefined,
-    domains: readStringList(input.domains),
-    geographies: readStringList(input.geographies),
-    capabilities: readStringList(input.capabilities),
-    deliveryFormats: readStringList(input.deliveryFormats),
-    routeStatus: readStringList(input.routeStatus),
-    includeRoutes: readBoolean(input.includeRoutes),
-    includeSources: readBoolean(input.includeSources),
-  };
-}
-
-function readNodeReviewInput(input: unknown): NodeLocalizationReviewInput {
-  if (!isRecord(input)) {
-    throw new Error("review body is required");
-  }
-
-  const allowedFields = new Set(["reviewState", "reviewerNote"]);
-  const unsupportedFields = Object.keys(input).filter((key) => !allowedFields.has(key));
-  if (unsupportedFields.length > 0) {
-    throw new Error(`unsupported review fields: ${unsupportedFields.join(", ")}`);
-  }
-
-  const hasReviewState = Object.prototype.hasOwnProperty.call(input, "reviewState");
-  const hasReviewerNote = Object.prototype.hasOwnProperty.call(input, "reviewerNote");
-  if (!hasReviewState && !hasReviewerNote) {
-    throw new Error("reviewState or reviewerNote is required");
-  }
-  if (hasReviewState && !isReviewState(input.reviewState)) {
-    throw new Error("invalid reviewState");
-  }
-  if (
-    hasReviewerNote &&
-    input.reviewerNote !== null &&
-    typeof input.reviewerNote !== "string"
-  ) {
-    throw new Error("reviewerNote must be a string or null");
-  }
-
-  return {
-    ...(hasReviewState ? { reviewState: input.reviewState as NodeLocalizationReviewInput["reviewState"] } : {}),
-    ...(hasReviewerNote ? { reviewerNote: normalizeString(input.reviewerNote) } : {}),
-  };
-}
-
 function sendError(response: Response, error: unknown) {
   const message = error instanceof Error ? error.message : "request failed";
   const status =
@@ -201,26 +125,9 @@ export function toPublicBootstrap(payload: GraphBootstrapPayload): GraphBootstra
   };
 }
 
-function toPublicPortalSystem(system: RyuSystemRecord): RyuSystemRecord {
-  return {
-    ...system,
-    routes: [],
-    sources: system.sources.map(withoutLocalPath),
-  };
-}
-
 function readParam(request: Request, key: string): string {
   const value = request.params[key];
   return Array.isArray(value) ? value[0] : value;
-}
-
-function readLocaleParam(request: Request, key: string) {
-  const locale = readParam(request, key);
-  if (!isSupportedLocale(locale)) {
-    throw new Error(`unsupported locale: ${locale}`);
-  }
-
-  return locale;
 }
 
 function normalizeBasePath(value: string | undefined): string {
@@ -247,13 +154,184 @@ function readEnvList(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
-function readAuditUser(request: Request) {
+export type ApiTokenScope = "reader" | "writer" | "reviewer" | "admin";
+
+export interface ApiTokenRecord {
+  name: string;
+  scopes: ApiTokenScope[];
+  hash: string;
+  owner?: string | null;
+  expiresAt?: string | null;
+}
+
+type AuthContext = {
+  kind: "local" | "public" | "iap" | "token";
+  scopes: ApiTokenScope[];
+  tokenName?: string;
+  tokenOwner?: string | null;
+  userEmail?: string | null;
+  userSubject?: string | null;
+  rateLimitBucket?: string | null;
+};
+
+const scopeRank: Record<ApiTokenScope, number> = {
+  reader: 0,
+  writer: 1,
+  reviewer: 2,
+  admin: 3,
+};
+
+const tokenScopes = new Set<ApiTokenScope>(["reader", "writer", "reviewer", "admin"]);
+const recordUpdatedAtHeader = "x-ryu-record-updated-at";
+const createOnlyHeader = "x-ryu-create-only";
+
+export function hashApiToken(token: string): string {
+  return `sha256:${crypto.createHash("sha256").update(token).digest("hex")}`;
+}
+
+function isApiTokenScope(value: unknown): value is ApiTokenScope {
+  return typeof value === "string" && tokenScopes.has(value as ApiTokenScope);
+}
+
+function hasScope(scopes: ApiTokenScope[], requiredScope: ApiTokenScope): boolean {
+  return scopes.some((scope) => scopeRank[scope] >= scopeRank[requiredScope]);
+}
+
+function readApiTokenRecords(value: string | undefined): ApiTokenRecord[] {
+  if (!value?.trim()) {
+    return [];
+  }
+
+  const parsed = JSON.parse(value) as unknown;
+  if (!Array.isArray(parsed)) {
+    throw new Error("RYU_API_TOKENS_JSON must be a JSON array");
+  }
+
+  return parsed.map((item, index) => {
+    if (!isRecord(item)) {
+      throw new Error(`RYU_API_TOKENS_JSON[${index}] must be an object`);
+    }
+    if (typeof item.name !== "string" || !item.name.trim()) {
+      throw new Error(`RYU_API_TOKENS_JSON[${index}].name is required`);
+    }
+    if (typeof item.hash !== "string" || !item.hash.startsWith("sha256:")) {
+      throw new Error(`RYU_API_TOKENS_JSON[${index}].hash must be sha256:<hex>`);
+    }
+    if (!Array.isArray(item.scopes) || !item.scopes.every(isApiTokenScope)) {
+      throw new Error(`RYU_API_TOKENS_JSON[${index}].scopes are invalid`);
+    }
+    if (
+      item.expiresAt !== undefined &&
+      item.expiresAt !== null &&
+      typeof item.expiresAt !== "string"
+    ) {
+      throw new Error(`RYU_API_TOKENS_JSON[${index}].expiresAt must be a string or null`);
+    }
+
+    return {
+      name: item.name.trim(),
+      hash: item.hash,
+      scopes: item.scopes,
+      owner: typeof item.owner === "string" ? item.owner : null,
+      expiresAt: item.expiresAt ?? null,
+    };
+  });
+}
+
+function readPositiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function safeEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function authenticateToken(request: Request, tokens: ApiTokenRecord[]): AuthContext | ApiRequestError {
+  if (tokens.length === 0) {
+    return new ApiRequestError(403, "api_token_config_missing");
+  }
+
+  const authorization = request.get("authorization") ?? "";
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    return new ApiRequestError(401, "missing_bearer_token");
+  }
+
+  const hashedToken = hashApiToken(match[1]);
+  const token = tokens.find((candidate) => safeEqual(candidate.hash, hashedToken));
+  if (!token) {
+    return new ApiRequestError(403, "invalid_bearer_token");
+  }
+  if (token.expiresAt && Date.parse(token.expiresAt) <= Date.now()) {
+    return new ApiRequestError(403, "expired_bearer_token");
+  }
+
+  return {
+    kind: "token",
+    scopes: token.scopes,
+    tokenName: token.name,
+    tokenOwner: token.owner ?? null,
+    rateLimitBucket: token.name,
+  };
+}
+
+function createTokenRateLimiter(limitPerMinute: number) {
+  const windowMs = 60_000;
+  const buckets = new Map<string, { startedAt: number; count: number }>();
+
+  return (context: AuthContext, response: Response): boolean => {
+    if (context.kind !== "token" || !context.rateLimitBucket) {
+      return true;
+    }
+
+    const now = Date.now();
+    const bucket = buckets.get(context.rateLimitBucket);
+    const current = bucket && now - bucket.startedAt < windowMs
+      ? bucket
+      : { startedAt: now, count: 0 };
+
+    if (current.count >= limitPerMinute) {
+      response.set("Retry-After", String(Math.max(1, Math.ceil((current.startedAt + windowMs - now) / 1000))));
+      return false;
+    }
+
+    current.count += 1;
+    buckets.set(context.rateLimitBucket, current);
+    return true;
+  };
+}
+
+function setAuthContext(response: Response, context: AuthContext) {
+  response.locals.ryuAuth = context;
+}
+
+function readAuthContext(response: Response): AuthContext | null {
+  return response.locals.ryuAuth as AuthContext | null ?? null;
+}
+
+function readAuditUser(request: Request, response?: Response) {
+  const context = response ? readAuthContext(response) : null;
+  if (context?.userEmail || context?.userSubject) {
+    return {
+      email: context.userEmail ?? null,
+      subject: context.userSubject ?? null,
+    };
+  }
+  const iapUser = response?.locals.ryuIapUser as { email?: string | null; subject?: string | null } | undefined;
+  if (iapUser?.email || iapUser?.subject) {
+    return {
+      email: iapUser.email ?? null,
+      subject: iapUser.subject ?? null,
+    };
+  }
+
   const email =
-    request.get("x-chm-user-email") ??
     request.get("x-goog-authenticated-user-email") ??
     null;
   const subject =
-    request.get("x-chm-user-subject") ??
     request.get("x-goog-authenticated-user-id") ??
     null;
 
@@ -263,14 +341,26 @@ function readAuditUser(request: Request) {
   };
 }
 
-function logWrite(request: Request, action: string, details: Record<string, unknown> = {}) {
-  const auditUser = readAuditUser(request);
+function logWrite(
+  request: Request,
+  response: Response,
+  action: string,
+  details: Record<string, unknown> = {},
+) {
+  const auth = readAuthContext(response);
+  const auditUser = readAuditUser(request, response);
   console.info("Explorer write", {
     requestId: request.get("x-request-id") ?? request.get("x-cloud-trace-context") ?? null,
     action,
-    caller: request.get("x-chm-caller-service-account") ?? null,
+    authKind: auth?.kind ?? null,
+    tokenName: auth?.tokenName ?? null,
+    tokenOwner: auth?.tokenOwner ?? null,
+    tokenScopes: auth?.kind === "token" ? auth.scopes : undefined,
+    rateLimitBucket: auth?.rateLimitBucket ?? null,
     userEmail: auditUser.email,
     userSubject: auditUser.subject,
+    method: request.method,
+    route: request.route?.path ?? request.path,
     ...details,
   });
 }
@@ -279,90 +369,73 @@ function isOceanAgenticsEmail(email: string | null): boolean {
   return Boolean(email?.endsWith(`@${oceanAgenticsDomain}`));
 }
 
-function requireAuthenticatedEditorAccess(
+function requireAccess(
   mode: RyuRuntimeMode,
-  trustedCallerServiceAccounts: string[],
+  requiredScope: ApiTokenScope,
+  options: {
+    adminUsers: string[];
+    apiTokens: ApiTokenRecord[];
+    iapAudience: string | undefined;
+    rateLimit: ReturnType<typeof createTokenRateLimiter>;
+  },
 ): RequestHandler {
   return (request, response, next) => {
     if (mode === "local") {
+      setAuthContext(response, {
+        kind: "local",
+        scopes: ["admin"],
+        userEmail: readAuditUser(request).email ?? "local",
+        userSubject: readAuditUser(request).subject,
+      });
       return next();
     }
 
     if (mode === "public") {
-      return response.status(403).json({ error: "writes_disabled" });
+      if (requiredScope !== "reader") {
+        return response.status(403).json({ error: "writes_disabled" });
+      }
+      setAuthContext(response, { kind: "public", scopes: ["reader"] });
+      return next();
     }
 
-    const caller = request.get("x-chm-caller-service-account")?.toLowerCase() ?? "";
-    if (
-      trustedCallerServiceAccounts.length > 0 &&
-      !trustedCallerServiceAccounts.includes(caller)
-    ) {
-      return response.status(403).json({ error: "unauthorized_service_account" });
-    }
-
-    const auditUser = readAuditUser(request);
-    if (!auditUser.email) {
-      return response.status(401).json({ error: "missing_chm_user_context" });
-    }
-    if (!isOceanAgenticsEmail(auditUser.email)) {
-      return response.status(403).json({ error: "forbidden" });
-    }
-
-    return next();
-  };
-}
-
-function requireAdminAccess(
-  mode: RyuRuntimeMode,
-  trustedCallerServiceAccounts: string[],
-  adminUsers: string[],
-): RequestHandler {
-  const editorAccess = requireAuthenticatedEditorAccess(mode, trustedCallerServiceAccounts);
-  return (request, response, next) => {
-    editorAccess(request, response, () => {
-      if (mode === "local") {
-        return next();
+    if (options.iapAudience) {
+      const auditUser = readAuditUser(request, response);
+      if (!auditUser.email) {
+        return response.status(401).json({ error: "missing_iap_user_context" });
+      }
+      if (!isOceanAgenticsEmail(auditUser.email)) {
+        return response.status(403).json({ error: "forbidden" });
       }
 
-      if (adminUsers.length === 0) {
-        return response.status(403).json({ error: "admin_allowlist_missing" });
-      }
-
-      const auditUser = readAuditUser(request);
-      if (!auditUser.email || !adminUsers.includes(auditUser.email)) {
+      const scopes: ApiTokenScope[] = options.adminUsers.includes(auditUser.email)
+        ? ["admin"]
+        : ["reviewer"];
+      if (!hasScope(scopes, requiredScope)) {
         return response.status(403).json({ error: "admin_required" });
       }
 
-      return next();
-    });
-  };
-}
-
-function requirePrivateRecordReadAccess(
-  mode: RyuRuntimeMode,
-  trustedCallerServiceAccounts: string[],
-): RequestHandler {
-  return (request, response, next) => {
-    if (mode !== "api") {
+      setAuthContext(response, {
+        kind: "iap",
+        scopes,
+        userEmail: auditUser.email,
+        userSubject: auditUser.subject,
+      });
       return next();
     }
 
-    const caller = request.get("x-chm-caller-service-account")?.toLowerCase() ?? "";
-    if (
-      trustedCallerServiceAccounts.length > 0 &&
-      !trustedCallerServiceAccounts.includes(caller)
-    ) {
-      return response.status(403).json({ error: "unauthorized_service_account" });
+    const context = authenticateToken(request, options.apiTokens);
+    if (context instanceof ApiRequestError) {
+      return response.status(context.status).json({ error: context.message });
+    }
+    if (!hasScope(context.scopes, requiredScope)) {
+      return response.status(403).json({ error: "wrong_scope" });
+    }
+    if (!options.rateLimit(context, response)) {
+      setAuthContext(response, context);
+      return response.status(429).json({ error: "rate_limited" });
     }
 
-    const auditUser = readAuditUser(request);
-    if (!auditUser.email) {
-      return response.status(401).json({ error: "missing_chm_user_context" });
-    }
-    if (!isOceanAgenticsEmail(auditUser.email)) {
-      return response.status(403).json({ error: "forbidden" });
-    }
-
+    setAuthContext(response, context);
     return next();
   };
 }
@@ -383,6 +456,10 @@ function requireIap(expectedAudience: string | undefined): RequestHandler {
       if (!isOceanAgenticsIapPayload(payload)) {
         return response.status(403).json({ error: "forbidden" });
       }
+      response.locals.ryuIapUser = {
+        email: typeof payload?.email === "string" ? payload.email.toLowerCase() : null,
+        subject: typeof payload?.sub === "string" ? payload.sub : null,
+      };
 
       return next();
     } catch (error) {
@@ -407,8 +484,9 @@ export interface CreateAppOptions {
   mode?: RyuRuntimeMode;
   repository?: GraphRepository;
   adminUsers?: string[];
+  apiTokens?: ApiTokenRecord[];
+  apiWriteRateLimitPerMinute?: number;
   staticDirectory?: string;
-  trustedCallerServiceAccounts?: string[];
 }
 
 function readRecordDtoScope(mode: RyuRuntimeMode, iapAudience: string | undefined): RecordDtoScope {
@@ -432,6 +510,23 @@ function readQueryString(request: Request, key: string): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function readMutationOptions(request: Request, validateOnly = false) {
+  return {
+    validateOnly,
+    recordUpdatedAt: normalizeString(request.get(recordUpdatedAtHeader)),
+    createOnly: request.get(createOnlyHeader) === "true",
+  };
+}
+
+function readReviewerIdentity(request: Request, response: Response): string | null {
+  const auth = readAuthContext(response);
+  if (auth?.kind === "token") {
+    return auth.tokenOwner || auth.tokenName || null;
+  }
+
+  return readAuditUser(request, response).email;
+}
+
 function jsonBody(limit: string): RequestHandler {
   return express.json({ limit });
 }
@@ -442,16 +537,23 @@ export function createApp(options: CreateAppOptions = {}) {
   const basePath = normalizeBasePath(options.basePath ?? process.env.APP_BASE_PATH);
   const mode = options.mode ?? readRuntimeMode(process.env.RYU_MODE);
   const repository = options.repository ?? createGraphRepository();
-  const trustedCallerServiceAccounts =
-    options.trustedCallerServiceAccounts ??
-    readEnvList(process.env.RYU_TRUSTED_CALLER_SERVICE_ACCOUNTS);
   const adminUsers = options.adminUsers ?? readEnvList(process.env.EXPLORER_ADMIN_USERS);
+  const apiTokens = options.apiTokens ?? readApiTokenRecords(process.env.RYU_API_TOKENS_JSON);
+  const rateLimit = createTokenRateLimiter(
+    options.apiWriteRateLimitPerMinute ??
+      readPositiveInteger(
+        process.env.RYU_API_TOKEN_LIMIT_PER_MINUTE ??
+          process.env.RYU_API_TOKEN_WRITE_LIMIT_PER_MINUTE,
+        300,
+      ),
+  );
   const staticDirectory = resolveStaticDirectory(options.staticDirectory ?? process.env.RYU_STATIC_DIR);
   const indexPath = path.join(staticDirectory, "index.html");
-  const editorAccess = requireAuthenticatedEditorAccess(mode, trustedCallerServiceAccounts);
-  const adminAccess = requireAdminAccess(mode, trustedCallerServiceAccounts, adminUsers);
-  const privateRecordReadAccess = requirePrivateRecordReadAccess(mode, trustedCallerServiceAccounts);
   const iapAudience = process.env.IAP_JWT_AUDIENCE;
+  const accessOptions = { adminUsers, apiTokens, iapAudience, rateLimit };
+  const recordReadAccess = requireAccess(mode, "reader", accessOptions);
+  const writerAccess = requireAccess(mode, "writer", accessOptions);
+  const adminAccess = requireAccess(mode, "admin", accessOptions);
   const shouldRedactPublicFields = mode === "public" && !iapAudience;
   const recordDtoScope = readRecordDtoScope(mode, iapAudience);
 
@@ -473,27 +575,12 @@ export function createApp(options: CreateAppOptions = {}) {
   router.get("/health", sendHealth);
   router.get("/healthz", sendHealth);
 
-  router.get("/api/graph/bootstrap", async (_request, response) => {
+  router.get("/api/graph/bootstrap", recordReadAccess, async (_request, response) => {
     const bootstrap = await repository.getBootstrap();
     response.json(shouldRedactPublicFields ? toPublicBootstrap(bootstrap) : bootstrap);
   });
 
-  router.get("/api/ryu/systems", async (request, response) => {
-    const systems = await repository.listPortalSystems(readSystemQuery(request.query));
-    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
-  });
-
-  router.get("/api/ryu/systems/search", async (request, response) => {
-    const systems = await repository.searchPortalSystems(readSystemQuery(request.query));
-    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
-  });
-
-  router.post("/api/ryu/systems/search", jsonBody("64kb"), async (request, response) => {
-    const systems = await repository.searchPortalSystems(readSystemQuery(request.body));
-    response.json(shouldRedactPublicFields ? systems.map(toPublicPortalSystem) : systems);
-  });
-
-  router.get("/api/records", privateRecordReadAccess, async (request, response) => {
+  router.get("/api/records", recordReadAccess, async (request, response) => {
     try {
       const query = readRecordSearchQuery(request.query);
       const result = await repository.listRecords(query);
@@ -505,7 +592,7 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
-  router.get("/api/records/:id", privateRecordReadAccess, async (request, response) => {
+  router.get("/api/records/:id", recordReadAccess, async (request, response) => {
     try {
       const query = readRecordSearchQuery(request.query);
       const record = await repository.getRecord(readParam(request, "id"), query);
@@ -515,17 +602,19 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
-  router.put("/api/records/:id", editorAccess, jsonBody("1mb"), async (request, response) => {
+  router.put("/api/records/:id", writerAccess, jsonBody("1mb"), async (request, response) => {
     const id = readParam(request, "id");
     try {
       const validateOnly = readValidateOnly(request.query.validateOnly);
       const input = readRecordAggregateContentInput(id, request.body);
-      const result = await repository.upsertRecord(id, input, { validateOnly });
-      logWrite(request, "upsert_record", {
+      const result = await repository.upsertRecord(id, input, readMutationOptions(request, validateOnly));
+      logWrite(request, response, "upsert_record", {
         targetRecordId: id,
         validateOnly,
         validationResult: isRecordValidationResult(result) ? result.valid : true,
-        afterHash: isRecordValidationResult(result) ? null : hashJson(result),
+        recordUpdatedAt: isRecordValidationResult(result)
+          ? result.recordUpdatedAt ?? null
+          : buildRecordUpdatedAt(result),
       });
       response.json(
         isRecordValidationResult(result)
@@ -537,18 +626,20 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
-  router.patch("/api/records/:id", editorAccess, jsonBody("256kb"), async (request, response) => {
+  router.patch("/api/records/:id", writerAccess, jsonBody("256kb"), async (request, response) => {
     const id = readParam(request, "id");
     try {
       const validateOnly = readValidateOnly(request.query.validateOnly);
       const input = readRecordPatchInput(id, request.body);
-      const result = await repository.patchRecord(id, input, { validateOnly });
-      logWrite(request, "patch_record", {
+      const result = await repository.patchRecord(id, input, readMutationOptions(request, validateOnly));
+      logWrite(request, response, "patch_record", {
         targetRecordId: id,
         validateOnly,
         affectedSections: Object.keys(input),
         validationResult: isRecordValidationResult(result) ? result.valid : true,
-        afterHash: isRecordValidationResult(result) ? null : hashJson(result),
+        recordUpdatedAt: isRecordValidationResult(result)
+          ? result.recordUpdatedAt ?? null
+          : buildRecordUpdatedAt(result),
       });
       response.json(
         isRecordValidationResult(result)
@@ -560,13 +651,19 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
-  router.patch("/api/records/:id/review", editorAccess, jsonBody("8kb"), async (request, response) => {
+  router.patch("/api/records/:id/review", writerAccess, jsonBody("8kb"), async (request, response) => {
     const id = readParam(request, "id");
     try {
+      const validateOnly = readValidateOnly(request.query.validateOnly);
       const input = readRecordReviewInput(request.body);
-      const reviewer = readAuditUser(request).email;
+      const auth = readAuthContext(response);
+      if (input.reviewState === "human_reviewed" && !hasScope(auth?.scopes ?? [], "reviewer")) {
+        return response.status(403).json({ error: "review_scope_required" });
+      }
+
+      const reviewer = readReviewerIdentity(request, response);
       if (!reviewer) {
-        return response.status(401).json({ error: "missing_chm_user_context" });
+        return response.status(401).json({ error: "missing_reviewer_identity" });
       }
 
       await repository.updateNodeLocalizationReview(
@@ -574,17 +671,19 @@ export function createApp(options: CreateAppOptions = {}) {
         input.locale,
         toNodeLocalizationReviewInput(input),
         reviewer,
+        readMutationOptions(request, validateOnly),
       );
       const query = readRecordSearchQuery({
         locale: input.locale,
         include: "localizations,edges,sources,routes",
       });
       const record = await repository.getRecord(id, query);
-      logWrite(request, "update_record_review", {
+      logWrite(request, response, "update_record_review", {
         targetRecordId: id,
         locale: input.locale,
+        validateOnly,
         validationResult: true,
-        afterHash: hashJson(record),
+        recordUpdatedAt: buildRecordUpdatedAt(record),
       });
       response.json(toDefaultRecordDetailDto(record, recordDtoScope, query.include, input.locale));
     } catch (error) {
@@ -602,81 +701,17 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       const impact = validateOnly
         ? await repository.getRecordDeleteImpact(id)
-        : await repository.deleteRecord(id, impactHash ?? "");
-      logWrite(request, "delete_record", {
+        : await repository.deleteRecord(id, impactHash ?? "", readMutationOptions(request));
+      logWrite(request, response, "delete_record", {
         targetRecordId: id,
         validateOnly,
         validationResult: true,
-        beforeHash: impact.impactHash,
+        recordUpdatedAt: impact.recordUpdatedAt,
       });
       response.json(impact);
     } catch (error) {
       sendError(response, error);
     }
-  });
-
-  router.post("/api/records:bulk", adminAccess, jsonBody("2mb"), async (request, response) => {
-    try {
-      const input = readBulkRecordValidationInput(request.body);
-      const result = await repository.validateBulkRecords(input);
-      logWrite(request, "validate_records_bulk", {
-        validateOnly: true,
-        validationResult: result.valid,
-        checkedRecords: result.checkedRecords,
-      });
-      response.json(result);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.get("/api/ryu/systems/:id", async (request, response) => {
-    try {
-      const system = await repository.getPortalSystem(
-        request.params.id,
-        readSystemQuery(request.query),
-      );
-      response.json(shouldRedactPublicFields ? toPublicPortalSystem(system) : system);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.get("/api/saved-views", async (_request, response) => {
-    response.json(await repository.listSavedViews());
-  });
-
-  router.patch("/api/nodes/:id/localizations/:locale/review", editorAccess, jsonBody("8kb"), async (request, response) => {
-    const reviewer = readAuditUser(request).email;
-    if (!reviewer) {
-      return response.status(401).json({ error: "missing_chm_user_context" });
-    }
-
-    try {
-      const node = await repository.updateNodeLocalizationReview(
-        readParam(request, "id"),
-        readLocaleParam(request, "locale"),
-        readNodeReviewInput(request.body),
-        reviewer,
-      );
-      logWrite(request, "update_node_localization_review");
-      response.json(node);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.get("/api/sources/:id", async (request, response) => {
-    try {
-      const source = await repository.getSource(readParam(request, "id"));
-      response.json(shouldRedactPublicFields ? withoutLocalPath<Source>(source) : source);
-    } catch (error) {
-      sendError(response, error);
-    }
-  });
-
-  router.get("/sources/:id", (request, response) => {
-    response.redirect(302, `${basePath === "/" ? "" : basePath}/api/sources/${encodeURIComponent(readParam(request, "id"))}`);
   });
 
   router.use(express.static(staticDirectory));

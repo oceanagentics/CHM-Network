@@ -103,6 +103,7 @@ export interface RecordSummaryDto {
   displayLocale: SupportedLocale | null;
   isLocaleFallback: boolean;
   updatedAt: string;
+  recordUpdatedAt: string;
   matchReasons?: string[];
 }
 
@@ -276,6 +277,8 @@ export interface RecordReviewInput {
 
 export interface RecordMutationOptions {
   validateOnly?: boolean;
+  recordUpdatedAt?: string | null;
+  createOnly?: boolean;
 }
 
 export interface RecordValidationIssue {
@@ -288,6 +291,9 @@ export interface RecordValidationResult {
   valid: boolean;
   recordId?: string;
   issues: RecordValidationIssue[];
+  warnings?: string[];
+  affectedSections?: string[];
+  recordUpdatedAt?: string | null;
 }
 
 export interface BulkRecordValidationInput {
@@ -303,6 +309,7 @@ export interface BulkRecordValidationResult {
 
 export interface RecordDeleteImpact {
   recordId: string;
+  recordUpdatedAt: string;
   nodeRows: number;
   localizationRows: number;
   inboundEdges: number;

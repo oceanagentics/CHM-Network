@@ -7,8 +7,6 @@
     "build": "tsc -p tsconfig.json --noEmit",
     "export:public": "node --import tsx src/exportPublicBootstrap.ts",
     "migrate:language": "node --import tsx src/migrateLanguageLocalizations.ts",
-    "mcp:arcgis-rest": "node --import tsx src/mcpArcgisRestServer.ts",
-    "mcp:portal": "node --import tsx src/mcpPortalServer.ts",
     "test": "node --import tsx --test src/**/*.test.ts",
     "validate:urls": "node --import tsx src/validateUrls.ts",
     "start": "node --import tsx src/server.ts"

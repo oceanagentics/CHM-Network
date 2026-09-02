@@ -45,13 +45,18 @@ export interface GraphRepository {
     options?: RecordMutationOptions,
   ): RepositoryResult<RecordAggregate | RecordValidationResult>;
   getRecordDeleteImpact(id: string): RepositoryResult<RecordDeleteImpact>;
-  deleteRecord(id: string, impactHash: string): RepositoryResult<RecordDeleteImpact>;
+  deleteRecord(
+    id: string,
+    impactHash: string,
+    options?: RecordMutationOptions,
+  ): RepositoryResult<RecordDeleteImpact>;
   validateBulkRecords(input: BulkRecordValidationInput): RepositoryResult<BulkRecordValidationResult>;
   updateNodeLocalizationReview(
     id: string,
     locale: SupportedLocale,
     input: NodeLocalizationReviewInput,
     reviewer: string,
+    options?: RecordMutationOptions,
   ): RepositoryResult<GraphNode>;
   getSource(id: string): RepositoryResult<Source>;
   listSavedViews(): RepositoryResult<SavedView[]>;

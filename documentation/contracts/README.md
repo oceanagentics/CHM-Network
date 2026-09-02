@@ -28,7 +28,7 @@ Each `ryu_routes.contract_ref` should point to one of these files, a specific co
 Portal clients should read route fields this way:
 
 - `connectorRef`: selects the connector implementation.
-- `connectorTarget`: gives the base URL, asset key, MCP target, or runtime target.
+- `connectorTarget`: gives the base URL, asset key, or runtime target.
 - `contractRef`: tells the connector which behavior contract applies.
 - `capabilities`: explains what the route can provide.
 - `deliveryFormats`: lists concrete delivery forms Deeptime may receive.

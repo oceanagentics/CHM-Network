@@ -4,8 +4,7 @@
 
 Define a simple, agent-friendly API for CHM Explorer records that supports
 smart reads, targeted writes, full localization writes, full record writes,
-record removal, and bulk import validation without exposing arbitrary database
-table mutation.
+and record removal without exposing arbitrary database table mutation.
 
 This is a planning document. It describes the intended API shape and migration
 work; it does not describe the currently deployed write surface except where
@@ -15,18 +14,19 @@ noted.
 
 - Use `records` as the public API concept. Internally, a record is backed by a
   `nodes` row plus localization rows, edges, sources, and `ryu_routes`.
-- Keep API paths the same across public, admin, and private Explorer. Access
-  should be gated by deployment mode, IAP, service identity, and DB role, not by
-  different endpoint syntax.
-- Enforce write authorization inside Explorer itself. CHM proxy allowlisting and
-  Cloud Run IAM are required outer controls, but they are not sufficient
-  authorization for Explorer record mutations.
-- Fail closed for admin-only operations when production admin allowlists are
-  missing or empty. Authenticated editor writes must fail closed when IAP user
-  context is missing or invalid.
-- Start with `GET` for search/list reads. `POST` is not inherently a write, but
-  it is commonly read as "do something", so reserve it for bulk validation and
-  future complex read searches only if query strings become too limited.
+- Use one canonical API family: `/api/records`. Do not add or preserve separate
+  node, source, graph, or ryu CRUD APIs for launch.
+- Keep API paths the same across human and token-authenticated Explorer API
+  access. Humans authenticate with IAP directly at Explorer. Agents authenticate
+  with bearer tokens directly at Explorer API.
+- Enforce write authorization inside Explorer itself. Bearer tokens, IAP, Cloud
+  Run settings, and DB roles are outer controls, but route handlers must still
+  check operation-specific permissions.
+- Fail closed for admin-only operations when production admin scopes are missing
+  or empty. API writes must fail closed when bearer-token config is missing,
+  malformed, invalid, expired, or lacks the required scope.
+- Start with `GET` for search/list reads. Do not add bulk endpoints for launch;
+  agents can validate and apply one record per request.
 - Treat localization coverage as a general record search/list filter, not as a
   separate special-purpose `/api/nodes/localization-coverage` endpoint.
 - Keep write operations record-oriented. Agents should be able to patch one
@@ -35,21 +35,37 @@ noted.
 - Define strict request contracts before implementing writes. Do not accept raw
   table names, arbitrary JSON Patch paths, or untyped nested JSON merges.
 - Return explicit public, admin, and private response DTOs. Do not serialize raw
-  repository/database rows and rely on later redaction.
+  repository/database rows and rely on post-serialization redaction.
 - Implement record list/search with SQL-backed filtering and cursor pagination
   from day one. Do not extend the current bootstrap-loaded in-memory filtering
   pattern for this endpoint.
 - Use deterministic caller-supplied IDs for record writes. Do not add
   idempotency tables; standard transactional upserts are enough when
   repeated requests carry the same explicit IDs.
-- Keep MCP optional. MCP tools should call these APIs rather than writing
-  directly to Postgres or reimplementing validation.
+- Do not ship direct database-backed MCP servers. Agents should target this
+  API directly. MCP is not part of this refactor; any MCP client must be a thin
+  API-backed client that does not write directly to Postgres or reimplement
+  validation.
+- Use normal API bearer tokens for agent writes. Local and prompt-driven agents
+  need a stable HTTPS API token workflow without Cloud Run proxying, one-off
+  jobs, or CHM-forwarded identity headers.
+- Store only API token hashes in Secret Manager or environment config. Do not
+  add token tables in this refactor.
+- Keep `human_reviewed` as a human/reviewer action. Routine writer tokens may
+  create and update agent-authored content, but they must not mark a
+  localization as `human_reviewed`.
+- Require optimistic concurrency for applied record writes using a simple
+  `recordUpdatedAt` precondition. Agents must read a record version before
+  applying updates so parallel agents cannot silently overwrite each other.
+- Add a small, generous in-process token rate limit for `RYU_MODE=api` to stop
+  runaway agent loops before they exhaust database connections.
 
 ## Current State
 
-Explorer currently exposes broad read routes and one narrow write route.
+Before this refactor, Explorer exposed several pre-launch read/projection routes
+alongside the record-oriented API.
 
-Implemented read routes include:
+Pre-launch read/projection routes include:
 
 - `GET /api/graph/bootstrap`
 - `GET /api/ryu/systems`
@@ -57,17 +73,33 @@ Implemented read routes include:
 - `GET /api/saved-views`
 - `GET /api/sources/:id`
 
-The only implemented write route is:
+The pre-launch browser-mediated write route is:
 
 - `PATCH /api/nodes/:id/localizations/:locale/review`
 
 That review route accepts only `reviewState` and `reviewerNote`. The server sets
 `reviewer` and `lastReviewed` from CHM/IAP context.
 
-The browser client still contains broader node, edge, source, and saved-view
-helpers, but the server does not expose matching general mutation routes. Treat
-those helpers as stale or future-facing until this refactor wires them to real
-server APIs.
+The launch server keeps `GET /api/graph/bootstrap` as a UI bootstrap support
+route for the current browser app. It is not an agent API surface.
+
+Launch record API routes are:
+
+- `GET /api/records`
+- `GET /api/records/:id`
+- `PUT /api/records/:id`
+- `PATCH /api/records/:id`
+- `PATCH /api/records/:id/review`
+- `DELETE /api/records/:id`
+
+The current deployed private API still uses the CHM/internal-service identity
+model, which is a poor fit for local agents and browser writes. This plan
+replaces that path with direct Explorer auth: IAP for humans and bearer tokens
+for agents.
+
+The browser client now uses record-oriented API helpers where write helpers are
+present. Legacy broad node, edge, source, and saved-view mutation helpers are no
+longer the planned write surface.
 
 Relevant current files:
 
@@ -82,15 +114,8 @@ Relevant current files:
 - `client/src/app/components/EntityDetailsPanel.tsx`
 - `client/src/app/components/EditorPanel.tsx`
 
-CHM currently proxies only the review mutation path to the private Explorer API.
-Unsupported Explorer API proxy routes are rejected.
-
-Relevant CHM files:
-
-- `src/server.js`
-- `test/server.test.js`
-- `docs/deploy.md`
-- `docs/security-audit.md`
+CHM should not proxy Explorer writes for launch. CHM may keep owning the root
+domain and future app shell, but Explorer should own Explorer auth and writes.
 
 ## Target API Surface
 
@@ -108,8 +133,7 @@ Use this checklist for the implementation pass.
   properties afterward.
 - [x] Add Explorer-side auth helpers for authenticated OA editor access and
   admin-only destructive actions.
-- [x] Add per-route JSON body limits for review, patch, full record upsert, and
-  bulk validation.
+- [x] Add per-route JSON body limits for review, patch, and full record upsert.
 - [x] Implement SQL-backed `GET /api/records` with the full filter set: `q`,
   `kind`, `geography`, `dataType`, `recordDepth`, `reviewState`, `locale`,
   `localeMode`, `localeAvailability`, `reviewLocale`, `routeStatus`,
@@ -118,8 +142,7 @@ Use this checklist for the implementation pass.
 - [x] Implement `GET /api/records/:id` using the same DTO rules and public/admin
   redaction behavior.
 - [x] Add `PATCH /api/records/:id/review` as the record-oriented review endpoint,
-  while preserving or aliasing the existing node-localization review path during
-  migration.
+  and make it the only launch review write path.
 - [x] Add private `PATCH /api/records/:id` for targeted content, edge, route, and
   source upserts/deletes according to the section-aware patch rules.
 - [x] Add `PUT /api/records/:id` as a deterministic-ID content upsert, not a
@@ -128,13 +151,28 @@ Use this checklist for the implementation pass.
   authenticated review changes, admin-only destructive actions, unknown field
   rejection, content-write review-field rejection, transaction rollback, and SQL
   query filters.
-- [ ] CHM proxy widening is not applied. Browser review remains on the existing
-  approved `PATCH /api/explorer/nodes/:id/localizations/:locale/review` path;
-  exposing `PUT`, `PATCH`, `DELETE`, or bulk record routes through
-  `/api/explorer` needs explicit approval after reviewing the browser-facing
-  destructive write risk.
-- [x] Defer only applied bulk imports. Bulk validation and delete are part of this
-  plan.
+- [x] Applied bulk imports are not part of this API. Bulk validation is also cut
+  from launch; agents validate one record at a time.
+- [x] Add API bearer-token auth for `RYU_MODE=api` so agents can call
+  `explorer-api` directly over HTTPS.
+- [x] Add `reader`, `writer`, `reviewer`, and `admin` token scopes. `writer`
+  tokens must not set `human_reviewed`; `reviewer` and `admin` tokens may.
+- [x] Remove CHM-header-only trust from the launch write path. Do not rely on
+  `x-chm-*` forwarded identity headers for Explorer authorization.
+- [ ] Configure `explorer-api` for normal API reachability only after token auth
+  is enforced on every private read and write route.
+- [x] Implement semantic `validateOnly=true` for record `PUT`, record `PATCH`,
+  review changes, and delete dry-runs. Dry-runs must run the
+  same request parsing and database validation as apply requests without
+  mutating rows.
+- [x] Require optimistic concurrency on applied record mutations with
+  a simple `recordUpdatedAt` precondition.
+- [x] Add structured audit logging for mutation action, request context, token
+  identity, rate-limit bucket, affected sections, validation result, and current
+  `recordUpdatedAt` without logging tokens or full payloads.
+- [x] Add generous token-based rate limiting for `RYU_MODE=api`.
+- [x] Document token issuance, installation, validation-first write workflow,
+  optimistic-concurrency use, rotation, and revocation.
 
 ### Read Records
 
@@ -182,8 +220,9 @@ calling `getBootstrap()` and filtering in memory. Required query behavior:
 - Filters involving locale coverage, review state, routes, access paths, and
   descriptors should be pushed into SQL joins, JSONB predicates, or bounded
   subqueries.
-- `q` can start with simple SQL-backed text matching over typed fields; full-text
-  indexes can be added when volume or ranking quality requires them.
+- `q` can start with simple SQL-backed text matching over typed fields. Do not
+  add full-text indexes in this refactor unless simple matching fails acceptance
+  tests.
 
 Supported `localeMode` values:
 
@@ -254,15 +293,15 @@ Response redaction should be expressed as separate DTOs:
   local source paths, private route targets, route upstreams, raw route
   properties, or other non-public operational details. Public reads may filter by
   public-safe route metadata without returning internal route fields. Current
-  route status and capability values are not treated as sensitive; revisit this
-  only if routes later encode private partners, credentials, security posture, or
-  unreleased commercial plans.
+  route status and capability values are treated as public-safe only when they do
+  not encode private partners, credentials, security posture, or unreleased
+  commercial plans.
 - Admin DTOs: may include reviewer metadata and authoring status, but should
   still omit local filesystem paths and secrets. Route fields should be
   allowlisted, not copied wholesale from `ryu_routes.properties_json`.
 - Private DTOs: may include full record aggregates needed for trusted service
-  workflows, still excluding secrets unless a later contract explicitly needs
-  them.
+  workflows. Generic record DTOs must not return secrets; secret delivery must
+  use a separate route/tool contract.
 
 All DTOs should be built by allowlisting fields. Public redaction must not depend
 on deleting sensitive fields after serializing a private object.
@@ -349,8 +388,10 @@ Validation rules:
 - Unknown fields should be rejected.
 - Writes should run in one transaction.
 - Request bodies should support `validateOnly=true` for dry runs.
-- Full writes should require an `If-Match`/ETag or equivalent `updatedAt`
-  precondition once concurrent editing is possible.
+- Applied writes against existing records must require a `recordUpdatedAt`
+  precondition.
+- Create-only full writes must provide an explicit create-only precondition so
+  accidental overwrites fail.
 
 ### Patch One Record
 
@@ -371,8 +412,7 @@ Patch semantics:
 - Scalar fields are replaced when present. Explicit `null` clears only fields
   that are nullable in the typed contract.
 - Unknown fields are rejected at every level.
-- JSON object columns are replace-only unless a later named operation defines a
-  narrower merge. For this implementation, use explicit replacement fields such as
+- JSON object columns are replace-only. Use explicit replacement fields such as
   `propertiesReplace` and `detailsReplace`; reject ambiguous partial nested JSON.
 - Localization patch entries must declare `mode: "patch"` or `mode: "replace"`.
   `patch` changes only supplied scalar fields and explicit replacement objects;
@@ -458,7 +498,7 @@ Additional relationship rules:
 
 ### Review State
 
-Keep review state intentionally separate from content writes at first:
+Keep review state intentionally separate from content writes:
 
 ```http
 PATCH /api/records/:id/review
@@ -474,13 +514,19 @@ Suggested body:
 }
 ```
 
-The existing implementation uses
-`PATCH /api/nodes/:id/localizations/:locale/review`. During migration, keep that
-path as a compatibility alias or update the browser and CHM proxy together.
+The pre-launch node-localization review route should be removed from the launch
+surface. Human browser review and agent review both use this record-oriented
+path.
 
-Any authenticated OA editor may set `human_reviewed`, `agent_researched`, or
-`needs_revision`. Content writes still cannot set review fields; review changes
-go through this endpoint so Explorer can set reviewer metadata server-side.
+Review-state permissions:
+
+- `writer` tokens may set `agent_researched` or `needs_revision`.
+- `writer` tokens must receive `403 review_scope_required` when they attempt to
+  set `human_reviewed`.
+- `reviewer` and `admin` tokens may set `human_reviewed`,
+  `agent_researched`, or `needs_revision`.
+- Content writes still cannot set review fields; review changes go through this
+  endpoint so Explorer can set reviewer metadata server-side.
 
 ### Delete One Record
 
@@ -506,35 +552,21 @@ The dry-run response should report the impact before applying the delete:
 - orphaned source candidates, if any
 
 Applying a delete should require admin access, not just authenticated editor
-access. For the current small-org model, that can be a short admin allowlist
-rather than a complex authorization scope system. The apply request should
-include a fresh dry-run impact hash or equivalent confirmation token so
-accidental stale deletes are rejected.
+access. In the token model, that means an `admin` token scope rather than a
+separate email allowlist. The apply request should include both a fresh dry-run
+`impactHash` and the current `recordUpdatedAt` precondition so accidental stale
+deletes are rejected.
 
-### Bulk Validate Records
+### Cut From Launch
 
-Use a collection operation to validate bulk import payloads:
+Do not ship these as agent API surfaces for launch:
 
-```http
-POST /api/records:bulk
-```
-
-Body:
-
-```json
-{
-  "validateOnly": true,
-  "records": []
-}
-```
-
-Supported option:
-
-- `validateOnly=true`
-
-Bulk validation requires the admin role. Applying bulk changes is out of scope
-for this plan; use individual deterministic `PUT`/`PATCH` requests for applied
-changes.
+- `POST /api/records:bulk`
+- `/api/nodes/*` mutation routes
+- `/api/sources/*` mutation routes
+- `/api/ryu/*` agent API routes
+- `/api/graph/*` agent API routes
+- CHM `/api/explorer/*` write proxy routes
 
 Per-route JSON payload limits should be explicit rather than relying on global
 Express defaults. Suggested starting caps:
@@ -542,10 +574,85 @@ Express defaults. Suggested starting caps:
 - review patch: 8 KB
 - record patch: 256 KB
 - full record put: 1 MB
-- bulk validate: 2 MB, aligned with the current CHM proxy body limit
 
-Large applied imports require a separate future plan. Do not add an idempotency
-or audit table for this implementation.
+Large applied imports are not part of this record API. Do not add an
+idempotency or audit table in this implementation.
+
+### Validation And Dry Runs
+
+`validateOnly=true` is a first-class preflight, not a parse-only check. Dry-runs
+must run the same authentication, scope checks, rate limiting, request parsing,
+schema validation, semantic validation, and database lookups as apply requests,
+but must not mutate rows.
+
+Dry-run response shape should extend `RecordValidationResult` enough for an
+agent to show a useful pre-apply summary:
+
+```json
+{
+  "valid": true,
+  "recordId": "fishbase",
+  "issues": [],
+  "warnings": [],
+  "affectedSections": ["localizations.en", "routes"],
+  "recordUpdatedAt": "2026-09-02T00:00:00.000Z"
+}
+```
+
+Validation implementation belongs in shared TypeScript contracts and repository
+runtime checks, not in markdown rule tables. Required behavior:
+
+- full-write and patch payloads satisfy the strict typed contracts and reject
+  unknown fields at every level
+- path `:id` matches any body id, route `nodeId`, and all affected route rows
+- rich records include all supported localizations unless `incomplete=true`
+- localization source refs in `details`, node source refs in `properties`,
+  edge source refs, and route source refs either already exist or are included in
+  `sources.upsert`
+- edge endpoint nodes exist, edge ids are deterministic, edges are incident to
+  the target record, self-edges are rejected, and edge kinds follow the canonical
+  graph rules
+- route status is one of `active`, `planned`, `deprecated`, or `blocked`
+- active routes include a non-empty `target`, non-empty `capabilities`, and a
+  valid `contractRef` when the route depends on a documented contract
+- local `contractRef` paths resolve under `documentation/contracts`
+- source upserts have deterministic ids and usable title/type fields
+- a provided `recordUpdatedAt` precondition still matches the current record
+  version
+
+Synchronous validation should not perform network liveness checks for external
+route targets. Validate URL shape and local contract references in the request
+path; operational liveness checks belong to route-validation tooling, not the
+record write transaction.
+
+### Optimistic Concurrency
+
+All `GET /api/records/:id` detail responses and successful mutation responses
+must include `recordUpdatedAt`.
+
+`recordUpdatedAt` is the max `updated_at` timestamp across the record's node row,
+localization rows, incident edge rows, and route rows. Source rows are not part
+of the launch concurrency version because the current `sources` table has no
+`updated_at`.
+
+Applied mutations against an existing record must require an explicit
+`recordUpdatedAt` precondition. Missing preconditions should return
+`428 precondition_required`; stale preconditions should return
+`412 precondition_failed`. Create-only writes must use an explicit create-only
+precondition.
+
+`validateOnly=true` may run without a precondition, but it should return the
+current `recordUpdatedAt`. If a dry-run includes a precondition, validate it and
+report stale state as a validation issue.
+
+### Token Rate Limiting
+
+Add a generous in-process fixed-window token limiter for `RYU_MODE=api` after
+bearer-token authentication succeeds. The purpose is runaway-agent protection,
+not traffic shaping. Start with one configurable per-token request limit and
+return `429 rate_limited` with `Retry-After` when exceeded. Do not add gateway
+rules, sliding windows, invalid-token IP fallback, or database-backed rate-limit
+state in this refactor.
 
 ## Deployment And Access
 
@@ -554,183 +661,368 @@ Keep the same API path format everywhere:
 ```text
 /api/records
 /api/records/:id
-/api/records:bulk
 ```
 
 Deployment controls what works:
 
-- Public Explorer allows read routes only, uses read DB credentials, and
-  returns redacted data.
-- Admin Explorer allows read routes and can call private write routes through
-  CHM, still using the same request shapes.
-- Private Explorer API allows read and write routes, uses write DB credentials,
-  and requires CHM/private service identity plus user context.
+- Human Explorer is IAP-protected, uses Explorer's own auth checks, and calls
+  Explorer's `/api/records` routes directly.
+- Explorer API allows private reads and writes, uses write DB credentials, and
+  requires a valid API bearer token for every route except health checks.
 
 This keeps usage simple for agents and the browser. The caller changes base URL
 and credentials, not endpoint syntax.
 
+Do not use CHM as an Explorer write proxy for launch. CHM may own the root
+domain and future app shell, but it should not translate identity or forward
+Explorer record writes.
+
+## API Token Model
+
+Use opaque bearer tokens:
+
+```text
+Authorization: Bearer ryu_live_<random>
+```
+
+Token scopes:
+
+- `reader`: private record reads.
+- `writer`: includes `reader`; allows `PUT /api/records/:id`,
+  `PATCH /api/records/:id`, validate-only writes, and review changes to
+  `agent_researched` or `needs_revision`.
+- `reviewer`: includes `writer`; additionally allows review changes to
+  `human_reviewed`.
+- `admin`: includes `reviewer`; additionally allows `DELETE /api/records/:id`
+  apply requests.
+
+Do not add per-table scopes unless the organization grows into a real multi-team
+permission model. These four scopes are enough for the current boundary.
+
+Store token records as JSON in Secret Manager or an environment variable:
+
+```json
+[
+  {
+    "name": "codex-writer-danny",
+    "scopes": ["writer"],
+    "hash": "sha256:<hex>",
+    "owner": "danny@oceanagentics.com",
+    "createdAt": "2026-09-02T00:00:00.000Z",
+    "expiresAt": null
+  },
+  {
+    "name": "danny-human-review",
+    "scopes": ["reviewer"],
+    "hash": "sha256:<hex>",
+    "owner": "danny@oceanagentics.com",
+    "createdAt": "2026-09-02T00:00:00.000Z",
+    "expiresAt": null
+  }
+]
+```
+
+Only the hash is stored. The plaintext token is generated once, shown once, and
+delivered to the human or runtime through a password manager or deployment
+secret. Explorer compares hashes with constant-time comparison and never logs
+token values.
+
+Token auth rules:
+
+- missing token: `401`.
+- malformed, unknown, expired, or wrong-scope token: `403`.
+- token config missing in `RYU_MODE=api`: fail closed for every private read and
+  write route.
+- `writer` token attempting `human_reviewed`: `403 review_scope_required`.
+- `admin` actions still require admin scope; do not preserve a separate
+  email-based admin allowlist as the primary API-token gate.
+- rate-limited token: `429 rate_limited` with `Retry-After`.
+- logs should include token `name`, token `owner`, scopes, optional request id,
+  target record id, affected section/locale, validation result, status, latency,
+  and current `recordUpdatedAt`. Logs must not include token plaintext.
+
+## Token Issuance And Revocation
+
+Issuance is operator-mediated at first:
+
+1. Operator generates a high-entropy token with a `ryu_live_` prefix.
+2. Operator hashes it with SHA-256.
+3. Operator adds the token record to the Secret Manager token config.
+4. Operator deploys or restarts `explorer-api` so the new config is active.
+5. Operator sends the plaintext token once through a password manager or other
+   secure channel.
+
+Revocation:
+
+1. Remove the token record from the Secret Manager token config.
+2. Deploy or restart `explorer-api`.
+3. Confirm the old token receives `403`.
+
+Rotation:
+
+1. Issue a replacement token and add its hash alongside the old token.
+2. Move the user/agent to the new token.
+3. Remove the old token and redeploy/restart.
+
+Emergency revocation can set the token config to an empty list and redeploy the
+API. In `RYU_MODE=api`, an empty token config should deny all non-health access.
+
+Do not add a token database in this refactor. Secret Manager or environment JSON
+is the token store.
+
+## Human And Agent Workflow
+
+Human setup instructions:
+
+1. Ask an operator for a `reader`, `writer`, or `reviewer` token. Use an
+   `admin` token only when delete is actually needed.
+2. Store the token outside the repo, for example in a password manager, shell
+   secret, local ignored environment file, or Codex/agent secret store.
+3. Tell the agent the API URL and which environment variable contains the token.
+   Do not paste the token into a prompt unless there is no safer secret channel.
+
+Suggested local environment:
+
+```sh
+export RYU_API_URL="https://chm.oceanagentics.org"
+export RYU_API_TOKEN="ryu_live_..."
+```
+
+Agent rules:
+
+- never print the token.
+- never commit the token or payload files containing it.
+- call public Explorer for public reads when private fields are not needed.
+- call `explorer-api` with `Authorization: Bearer $RYU_API_TOKEN` for private
+  reads and all writes.
+- read the target record and capture `recordUpdatedAt` before applying a
+  mutation.
+- run `validateOnly=true` before applying every content write.
+- show validation errors and the intended diff before applying.
+- apply with the same payload only after explicit human confirmation unless the
+  user has explicitly delegated that specific write.
+- include the current `recordUpdatedAt` for existing-record mutations or an
+  explicit create-only precondition for create-only writes.
+
+Example validation and apply:
+
+```sh
+RYU_RECORD_UPDATED_AT="$(
+  curl -sS \
+    "$RYU_API_URL/api/records/fishbase?include=localizations,routes,sources,edges" \
+    -H "Authorization: Bearer $RYU_API_TOKEN" \
+    | jq -r '.recordUpdatedAt'
+)"
+
+curl -sS -X PATCH \
+  "$RYU_API_URL/api/records/fishbase?validateOnly=true" \
+  -H "Authorization: Bearer $RYU_API_TOKEN" \
+  -H "content-type: application/json" \
+  -H "x-ryu-record-updated-at: $RYU_RECORD_UPDATED_AT" \
+  --data-binary @payload.json
+
+curl -sS -X PATCH \
+  "$RYU_API_URL/api/records/fishbase" \
+  -H "Authorization: Bearer $RYU_API_TOKEN" \
+  -H "content-type: application/json" \
+  -H "x-ryu-record-updated-at: $RYU_RECORD_UPDATED_AT" \
+  --data-binary @payload.json
+```
+
+Delete remains admin-only and two-step:
+
+```sh
+curl -sS -X DELETE \
+  "$RYU_API_URL/api/records/fishbase?validateOnly=true" \
+  -H "Authorization: Bearer $RYU_API_TOKEN"
+
+curl -sS -X DELETE \
+  "$RYU_API_URL/api/records/fishbase?impactHash=<dry-run-impact-hash>" \
+  -H "Authorization: Bearer $RYU_API_TOKEN" \
+  -H "x-ryu-record-updated-at: $RYU_RECORD_UPDATED_AT"
+```
+
 ## Authorization Model
 
-Do not start with a large scope system. The organization is small, and domain
-IAP is acceptable for app access.
+Do not start with a large scope system. The organization is small. Human
+Explorer access should use IAP directly on Explorer, while agent API access
+should use scoped bearer tokens.
 
 Roles and boundaries that exist today:
 
-- Public internet user: can read the public Explorer deployment at `/explorer`;
-  not an authenticated app role.
-- IAP-authenticated Ocean Agentics user: can reach CHM and Explorer admin read
-  surfaces; currently based on the `oceanagentics.com` domain.
-- CHM admin hint email: controls the public-to-admin redirect hint cookie only;
-  it is not an authorization role.
-- CHM service account: the only intended caller of the private Explorer API; this
-  is a service boundary, not an end-user role.
-- `explorer_read`: database role for public/admin read services.
+- IAP-authenticated Ocean Agentics user: can reach Explorer's human browser app
+  and use human write actions that Explorer permits.
+- API token holder: can call `explorer-api` directly over HTTPS according to the
+  token's scope.
+- `explorer_read`: database role for read-only service variants, if kept.
 - `explorer_write`: database role for the private API service.
 - `explorer_schema_admin`: database role for deliberate schema work only.
 
 Target Explorer app access levels:
 
-- authenticated OA editor: any IAP-authenticated `@oceanagentics.com` user. Can
-  use admin/private reads, create and update record content, update reviewer
-  notes, and set review state to any valid review state including
-  `human_reviewed`.
-- admin: a configured allowlist for destructive or operationally sensitive
-  actions only. Admin can delete records, validate bulk imports, and perform
-  source cleanup. Admin also has authenticated OA editor permissions.
+- authenticated OA editor: browser-side concept for IAP-authenticated
+  `@oceanagentics.com` users. Can use Explorer's direct record review/write
+  actions.
+- reader token: direct API concept for private agent reads without write access.
+- writer token: direct API concept for agents. Can use private reads, create and
+  update record content, update reviewer notes, and set review state to
+  `agent_researched` or `needs_revision`.
+- reviewer token: direct API concept for human-directed review work. Includes
+  writer permissions and can set `human_reviewed`.
+- admin token: direct API concept for destructive or operationally sensitive
+  actions only. Admin can delete records and also has reviewer permissions.
 
 Initial gates:
 
-- IAP authenticated Ocean Agentics user for admin/browser entry.
-- Private Explorer API reachable only through CHM or approved service identity.
-- Trusted caller service account check on the private API.
-- Required user context on all write requests.
-- Simple admin allowlist in environment variables for destructive actions.
-- Explorer-side role checks on every write route. Do not rely on the CHM proxy
-  allowlist as the only authorization layer.
-- CHM-forwarded user headers are trusted only after Cloud Run IAM/service
-  identity validation. Treat the caller header as defense in depth, not the
-  primary boundary.
+- IAP authenticated Ocean Agentics user for human browser entry.
+- Private Explorer API requires bearer token authentication for all non-health
+  routes.
+- Required token scope on all private read and write requests.
+- Explorer-side role checks on every write route.
+- Do not use CHM-forwarded user headers as Explorer authorization.
 
 Suggested minimal allowlists:
 
 ```text
-EXPLORER_ADMIN_USERS=dan@oceanagentics.com,...
+RYU_API_TOKENS_JSON=[...hashed token records...]
 ```
 
 Minimal permission rule:
 
-- Authenticated OA users are readers, writers, and reviewers. Admin is separate
-  only because destructive actions need an extra gate.
-
-This can later move to Google Groups if the team grows.
+- Authenticated OA users are browser readers/reviewers through direct Explorer
+  IAP. Agents are API readers, writers, or reviewers through bearer tokens.
+  Admin is separate only because destructive actions need an extra token scope.
 
 ## Audit And Safety Requirements
 
 Every write route should record:
 
 - request id
-- actor email and subject
-- caller service account
+- token name, owner, scopes, and rate-limit bucket
+- actor email and subject for IAP-authenticated human browser writes
 - operation
+- route and method
 - target record id
-- affected section and locale, when relevant
+- affected section, locale, edge ids, route ids, and source ids when relevant
 - validation result
-- before and after hash or compact diff summary
+- current `recordUpdatedAt`
+- response status and latency
 - timestamp
 
-Every write route should support strict schema validation. Delete apply requests
-should require a successful `validateOnly=true` dry run before a separate apply
-request. Bulk import validation is validate-only in this plan.
+Every write route should support strict schema validation.
 
-Use structured application logs for audit. Do not add an audit or idempotency
-table unless a later requirement needs queryable audit history or
-non-deterministic side-effect tracking.
+Use structured application logs for audit. Do not log plaintext tokens, full
+request bodies, full record payloads, or URLs containing credentials. Do not add
+an audit or idempotency table in this refactor.
 
-Patch writes should use optimistic concurrency once multiple humans or agents
-are editing records regularly. A simple `updatedAt` or ETag precondition is
-enough.
+Patch writes, full writes, review writes, and delete applies must use optimistic
+concurrency. The simple `recordUpdatedAt` precondition is enough.
 
 Schema migrations, role changes, and table creation should stay outside this API
 and continue through deliberate deployment/migration work.
 
-## MCP Position
+## Agent Interface Position
 
-MCP is useful as a client interface for agents, but it should not become an
-independent write path.
+Agents should target the Explorer API directly for record reads, validation, and
+writes. The old direct database-backed MCP servers are sunset because they
+bypassed the HTTP API's authorization, DTO redaction, validation, transaction,
+and logging boundary.
 
-Recommended MCP tools after this API exists:
-
-- `search_records`
-- `get_record`
-- `validate_record`
-- `upsert_record`
-- `patch_record`
-- `delete_record`
-- `validate_records_bulk`
-
-Each MCP tool should call the Explorer API and rely on the API for
-authorization, validation, transactions, and audit logging.
+This refactor does not ship MCP. Any MCP client for Explorer must be a thin
+wrapper over the deployed Explorer API. It must not instantiate repositories
+directly, use direct Postgres credentials, return richer DTOs than the selected
+API surface, or create a parallel write path.
 
 ## Migration Work
 
 Server:
 
-- Add shared `RecordAggregate` write types and public/admin/private response DTO
+- [x] Add shared `RecordAggregate` write types and public/admin/private response DTO
   types.
-- Add Explorer-side authenticated-editor and admin authorization middleware with
-  fail-closed production admin allowlist behavior.
-- Add SQL-backed repository methods for `GET /api/records`.
-- Add `GET /api/records`.
-- Add `GET /api/records/:id`.
-- Add `PUT /api/records/:id`.
-- Add `PATCH /api/records/:id`.
-- Add `PATCH /api/records/:id/review` or alias the current review route.
-- Add `DELETE /api/records/:id`.
-- Add `POST /api/records:bulk` for validation only.
-- Add repository methods for validated record aggregate reads and writes.
-- Add audit logging for all record mutations.
+- [x] Add Explorer-side direct IAP human authorization and bearer-token agent
+  authorization.
+- [x] Add SQL-backed repository methods for `GET /api/records`.
+- [x] Add `GET /api/records`.
+- [x] Add `GET /api/records/:id`.
+- [x] Add `PUT /api/records/:id`.
+- [x] Add `PATCH /api/records/:id`.
+- [x] Add `PATCH /api/records/:id/review`.
+- [x] Add `DELETE /api/records/:id`.
+- [x] Remove `POST /api/records:bulk` from the launch API.
+- [x] Add repository methods for validated record aggregate reads and writes.
+- [x] Add audit logging for all record mutations.
+- [x] Remove legacy direct database-backed MCP server entrypoints.
+- [x] Add token config parsing and constant-time token hash checks.
+- [x] Add route middleware that maps token scopes to `reader`, `writer`,
+  `reviewer`, and `admin` permissions.
+- [x] Require either direct IAP human auth or bearer-token agent auth for all
+  `RYU_MODE=api` private read and write routes, except health checks.
+- [x] Enforce `writer` versus `reviewer` review-state permissions so only
+  `reviewer` or `admin` requests can set `human_reviewed`.
+- [x] Remove `x-chm-*` caller/user headers as app-level authorization controls.
+- [x] Replace parse-only dry-runs with semantic `validateOnly=true` checks over
+  current database state and return affected sections and current
+  `recordUpdatedAt`.
+- [x] Return `recordUpdatedAt` from record detail and mutation responses, and
+  require it or create-only preconditions on applied mutations.
+- [x] Add basic token-based rate limiting with `429`/`Retry-After` responses.
+- [x] Upgrade structured write logs to include token identity, rate-limit bucket,
+  affected ids, validation result, affected sections, and `recordUpdatedAt`.
+- [x] Add tests for missing token, invalid token, expired token, wrong scope,
+  writer success, writer denial for `human_reviewed`, reviewer success,
+  admin-only denial, admin success, semantic dry-run failures,
+  `recordUpdatedAt` missing/stale failures, and rate-limit responses.
 
 Client:
 
-- Replace stale broad CRUD helpers in `client/src/app/api.ts` with the record
+- [x] Replace stale broad CRUD helpers in `client/src/app/api.ts` with the record
   API helpers.
-- Decide whether `SystemDirectoryView` continues using client-side bootstrap
-  search or switches to `GET /api/records` for server-backed search.
-- Keep `EntityDetailsPanel` review behavior, but update the endpoint if the
+- [ ] Switch `SystemDirectoryView` off bootstrap search where practical and onto
+  `GET /api/records`.
+- [x] Keep `EntityDetailsPanel` review behavior, but update the endpoint if the
   review path moves.
-- Rewire or hide `EditorPanel` until it uses the new record API.
+- [x] Rewire or hide `EditorPanel` until it uses the new record API.
 
 CHM:
 
-- Keep the `/api/explorer` browser proxy on the existing localization review
-  path until broader record writes are explicitly approved for browser-facing
-  proxy exposure.
-- Keep method/path allowlisting explicit. Do not proxy all Explorer API paths.
-- If broader proxy exposure is later approved, add tests for each allowed record
-  method/path and rejected unsupported routes before deployment.
+- [x] Remove CHM's Explorer write proxy from the launch path.
+- [x] Keep CHM as root domain/future app shell only; do not proxy Explorer
+  record writes through CHM.
 
 Docs:
 
-- Update `documentation/cloud-run-migration.md` after implementation so
+- [x] Update `documentation/cloud-run-migration.md` after implementation so
   `RYU_MODE=api` no longer says review-only.
-- Update `documentation/RICH_RESEARCH_RECORDS.md` so routine backfills use the
+- [x] Update `documentation/RICH_RESEARCH_RECORDS.md` so routine backfills use the
   record API instead of direct Postgres edits.
-- Update `documentation/SEARCH_SYSTEM_PLAN.md` to describe server-backed record
+- [x] Update `documentation/SEARCH_SYSTEM_PLAN.md` to describe server-backed record
   search and localization filters.
-- Update `documentation/language-migration-plan.md` with localization coverage
+- [x] Update `documentation/language-migration-plan.md` with localization coverage
   filter semantics.
-- Update CHM `docs/deploy.md` and `docs/security-audit.md` once the proxy
-  allowlist and write surface change.
+- [x] Update `documentation/cloud-run-migration.md` after token auth ships so it
+  describes direct Explorer IAP for humans and bearer-token API access for
+  agents.
+- [x] Update CHM `docs/deploy.md` and `docs/security-audit.md` after removing
+  the Explorer write proxy from the launch path.
 
 ## Suggested Implementation Order
 
 1. Define record contracts, response DTOs, and authorization access levels.
 2. Add read-only SQL-backed `GET /api/records` and `GET /api/records/:id` with
    localization and review filters.
-3. Switch the browser search/directory to the read API where useful, while
-   preserving bootstrap search for small local graphs if desired.
+3. Switch the browser search/directory to the read API where practical.
 4. Add private `PATCH /api/records/:id` for targeted updates.
 5. Add `PUT /api/records/:id` for full record writes.
 6. Add delete with admin-only, mandatory dry-run behavior.
-7. Add `POST /api/records:bulk` for validation only if still useful.
-8. Add MCP tools as thin wrappers over the finished API.
+7. Remove legacy direct database-backed MCP server entrypoints. Do not rebuild
+   MCP in this refactor.
+8. Add bearer-token auth in `RYU_MODE=api`, including token hash config, scopes,
+   fail-closed behavior, and tests.
+9. Enforce reviewer-only `human_reviewed`, semantic dry-runs, optimistic
+   concurrency, structured audit logging, and token-based rate limiting.
+10. Remove CHM write-proxy auth from the launch path.
+11. Change `explorer-api` Cloud Run reachability for normal HTTPS API access
+   only after bearer-token auth is deployed and verified.
+12. Issue a writer token, document agent setup, and smoke test validate/apply
+   from a local agent with no Cloud Run proxy, no temporary job, and no CHM
+   headers.

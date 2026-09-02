@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This is the shared contract for system-specific APIs or MCP connectors that Deeptime calls after Ryu identifies a relevant system route.
+This is the shared contract for system-specific APIs or connectors that Deeptime calls after Ryu identifies a relevant system route.
 
-Ryu portal tools return systems and routes. System connectors return layers, assets, source details, and health information.
+Ryu portal API endpoints return systems and routes. System connectors return layers, assets, source details, and health information.
 
-## Common Tools
+## Common Operations
 
 Connectors should expose:
 

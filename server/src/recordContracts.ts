@@ -447,6 +447,7 @@ export function toRecordSummaryDto(
 ): RecordSummaryDto {
   const node = aggregate.node;
   const localization = resolveNodeLocalization(node, locale);
+  const recordUpdatedAt = buildRecordUpdatedAt(aggregate);
   const reviewStatesByLocale = Object.fromEntries(
     Object.entries(node.localizations).map(([key, value]) => [
       key,
@@ -470,8 +471,20 @@ export function toRecordSummaryDto(
     displayLocale: localization.displayLocale,
     isLocaleFallback: localization.isLocaleFallback,
     updatedAt: node.updatedAt,
+    recordUpdatedAt,
     ...(include.includes("matchReasons") ? { matchReasons: aggregate.matchReasons } : {}),
   };
+}
+
+export function buildRecordUpdatedAt(aggregate: RecordAggregate): string {
+  return [
+    aggregate.node.updatedAt,
+    ...Object.values(aggregate.node.localizations)
+      .map((localization) => localization?.updatedAt)
+      .filter((value): value is string => Boolean(value)),
+    ...aggregate.edges.map((edge) => edge.updatedAt),
+    ...aggregate.routes.map((route) => route.updatedAt),
+  ].sort().at(-1) ?? aggregate.node.updatedAt;
 }
 
 export function buildDeleteImpactHash(input: Omit<RecordDeleteImpact, "impactHash">): string {

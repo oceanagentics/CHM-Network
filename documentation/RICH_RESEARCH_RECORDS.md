@@ -157,13 +157,13 @@ Route fields:
 - `id`: stable lower-kebab-case route id.
 - `node_id`: system node id.
 - `status`: route readiness, usually `active`, `planned`, `deprecated`, or `blocked`.
-- `mode`: machine access pattern, such as `live_api`, `self_hosted_snapshot`, `hosted_snapshot`, `oa_cache`, `mcp`, or `unavailable`.
+- `mode`: machine access pattern, such as `live_api`, `self_hosted_snapshot`, `hosted_snapshot`, `oa_cache`, `connector`, or `unavailable`.
 - `priority`: lower number means preferred.
 - `capabilities_json`: JSON array of task-level affordances, such as `species_profile`, `occurrence_locations`, `dataset_search`, `metadata_lookup`, `file_download`, or `submission_status`.
-- `target`: our runtime, service, MCP server, cache, or tool target.
+- `target`: our runtime, service, connector, cache, or tool target.
 - `upstream`: concise upstream locator, such as a domain, API base, bucket/prefix, repository, or source alias.
 - `format`: main data/interface format, such as `json`, `geojson`, `parquet`, `csv`, `darwin_core_archive`, or `html`.
-- `contract_ref`: pointer to the real contract, docs, MCP server, OpenAPI spec, or service notes. Do not inline the contract in `ryu_routes`.
+- `contract_ref`: pointer to the real contract, docs, connector, OpenAPI spec, or service notes. Do not inline the contract in `ryu_routes`.
 - `caveat`: one short operational warning.
 - `properties_json`: only for route-specific extras that do not deserve columns.
 
@@ -173,7 +173,7 @@ Research rules:
 - Use `status='planned'` when the route is intentional but not yet live. Planned routes are indexes for future implementation, not runtime access.
 - Multiple routes are allowed; order them with `priority`.
 - Prefer an OA-controlled runtime route when production use needs stable performance, joins, caching, credentials, or map-ready transforms.
-- Do not add raw upstream storage as a separate route when our runtime is a derived cache or MCP service. Mention the upstream on the machine route instead.
+- Do not add raw upstream storage as a separate route when our runtime is a derived cache or connector service. Mention the upstream on the machine route instead.
 - If there is no approved operational route, leave `ryu_routes` empty for that node.
 
 ## Gallery Images

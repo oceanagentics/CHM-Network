@@ -106,10 +106,10 @@ Routing and IAP:
   `301` to `/explorer/`; `/explorer/` returns public Explorer HTML.
 - Unauthenticated `https://chm.oceanagentics.org/explorer/admin` returns an
   IAP-generated `302`.
-- Unauthenticated `PATCH https://chm.oceanagentics.org/api/explorer/nodes/fishbase/review`
+- Unauthenticated `PATCH https://chm.oceanagentics.org/explorer/api/records/fishbase/review`
   returns an IAP-generated `401`.
 - Direct public Explorer writes to
-  `PATCH https://chm.oceanagentics.org/explorer/api/nodes/fishbase/review`
+  `PATCH https://chm.oceanagentics.org/explorer/api/records/fishbase/review`
   return `403 writes_disabled`.
 - Public Explorer bootstrap returns real graph data with reviewer metadata, raw
   review JSON, route targets, and source local paths redacted.
@@ -396,7 +396,8 @@ Explorer/Ryu repo:
 - Do not migrate from a VM as part of this launch.
 - Do not run SQLite infrastructure as part of this launch.
 - Do not expose direct database access to browsers.
-- Do not let MCP or any private API become a side door around CHM/IAP validation.
+- Do not reintroduce direct repository-backed MCP or any private API as a side
+  door around CHM/IAP validation.
 - Do not enable public write access.
 
 ## Reusable CHM Services

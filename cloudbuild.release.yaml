@@ -32,8 +32,6 @@ steps:
       - VITE_APP_MODE=public
       - --build-arg
       - VITE_CAN_REVIEW_NODES=false
-      - --build-arg
-      - VITE_REVIEW_API_BASE_PATH=/api/explorer
       - -t
       - ${_PUBLIC_IMAGE}
       - -t
@@ -54,8 +52,6 @@ steps:
       - VITE_APP_MODE=author
       - --build-arg
       - VITE_CAN_REVIEW_NODES=true
-      - --build-arg
-      - VITE_REVIEW_API_BASE_PATH=/api/explorer
       - -t
       - ${_ADMIN_IMAGE}
       - -t

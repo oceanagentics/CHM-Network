@@ -24,14 +24,6 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      "/api/explorer": {
-        target: "http://127.0.0.1:8787",
-        rewrite: (requestPath) => requestPath.replace(/^\/api\/explorer/, "/api"),
-        headers: {
-          "x-chm-caller-service-account": "local-chm-preview",
-          "x-chm-user-email": "danny@oceanagentics.com",
-        },
-      },
       "/api": "http://127.0.0.1:8787",
     },
     fs: {

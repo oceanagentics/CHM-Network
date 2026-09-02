@@ -21,15 +21,19 @@
 - Do not create or maintain a separate merged central CSV registry.
 
 ## Write Surfaces
-### Browser Review API
-- CHM is the public IAP-protected entry app.
-- CHM proxies only `PATCH /api/explorer/nodes/:id/localizations/:locale/review` to the private Explorer API.
-- Explorer handles that as `PATCH /explorer/api/nodes/:id/localizations/:locale/review`.
-- The request body may contain only `reviewState` and `reviewerNote`.
-- Explorer sets `reviewer` from the CHM-forwarded IAP email and sets `lastReviewed` when the review state or note is accepted.
-- The browser client should call the CHM proxy path `/api/explorer/nodes/:id/localizations/:locale/review`, not the public Explorer `/explorer/api/...` path.
+### Record API
+- The canonical agent API is `/api/records`, exposed by the `explorer-api` service through the CHM load balancer.
+- Agents must authenticate with `Authorization: Bearer $RYU_API_TOKEN`.
+- Do not use CHM proxy routes or `x-chm-*` forwarded identity headers for Explorer authorization.
+- Human browser authoring goes directly through the IAP-protected Explorer admin app at `/explorer/admin`, which calls its own `/api/records` routes.
 - The details UI shows `recordDepth` plus the resolved localization's `reviewState` for all users. Authenticated/author mode renders the review state dropdown and reviewer-note form for that localization.
-- Do not expose general node, edge, source, saved-view, or schema mutation routes through the browser API.
+- Record reads are `GET /api/records` and `GET /api/records/:id`.
+- Record writes are `PUT /api/records/:id`, `PATCH /api/records/:id`, `PATCH /api/records/:id/review`, and admin-only `DELETE /api/records/:id`.
+- Applied writes against existing records must include `x-ryu-record-updated-at` from a fresh read. Create-only writes must include `x-ryu-create-only: true`.
+- Agents should run `validateOnly=true` before applying content writes and show validation errors before retrying.
+- Writer tokens may create and update records but must not set `human_reviewed`; reviewer or admin tokens may set `human_reviewed`.
+- Delete is admin-only and requires a dry-run `impactHash` plus the current `recordUpdatedAt` precondition.
+- Do not expose general node, edge, source, saved-view, schema, bulk, or direct database mutation routes as launch APIs.
 
 ## Current Minimal Model
 ### Node kinds

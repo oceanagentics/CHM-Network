@@ -739,10 +739,13 @@ If current review metadata is stored inside `nodes.review_json`, split the exist
 The review write endpoint should be localization-aware from the start:
 
 ```text
-PATCH /api/explorer/nodes/:id/localizations/:locale/review
+PATCH /api/records/:id/review
 ```
 
-The request body may contain only `reviewState` and `reviewerNote`. Explorer sets `reviewer` from the CHM-forwarded IAP email and sets `lastReviewed` server-side. Do not keep the old node-level review endpoint as a long-term path.
+The request body contains `locale`, `reviewState`, and `reviewerNote`.
+Explorer sets `reviewer` from direct IAP identity or token owner and sets
+`lastReviewed` server-side. Do not keep the old node-level review endpoint as a
+long-term path.
 
 Use the current review-state values:
 
@@ -1079,7 +1082,7 @@ ResolvedNodeLocalization
 
 Repository responses should return nodes with `localizations`, `availableLocales`, `requestedLocale`, `displayLocale`, and `isLocaleFallback`. Remove all code paths that read `node.name`, `node.summary`, `node.description`, or `node.reviewState`.
 
-Update portal-facing contracts at the same time. `RyuSystemRecord` and any MCP/portal response shape should either become locale-aware or expose resolved localization fields explicitly; do not keep a parallel portal contract that still depends on `name`, `summary`, `description`, or node-level `reviewState`.
+Update portal-facing contracts at the same time. `RyuSystemRecord` and any portal response shape should either become locale-aware or expose resolved localization fields explicitly; do not keep a parallel portal contract that still depends on `name`, `summary`, `description`, or node-level `reviewState`.
 
 Public redaction should operate on localization fields. Public reads can expose localization `reviewState`, but should redact `reviewerNote`, `reviewer`, and `lastReviewed`.
 

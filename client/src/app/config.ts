@@ -16,16 +16,9 @@ export const appBasePath = normalizeBasePath(import.meta.env.BASE_URL);
 export const adminAppBasePath = normalizeBasePath(
   import.meta.env.VITE_ADMIN_BASE_PATH ?? "/explorer/admin",
 );
-const reviewApiBasePath = normalizeBasePath(
-  import.meta.env.VITE_REVIEW_API_BASE_PATH ?? "/api/explorer",
-);
 
 export function appPath(path: string): string {
   return `${appBasePath}/${path.replace(/^\/+/, "")}`;
-}
-
-export function reviewApiPath(path: string): string {
-  return `${reviewApiBasePath}/${path.replace(/^\/+/, "")}`;
 }
 
 export const bootstrapPath = import.meta.env.VITE_BOOTSTRAP_PATH || appPath("/api/graph/bootstrap");

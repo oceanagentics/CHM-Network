@@ -113,7 +113,7 @@ const roadmapRows = [
     "L",
     "R2-F01",
     "Backfill route records, source refs, contract refs, delivery formats, route caveats, and supported tool metadata.",
-    "Priority systems return complete route metadata through API and MCP, with planned routes separated from live routes.",
+    "Priority systems return complete route metadata through the API, with planned routes separated from live routes.",
     "QA Passed",
     "Start with Oregon DLCD, GEBCO, OSM/Protomaps, NOAA whale shapes, and fisheries context.",
   ],
@@ -137,7 +137,7 @@ const roadmapRows = [
   [
     "R2-F04",
     "Release 2",
-    "MCP portal hardening",
+    "Portal API hardening",
     "Make Ryu reliable as a discovery and routing portal.",
     "P0",
     "In Progress",
@@ -145,9 +145,9 @@ const roadmapRows = [
     new Date("2026-09-18"),
     new Date("2026-10-02"),
     "M",
-    "Existing list/search/get tools",
+    "Existing portal API endpoints",
     "Confirm query parameters, route inclusion behavior, response schema, error handling, and example prompts for system discovery.",
-    "list_systems, search_systems, and get_system pass smoke tests and return enough route/source/caveat metadata for Deeptime.",
+    "The portal API endpoints pass smoke tests and return enough route/source/caveat metadata for Deeptime.",
     "QA Passed",
     "Existing implementation gives this a head start.",
   ],
@@ -223,7 +223,7 @@ const roadmapRows = [
 
 const releaseRows = [
   ["Release 1", "Reviewable records", "Make priority systems complete enough for internal review.", "2026-08-24 to 2026-09-13", "Priority list approved", "Rich records and audit-facing UI shipped", "Scope creep in record depth", "Walk through six source-backed systems"],
-  ["Release 2", "Usable route/tool records", "Make Ryu useful for system discovery and operational routing.", "2026-09-09 to 2026-10-04", "Tool record archetype accepted", "Priority route records work through API/MCP", "Ambiguous route status definitions", "Run Deeptime-style discovery prompt"],
+  ["Release 2", "Usable route/tool records", "Make Ryu useful for system discovery and operational routing.", "2026-09-09 to 2026-10-04", "Tool record archetype accepted", "Priority route records work through the API", "Ambiguous route status definitions", "Run Deeptime-style discovery prompt"],
   ["Release 3", "Accountable operation", "Add filters, public hosting, and launch process.", "2026-10-01 to 2026-10-25", "Release 1/2 data quality accepted", "Public read-only build and release checklist complete", "Deployment ownership unclear", "Open public build and filter live routes"],
 ];
 

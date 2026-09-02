@@ -252,6 +252,7 @@ export class PostgresGraphRepository implements GraphRepository {
       valid: true,
       recordId: id,
       issues: [],
+      recordUpdatedAt: await this.getRecordUpdatedAt(id),
     };
   }
 
@@ -262,10 +263,18 @@ export class PostgresGraphRepository implements GraphRepository {
   ): Promise<RecordAggregate | RecordValidationResult> {
     const validation = await this.validateRecordAggregate(id, input);
     if (options.validateOnly) {
-      return validation;
+      const precondition = await this.validateRecordMutation(id, options);
+      const issues = [...validation.issues, ...precondition.issues];
+      return {
+        ...validation,
+        valid: validation.valid && precondition.valid,
+        issues,
+        recordUpdatedAt: precondition.recordUpdatedAt,
+      };
     }
 
     await this.withTransaction(async (client) => {
+      await this.requireUpsertPrecondition(client, id, options);
       await client.query(
         `
           INSERT INTO nodes (
@@ -316,11 +325,11 @@ export class PostgresGraphRepository implements GraphRepository {
     options: RecordMutationOptions = {},
   ): Promise<RecordAggregate | RecordValidationResult> {
     if (options.validateOnly) {
-      return { valid: true, recordId: id, issues: [] };
+      return this.validateRecordMutation(id, options);
     }
 
     await this.withTransaction(async (client) => {
-      await this.requireExistingNode(client, id);
+      await this.requireExistingRecordPrecondition(client, id, options);
       if (input.record) {
         await this.patchNeutralRecord(client, id, input.record);
       }
@@ -369,6 +378,11 @@ export class PostgresGraphRepository implements GraphRepository {
   }
 
   async getRecordDeleteImpact(id: string): Promise<RecordDeleteImpact> {
+    const recordUpdatedAt = await this.getRecordUpdatedAt(id);
+    if (!recordUpdatedAt) {
+      throw new Error(`record not found: ${id}`);
+    }
+
     const nodeRows = await this.countRows("SELECT count(*) AS count FROM nodes WHERE id = $1", [id]);
     if (nodeRows === 0) {
       throw new Error(`record not found: ${id}`);
@@ -409,6 +423,7 @@ export class PostgresGraphRepository implements GraphRepository {
 
     const impactWithoutHash = {
       recordId: id,
+      recordUpdatedAt,
       nodeRows,
       localizationRows,
       inboundEdges,
@@ -424,13 +439,18 @@ export class PostgresGraphRepository implements GraphRepository {
     };
   }
 
-  async deleteRecord(id: string, impactHash: string): Promise<RecordDeleteImpact> {
+  async deleteRecord(
+    id: string,
+    impactHash: string,
+    options: RecordMutationOptions = {},
+  ): Promise<RecordDeleteImpact> {
     const impact = await this.getRecordDeleteImpact(id);
     if (impact.impactHash !== impactHash) {
       throw new ApiRequestError(409, "stale delete impact hash");
     }
 
     await this.withTransaction(async (client) => {
+      await this.requireExistingRecordPrecondition(client, id, options);
       const result = await client.query("DELETE FROM nodes WHERE id = $1", [id]);
       if (result.rowCount !== 1) {
         throw new Error(`record not found: ${id}`);
@@ -449,8 +469,8 @@ export class PostgresGraphRepository implements GraphRepository {
     locale: SupportedLocale,
     input: NodeLocalizationReviewInput,
     reviewer: string,
+    options: RecordMutationOptions = {},
   ): Promise<GraphNode> {
-    const existing = await this.getNodeLocalization(id, locale);
     const normalizedReviewer = normalizeString(reviewer);
     if (!normalizedReviewer) {
       throw new Error("reviewer is required");
@@ -465,31 +485,43 @@ export class PostgresGraphRepository implements GraphRepository {
       throw new Error("invalid reviewState");
     }
 
-    const reviewState = hasReviewState ? input.reviewState : existing.reviewState;
-    const reviewerNote = hasReviewerNote
-      ? normalizeString(input.reviewerNote)
-      : existing.reviewerNote;
-    const lastReviewed = new Date().toISOString();
+    if (options.validateOnly) {
+      await this.withTransaction(async (client) => {
+        await this.requireExistingRecordPrecondition(client, id, options);
+        await this.getNodeLocalization(id, locale, client);
+      });
+      return this.getNode(id);
+    }
 
-    await this.pool.query(
-      `
-        UPDATE node_localizations
-        SET review_state = $2,
-            reviewer_note = $3,
-            reviewer = $4,
-            last_reviewed = $5
-        WHERE node_id = $1
-          AND locale = $6
-      `,
-      [
-        id,
-        reviewState,
-        reviewerNote,
-        normalizedReviewer,
-        lastReviewed,
-        locale,
-      ],
-    );
+    await this.withTransaction(async (client) => {
+      await this.requireExistingRecordPrecondition(client, id, options);
+      const existing = await this.getNodeLocalization(id, locale, client);
+      const reviewState = hasReviewState ? input.reviewState : existing.reviewState;
+      const reviewerNote = hasReviewerNote
+        ? normalizeString(input.reviewerNote)
+        : existing.reviewerNote;
+      const lastReviewed = new Date().toISOString();
+
+      await client.query(
+        `
+          UPDATE node_localizations
+          SET review_state = $2,
+              reviewer_note = $3,
+              reviewer = $4,
+              last_reviewed = $5
+          WHERE node_id = $1
+            AND locale = $6
+        `,
+        [
+          id,
+          reviewState,
+          reviewerNote,
+          normalizedReviewer,
+          lastReviewed,
+          locale,
+        ],
+      );
+    });
 
     return this.getNode(id);
   }
@@ -942,6 +974,55 @@ export class PostgresGraphRepository implements GraphRepository {
     return row?.referenced === true;
   }
 
+  private async getRecordUpdatedAt(
+    id: string,
+    client: Pool | PoolClient = this.pool,
+  ): Promise<string | null> {
+    const result = await client.query(
+      `
+        SELECT max(updated_at) AS record_updated_at
+        FROM (
+          SELECT updated_at
+          FROM nodes
+          WHERE id = $1
+          UNION ALL
+          SELECT updated_at
+          FROM node_localizations
+          WHERE node_id = $1
+          UNION ALL
+          SELECT updated_at
+          FROM edges
+          WHERE source_node_id = $1 OR target_node_id = $1
+          UNION ALL
+          SELECT updated_at
+          FROM ryu_routes
+          WHERE node_id = $1
+        ) record_versions
+      `,
+      [id],
+    );
+    const value = result.rows[0]?.record_updated_at;
+    return value == null ? null : timestampText(value);
+  }
+
+  private async validateRecordMutation(
+    id: string,
+    options: RecordMutationOptions,
+  ): Promise<RecordValidationResult> {
+    const recordUpdatedAt = await this.getRecordUpdatedAt(id);
+    const issues: RecordValidationResult["issues"] = [];
+    if (options.recordUpdatedAt && recordUpdatedAt && options.recordUpdatedAt !== recordUpdatedAt) {
+      issues.push({ recordId: id, message: "stale recordUpdatedAt" });
+    }
+
+    return {
+      valid: issues.length === 0,
+      recordId: id,
+      issues,
+      recordUpdatedAt,
+    };
+  }
+
   private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     try {
@@ -961,6 +1042,50 @@ export class PostgresGraphRepository implements GraphRepository {
     const result = await client.query("SELECT id FROM nodes WHERE id = $1 FOR UPDATE", [id]);
     if (result.rowCount !== 1) {
       throw new Error(`record not found: ${id}`);
+    }
+  }
+
+  private async requireUpsertPrecondition(
+    client: PoolClient,
+    id: string,
+    options: RecordMutationOptions,
+  ): Promise<void> {
+    const result = await client.query("SELECT id FROM nodes WHERE id = $1 FOR UPDATE", [id]);
+    if (result.rowCount === 0) {
+      if (options.createOnly) {
+        return;
+      }
+      throw new ApiRequestError(428, "createOnly precondition is required");
+    }
+
+    if (options.createOnly) {
+      throw new ApiRequestError(412, "record already exists");
+    }
+
+    await this.requireRecordUpdatedAt(client, id, options);
+  }
+
+  private async requireExistingRecordPrecondition(
+    client: PoolClient,
+    id: string,
+    options: RecordMutationOptions,
+  ): Promise<void> {
+    await this.requireExistingNode(client, id);
+    await this.requireRecordUpdatedAt(client, id, options);
+  }
+
+  private async requireRecordUpdatedAt(
+    client: PoolClient,
+    id: string,
+    options: RecordMutationOptions,
+  ): Promise<void> {
+    if (!options.recordUpdatedAt) {
+      throw new ApiRequestError(428, "recordUpdatedAt precondition is required");
+    }
+
+    const current = await this.getRecordUpdatedAt(id, client);
+    if (current !== options.recordUpdatedAt) {
+      throw new ApiRequestError(412, "stale recordUpdatedAt");
     }
   }
 
@@ -1392,11 +1517,13 @@ export class PostgresGraphRepository implements GraphRepository {
   private async getNodeLocalization(
     id: string,
     locale: SupportedLocale,
+    client: Pool | PoolClient = this.pool,
   ): Promise<NodeLocalization> {
-    const row = await this.queryOne(
+    const result = await client.query(
       "SELECT * FROM node_localizations WHERE node_id = $1 AND locale = $2",
       [id, locale],
     );
+    const row = result.rows[0];
     if (!row) {
       throw new Error(`node localization not found: ${id}/${locale}`);
     }

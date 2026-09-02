@@ -2,13 +2,9 @@ import type {
   GraphBootstrapPayload,
   GraphNode,
   NodeLocalizationReviewInput,
-  SavedView,
-  SavedViewInput,
   SupportedLocale,
 } from "../../../shared/domain";
 import type {
-  BulkRecordValidationInput,
-  BulkRecordValidationResult,
   RecordAggregateContentInput,
   RecordDeleteImpact,
   RecordDetailDto,
@@ -17,8 +13,7 @@ import type {
   RecordReviewInput,
   RecordValidationResult,
 } from "../../../shared/recordApi";
-import { appPath, bootstrapPath, reviewApiPath } from "./config";
-import { supportedLocales } from "../../../shared/localization";
+import { appPath, bootstrapPath } from "./config";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -47,33 +42,6 @@ export function fetchBootstrap(): Promise<GraphBootstrapPayload> {
   return request<GraphBootstrapPayload>(bootstrapPath);
 }
 
-export function fetchSavedViews(): Promise<SavedView[]> {
-  return request<SavedView[]>(appPath("/api/saved-views"));
-}
-
-export function createSavedView(input: SavedViewInput): Promise<SavedView> {
-  return request<SavedView>(appPath("/api/saved-views"), {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export function updateSavedView(
-  id: string,
-  input: SavedViewInput,
-): Promise<SavedView> {
-  return request<SavedView>(appPath(`/api/saved-views/${id}`), {
-    method: "PUT",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteSavedView(id: string): Promise<void> {
-  return request<void>(appPath(`/api/saved-views/${id}`), {
-    method: "DELETE",
-  });
-}
-
 export function fetchRecords(params = new URLSearchParams()): Promise<RecordListDto> {
   const query = params.toString();
   return request<RecordListDto>(appPath(`/api/records${query ? `?${query}` : ""}`));
@@ -92,12 +60,16 @@ export function fetchRecord(
 export function upsertRecord(
   id: string,
   input: RecordAggregateContentInput,
-  validateOnly = false,
+  options: { validateOnly?: boolean; recordUpdatedAt?: string; createOnly?: boolean } = {},
 ): Promise<RecordDetailDto | RecordValidationResult> {
   return request<RecordDetailDto | RecordValidationResult>(
-    reviewApiPath(`/records/${encodeURIComponent(id)}${validateOnly ? "?validateOnly=true" : ""}`),
+    appPath(`/api/records/${encodeURIComponent(id)}${options.validateOnly ? "?validateOnly=true" : ""}`),
     {
       method: "PUT",
+      headers: {
+        ...(options.recordUpdatedAt ? { "x-ryu-record-updated-at": options.recordUpdatedAt } : {}),
+        ...(options.createOnly ? { "x-ryu-create-only": "true" } : {}),
+      },
       body: JSON.stringify(input),
     },
   );
@@ -106,12 +78,15 @@ export function upsertRecord(
 export function patchRecord(
   id: string,
   input: RecordPatchInput,
-  validateOnly = false,
+  options: { validateOnly?: boolean; recordUpdatedAt?: string } = {},
 ): Promise<RecordDetailDto | RecordValidationResult> {
   return request<RecordDetailDto | RecordValidationResult>(
-    reviewApiPath(`/records/${encodeURIComponent(id)}${validateOnly ? "?validateOnly=true" : ""}`),
+    appPath(`/api/records/${encodeURIComponent(id)}${options.validateOnly ? "?validateOnly=true" : ""}`),
     {
       method: "PATCH",
+      headers: options.recordUpdatedAt
+        ? { "x-ryu-record-updated-at": options.recordUpdatedAt }
+        : undefined,
       body: JSON.stringify(input),
     },
   );
@@ -119,7 +94,7 @@ export function patchRecord(
 
 export function deleteRecord(
   id: string,
-  options: { validateOnly?: boolean; impactHash?: string } = {},
+  options: { validateOnly?: boolean; impactHash?: string; recordUpdatedAt?: string } = {},
 ): Promise<RecordDeleteImpact> {
   const params = new URLSearchParams();
   if (options.validateOnly) {
@@ -130,33 +105,32 @@ export function deleteRecord(
   }
 
   return request<RecordDeleteImpact>(
-    reviewApiPath(`/records/${encodeURIComponent(id)}${params.size > 0 ? `?${params}` : ""}`),
+    appPath(`/api/records/${encodeURIComponent(id)}${params.size > 0 ? `?${params}` : ""}`),
     {
       method: "DELETE",
+      headers: options.recordUpdatedAt
+        ? { "x-ryu-record-updated-at": options.recordUpdatedAt }
+        : undefined,
     },
   );
-}
-
-export function validateRecordsBulk(
-  input: BulkRecordValidationInput,
-): Promise<BulkRecordValidationResult> {
-  return request<BulkRecordValidationResult>(reviewApiPath("/records:bulk"), {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
 }
 
 export function updateRecordReview(
   id: string,
   input: RecordReviewInput,
+  recordUpdatedAt?: string,
 ): Promise<RecordDetailDto> {
-  return request<GraphNode>(reviewApiPath(`/nodes/${encodeURIComponent(id)}/localizations/${input.locale}/review`), {
+  return request<RecordDetailDto>(appPath(`/api/records/${encodeURIComponent(id)}/review`), {
     method: "PATCH",
+    headers: recordUpdatedAt
+      ? { "x-ryu-record-updated-at": recordUpdatedAt }
+      : undefined,
     body: JSON.stringify({
+      locale: input.locale,
       reviewState: input.reviewState,
       reviewerNote: input.reviewerNote,
     }),
-  }).then(graphNodeToRecordDetail);
+  });
 }
 
 export function updateNodeLocalizationReview(
@@ -164,45 +138,35 @@ export function updateNodeLocalizationReview(
   locale: SupportedLocale,
   input: NodeLocalizationReviewInput,
 ): Promise<GraphNode> {
-  return request<GraphNode>(reviewApiPath(`/nodes/${encodeURIComponent(id)}/localizations/${locale}/review`), {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
+  return updateNodeLocalizationReviewDirect(id, locale, input);
 }
 
-function graphNodeToRecordDetail(node: GraphNode): RecordDetailDto {
-  const displayLocale = node.displayLocale ?? node.requestedLocale;
-  const localization = displayLocale ? node.localizations[displayLocale] : undefined;
+async function updateNodeLocalizationReviewDirect(
+  id: string,
+  locale: SupportedLocale,
+  input: NodeLocalizationReviewInput,
+): Promise<GraphNode> {
+  const params = new URLSearchParams({ include: "localizations,edges,routes" });
+  const current = await fetchRecord(id, params);
+  const updated = await updateRecordReview(id, { locale, ...input }, current.recordUpdatedAt);
+  return recordDetailToGraphNode(updated);
+}
 
+function recordDetailToGraphNode(record: RecordDetailDto): GraphNode {
   return {
-    id: node.id,
-    kind: node.kind,
-    countryCode: node.countryCode,
-    subtype: node.subtype,
-    url: node.url,
-    recordDepth: node.recordDepth,
-    title: localization?.title ?? node.id,
-    summary: localization?.summary ?? null,
-    availableLocales: node.availableLocales,
-    missingLocales: supportedLocales.filter((locale) => !node.availableLocales.includes(locale)),
-    reviewStatesByLocale: Object.fromEntries(
-      Object.entries(node.localizations).map(([locale, value]) => [locale, value?.reviewState]),
-    ),
-    requestedLocale: node.requestedLocale,
-    displayLocale: node.displayLocale,
-    isLocaleFallback: node.isLocaleFallback,
-    updatedAt: node.updatedAt,
-    record: {
-      id: node.id,
-      kind: node.kind,
-      countryCode: node.countryCode,
-      subtype: node.subtype,
-      url: node.url,
-      recordDepth: node.recordDepth,
-      properties: node.properties,
-      createdAt: node.createdAt,
-      updatedAt: node.updatedAt,
-    },
-    localizations: node.localizations,
+    id: record.id,
+    kind: record.kind,
+    countryCode: record.countryCode,
+    subtype: record.subtype,
+    url: record.url,
+    recordDepth: record.recordDepth,
+    properties: record.record.properties ?? {},
+    createdAt: record.record.createdAt,
+    updatedAt: record.record.updatedAt,
+    localizations: (record.localizations as GraphNode["localizations"] | undefined) ?? {},
+    availableLocales: record.availableLocales,
+    requestedLocale: record.requestedLocale,
+    displayLocale: record.displayLocale,
+    isLocaleFallback: record.isLocaleFallback,
   };
 }

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Ryu should act as the system discovery and routing portal for Deeptime. Deeptime asks Ryu which source systems are relevant and how to query them. Deeptime then calls system-specific APIs or MCP connectors to retrieve layers, assets, records, or other data.
+Ryu should act as the system discovery and routing portal for Deeptime. Deeptime asks Ryu which source systems are relevant and how to query them. Deeptime then calls system-specific APIs or connectors to retrieve layers, assets, records, or other data.
 
 Ryu should not become one giant marine-data API. It should expose stable discovery tools over a maintained registry of systems, sources, capabilities, and operational routes.
 
@@ -52,15 +52,16 @@ Deeptime owns:
 - workspace/user credentials when needed
 - user-facing provenance display
 
-## Ryu Portal Tools
+## Ryu Record API
 
-The MVP Ryu MCP portal should expose:
+The MVP API should expose one record family:
 
-- `list_systems`
-- `search_systems`
-- `get_system`
+- `GET /api/records?kind=system`
+- `GET /api/records/:id`
 
-These tools return system records and route instructions. They do not need to return final geospatial layer payloads.
+These endpoints return system records and route instructions through the same
+record DTO used by agent reads and writes. They do not need to return final
+geospatial layer payloads.
 
 ### `list_systems`
 
@@ -150,9 +151,9 @@ Minimum response shape:
 }
 ```
 
-## Connector Tool Contract
+## Connector Contract
 
-System APIs or MCP connectors should expose their own tools. The common starting set is:
+System APIs or connectors should expose their own operations. The common starting set is:
 
 - `search_layers`
 - `get_layer`
@@ -160,7 +161,7 @@ System APIs or MCP connectors should expose their own tools. The common starting
 - `get_layer_asset`
 - `health`
 
-Connectors may add source-specific tools later, but Deeptime should be able to retrieve map-ready layer records through the common layer tools for the MVP.
+Connectors may add source-specific operations later, but Deeptime should be able to retrieve map-ready layer records through the common layer operations for the MVP.
 
 Connector contracts live in `documentation/contracts/`:
 
@@ -284,11 +285,10 @@ Start with a small Oregon-focused system set:
 - Map existing `nodes`, `sources`, and `ryu_routes` into those response shapes.
 - Keep the database model minimal; prefer derived portal responses before adding new tables.
 
-### Phase 2: Add Ryu Portal Endpoints Or MCP Tools
+### Phase 2: Add Record Endpoints
 
-- Add `list_systems`.
-- Add `search_systems`.
-- Add `get_system`.
+- Add `GET /api/records?kind=system`.
+- Add `GET /api/records/:id`.
 - Use Cloud SQL/Postgres data as the authority.
 - Include planned routes only when requested; default runtime results should prefer live routes.
 
