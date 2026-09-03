@@ -92,10 +92,9 @@ Launch record API routes are:
 - `PATCH /api/records/:id/review`
 - `DELETE /api/records/:id`
 
-The current deployed private API still uses the CHM/internal-service identity
-model, which is a poor fit for local agents and browser writes. This plan
-replaces that path with direct Explorer auth: IAP for humans and bearer tokens
-for agents.
+The 2026-09-03 deployment uses direct Explorer auth: IAP for humans and bearer
+tokens for agents. The load balancer routes `/api/records` directly to
+`explorer-api`, and CHM no longer proxies Explorer writes.
 
 The browser client now uses record-oriented API helpers where write helpers are
 present. Legacy broad node, edge, source, and saved-view mutation helpers are no
@@ -855,7 +854,7 @@ Roles and boundaries that exist today:
 - API token holder: can call `explorer-api` directly over HTTPS according to the
   token's scope.
 - `explorer_read`: database role for read-only service variants, if kept.
-- `explorer_write`: database role for the private API service.
+- `explorer_write`: database role for the write-capable API service.
 - `explorer_schema_admin`: database role for deliberate schema work only.
 
 Target Explorer app access levels:

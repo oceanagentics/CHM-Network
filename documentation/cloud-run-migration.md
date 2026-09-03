@@ -15,7 +15,7 @@ runtime database.
   and the review endpoint returns `403 writes_disabled`.
 - `RYU_MODE=api`: write-capable Explorer mode. With `IAP_JWT_AUDIENCE` set,
   human browser access is authenticated directly by Explorer/IAP. Without IAP,
-  private API access requires bearer-token auth. The API exposes
+  agent API access requires bearer-token auth. The API exposes
   record-oriented reads, deterministic record upserts, targeted record patches,
   review updates, and admin-gated delete dry-runs/applies. It does not expose
   raw table mutation, general node/edge/source/saved-view CRUD, bulk endpoints,
@@ -97,14 +97,15 @@ ID do not need a separate idempotency table. Applied writes require a
 
 ## Current Deployment
 
-Last verified on 2026-09-01:
+Last verified on 2026-09-03:
 
-- Source commit: `2a1584a`
-- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:c8bc35cb5afd4d98024922161ed3e7adce3d1cacff0a46915737abb1a58c8976`
-- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:ced7700839a2b3661ac9e4e9f397dc60479895dcf1306ed09730af42a291723e`
-- Public Cloud Run revision: `explorer-00016-89g`
-- Admin Cloud Run revision: `explorer-admin-00006-pt7`
-- Private API Cloud Run revision: `explorer-api-00014-jb8`
+- Source commit: `d6b6992`
+- Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:25e761049522571b0f0fb0521830c54418b8d12dca5ee91a9842d200bfe40ab5`
+- Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:09c40f273c50c00d13b9a30ec1109a16da224b3729a054b22b0ec01b5a56d07f`
+- API image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api@sha256:0f6c8ae7c27e8d97964c571d40b418d04722afdd5e0364757424956e747a6c6e`
+- Public Cloud Run revision: `explorer-00018-7qw`
+- Admin Cloud Run revision: `explorer-admin-00008-qz9`
+- API Cloud Run revision: `explorer-api-00016-bpt`
 - Admin IAP backend service ID: `5570063593656309274`
 - Cloud SQL rows after language migration: `102` sources, `117` nodes, `117`
   node localizations, `139` edges, `10` routes, and `2` saved views
@@ -116,9 +117,11 @@ Last verified on 2026-09-01:
   `117` nodes, `139` edges, `102` sources, `117` localization rows, locale
   `en`, review states `116` `agent_researched` and `1` `needs_revision`, `0`
   public routes, and no obsolete node text/review fields.
-- Internal private-API smoke execution `explorer-api-smoke-226fc2c-ncg2h`
-  verified the pre-refactor CHM review bridge. New private API smoke checks
-  should use bearer-token auth against `/api/records`.
+- Live agent API smoke verified that `/api/records` reaches Explorer API rather
+  than IAP/CHM: unauthenticated list returned JSON `401 missing_bearer_token`,
+  invalid bearer returned `403 invalid_bearer_token`, writer-token list returned
+  `200`, `validateOnly` patch returned `200`, and a throwaway record
+  create/delete cycle returned `200` then `404` after cleanup.
 - Three-state review schema normalization completed on 2026-08-31. Before:
   `99` `unreviewed`, `16` `agent_researched`, and `2`
   `needs_human_review`. After normalization and smoke probes, the public
