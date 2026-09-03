@@ -606,7 +606,6 @@ export class PostgresGraphRepository implements GraphRepository {
       }
     }
     if (query.localeAvailability) {
-      const supported = addParam([...supportedLocales]);
       if (query.localeAvailability === "available") {
         filters.push(`
           EXISTS (
@@ -626,6 +625,7 @@ export class PostgresGraphRepository implements GraphRepository {
           )
         `);
       } else if (query.localeAvailability === "partial") {
+        const supported = addParam([...supportedLocales]);
         filters.push(`
           (
             SELECT count(DISTINCT locale_l.locale)
@@ -635,6 +635,7 @@ export class PostgresGraphRepository implements GraphRepository {
           ) < ${supportedLocales.length}
         `);
       } else {
+        const supported = addParam([...supportedLocales]);
         filters.push(`
           (
             SELECT count(DISTINCT locale_l.locale)

@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { Pool } from "pg";
 
-import type { RecordAggregateContentInput } from "../../shared/recordApi";
+import type { LocaleAvailability, RecordAggregateContentInput } from "../../shared/recordApi";
 import { PostgresGraphRepository } from "./postgresGraphRepository";
 import { readRecordSearchQuery } from "./recordContracts";
 
@@ -35,6 +35,11 @@ class CapturingPool {
     this.queries.push({ sql: sql.trim().replace(/\s+/g, " "), params });
     return { rows: [], rowCount: 0 };
   }
+}
+
+function referencedSqlParams(sql: string): number[] {
+  return [...new Set([...sql.matchAll(/\$(\d+)/g)].map((match) => Number(match[1])))]
+    .sort((left, right) => left - right);
 }
 
 test("builds SQL-backed record searches for the full filter set", async () => {
@@ -70,6 +75,18 @@ test("builds SQL-backed record searches for the full filter set", async () => {
   assert.match(searchSql, /capabilities_json \?\|/);
   assert.match(searchSql, /ORDER BY lower\(coalesce\(display_l.title, n.id\)\), n.id/);
   assert.equal(pool.queries[0].params.at(-1), 11);
+});
+
+test("does not allocate unused params for locale availability filters", async () => {
+  for (const localeAvailability of ["available", "missing", "partial", "complete"] satisfies LocaleAvailability[]) {
+    const pool = new CapturingPool();
+    const repository = new PostgresGraphRepository(pool as unknown as Pool);
+
+    await repository.listRecords(readRecordSearchQuery({ localeAvailability }));
+
+    const placeholders = referencedSqlParams(pool.queries[0].sql);
+    assert.deepEqual(placeholders, pool.queries[0].params.map((_, index) => index + 1));
+  }
 });
 
 test("rolls back transactional record upserts when a related row write fails", async () => {
