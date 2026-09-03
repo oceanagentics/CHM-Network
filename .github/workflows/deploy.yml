@@ -1,0 +1,77 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: chm-network
+  REGION: us-east4
+  REPO_NAME: chm-apps
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # This provider string maps to the Workload Identity Federation setup
+          workload_identity_provider: 'projects/288836337031/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'explorer-build-sa@chm-network.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and Deploy
+        run: |
+          # Get short SHA for image tags
+          SHA=$(git rev-parse --short HEAD)
+          
+          echo "================================================="
+          echo "Building Public and Admin Images via Cloud Build..."
+          echo "================================================="
+          gcloud builds submit \
+            --region $REGION \
+            --config cloudbuild.release.yaml \
+            --substitutions _PUBLIC_IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-public:${SHA},_PUBLIC_CACHE_IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-public:latest,_ADMIN_IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-admin:${SHA},_ADMIN_CACHE_IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-admin:latest \
+            .
+          
+          echo "================================================="
+          echo "Building API Image via Cloud Build..."
+          echo "================================================="
+          gcloud builds submit \
+            --region $REGION \
+            --config cloudbuild.yaml \
+            --substitutions _IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-api:${SHA},_CACHE_IMAGE=us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-api:latest,_APP_BASE_PATH=/,_VITE_APP_MODE=public,_VITE_CAN_REVIEW_NODES=false \
+            .
+          
+          echo "================================================="
+          echo "Deploying all 3 services to Cloud Run..."
+          echo "================================================="
+          gcloud run deploy explorer \
+            --project $PROJECT_ID \
+            --region $REGION \
+            --image us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-public:${SHA} \
+            --quiet
+            
+          gcloud run deploy explorer-admin \
+            --project $PROJECT_ID \
+            --region $REGION \
+            --image us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-admin:${SHA} \
+            --quiet
+            
+          gcloud run deploy explorer-api \
+            --project $PROJECT_ID \
+            --region $REGION \
+            --image us-east4-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/explorer-api:${SHA} \
+            --quiet
