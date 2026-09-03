@@ -2,6 +2,7 @@
  * Structural projection turns scoped graph data into visible nodes and edges.
  */
 import type { GraphEdge, GraphNode, SupportedLocale, ViewMode } from "../../../../shared/domain";
+import { facetLabel } from "../i18n";
 import { nodeTitle } from "../localization";
 import type { CountryDisplayMode } from "../state/graphStore";
 import { buildLabel, getLayoutBand, getNodeDimensions, type NodeGeometry } from "./geometry";
@@ -102,19 +103,8 @@ function buildProjectionNode(
   };
 }
 
-function edgeLabel(kind: GraphProjectionEdgeType): string {
-  switch (kind) {
-    case "governs":
-      return "governs";
-    case "operates":
-      return "operates";
-    case "part_of":
-      return "part of";
-    case "publishes_to":
-      return "publishes to";
-    case "syncs_to":
-      return "syncs to";
-  }
+function edgeLabel(kind: GraphProjectionEdgeType, locale: SupportedLocale): string {
+  return facetLabel(locale, "edgeKind", kind);
 }
 
 export function projectGraph(input: ProjectionInput): GraphProjection {
@@ -174,7 +164,7 @@ export function projectGraph(input: ProjectionInput): GraphProjection {
       source: edge.sourceNodeId,
       target: edge.targetNodeId,
       type: edge.kind,
-      label: edgeLabel(edge.kind),
+      label: edgeLabel(edge.kind, locale),
       isDerivedHierarchy: false,
     }));
 

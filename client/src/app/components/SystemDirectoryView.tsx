@@ -19,10 +19,9 @@ import {
 
 import {
   claimFilterKeys,
-  claimFilterLabels,
+  claimFilterLabel,
   countActiveFilters,
   getSystemFilterOptions,
-  labelize,
   localizationCoverageFilterOptions,
   resolveGraphSearch,
   reviewStateFilterOptions,
@@ -31,24 +30,34 @@ import {
   type SearchMatchReason,
   type SystemSearchRecord,
 } from "../search";
+import { facetLabel, localeName, t, type FacetGroup } from "../i18n";
 import { useGraphStore } from "../state/graphStore";
 
 type DirectoryMode = "cards" | "table";
 type SystemDirectoryVariant = "page" | "rail";
 
-function CompactTags({ values, limit = 3 }: { values: string[]; limit?: number }) {
+function CompactTags({
+  values,
+  limit = 3,
+  facetGroup,
+}: {
+  values: string[];
+  limit?: number;
+  facetGroup?: FacetGroup;
+}) {
+  const locale = useGraphStore((state) => state.locale);
   const visible = values.slice(0, limit);
   const remaining = values.length - visible.length;
 
   if (values.length === 0) {
-    return <Typography.Text type="secondary">None recorded</Typography.Text>;
+    return <Typography.Text type="secondary">{t(locale, "directory.noneRecorded")}</Typography.Text>;
   }
 
   return (
     <Flex gap={4} wrap>
       {visible.map((value) => (
         <Tag key={value} bordered={false}>
-          {labelize(value)}
+          {facetGroup ? facetLabel(locale, facetGroup, value) : value}
         </Tag>
       ))}
       {remaining > 0 ? <Tag bordered={false}>+{remaining}</Tag> : null}
@@ -110,7 +119,10 @@ export function SystemDirectoryView({
   );
   const records = resolvedSearch?.systemRecords ?? [];
   const filteredRecords = resolvedSearch?.filteredSystemRecords ?? [];
-  const filterOptions = useMemo(() => getSystemFilterOptions(records), [records]);
+  const filterOptions = useMemo(
+    () => getSystemFilterOptions(records, locale),
+    [locale, records],
+  );
 
   const activeFilterCount = countActiveFilters(filters);
   const isRail = variant === "rail";
@@ -137,7 +149,7 @@ export function SystemDirectoryView({
 
   const columns = [
     {
-      title: "System",
+      title: t(locale, "directory.system"),
       key: "system",
       render: (_: unknown, record: SystemSearchRecord) => (
         <Flex vertical gap={2}>
@@ -146,51 +158,62 @@ export function SystemDirectoryView({
             {record.summary}
           </Typography.Text>
           {record.localization.isLocaleFallback ? (
-            <Tag bordered={false}>Showing {record.localization.displayLocale}</Tag>
+            <Tag bordered={false}>
+              {record.localization.displayLocale
+                ? t(locale, "common.showingLocale", {
+                    locale: localeName(record.localization.displayLocale, locale),
+                  })
+                : t(locale, "common.noLocalization")}
+            </Tag>
           ) : null}
           <MatchReasons reasons={record.matchReasons} />
         </Flex>
       ),
     },
     {
-      title: "Operator",
+      title: t(locale, "directory.operator"),
       dataIndex: "operatorName",
       key: "operatorName",
       render: (value: string) =>
-        value || <Typography.Text type="secondary">Unknown</Typography.Text>,
+        value || <Typography.Text type="secondary">{t(locale, "directory.unknown")}</Typography.Text>,
     },
     {
-      title: "Localization",
+      title: t(locale, "directory.localization"),
       key: "localization",
       render: (_: unknown, record: SystemSearchRecord) => (
         <Flex gap={4} wrap>
           <Tag bordered={false}>
-            {record.hasCurrentLocale ? locale : `Missing ${locale}`}
+            {record.hasCurrentLocale
+              ? localeName(locale, locale)
+              : t(locale, "common.missingLocale", { locale: localeName(locale, locale) })}
           </Tag>
           {record.currentLocaleReviewState ? (
-            <Tag bordered={false}>{labelize(record.currentLocaleReviewState)}</Tag>
+            <Tag bordered={false}>{facetLabel(locale, "reviewState", record.currentLocaleReviewState)}</Tag>
           ) : null}
         </Flex>
       ),
     },
     {
-      title: "Role",
+      title: t(locale, "directory.role"),
       key: "role",
       render: (_: unknown, record: SystemSearchRecord) =>
-        record.role ? <Tag>{labelize(record.role)}</Tag> : <Typography.Text type="secondary">Not set</Typography.Text>,
+        record.role
+          ? <Tag>{facetLabel(locale, "systemRole", record.role)}</Tag>
+          : <Typography.Text type="secondary">{t(locale, "directory.notSet")}</Typography.Text>,
     },
     {
-      title: "Data",
+      title: t(locale, "directory.data"),
       key: "data",
       render: (_: unknown, record: SystemSearchRecord) => (
         <CompactTags
           values={[...record.dataTypes, ...record.dataFormats, ...record.dataStandards]}
           limit={4}
+          facetGroup="descriptorLabel"
         />
       ),
     },
     {
-      title: "Access",
+      title: t(locale, "directory.access"),
       key: "access",
       render: (_: unknown, record: SystemSearchRecord) => (
         <CompactTags values={record.accessLabels} limit={4} />
@@ -208,17 +231,20 @@ export function SystemDirectoryView({
         <Flex align="center" justify="space-between" gap={12} wrap>
           <Flex vertical gap={2} className="systems-directory-summary">
             {showTitle ? (
-              <Typography.Title level={isRail ? 4 : 2}>Systems</Typography.Title>
+              <Typography.Title level={isRail ? 4 : 2}>{t(locale, "directory.systems")}</Typography.Title>
             ) : null}
             <Typography.Text type="secondary">
-              {filteredRecords.length} of {records.length} systems
+              {t(locale, "directory.systemCount", {
+                filtered: filteredRecords.length,
+                total: records.length,
+              })}
             </Typography.Text>
           </Flex>
           <Segmented
             value={mode}
             options={[
-              { label: "Cards", value: "cards", icon: <AppstoreOutlined /> },
-              { label: "Table", value: "table", icon: <TableOutlined /> },
+              { label: t(locale, "directory.cards"), value: "cards", icon: <AppstoreOutlined /> },
+              { label: t(locale, "directory.table"), value: "table", icon: <TableOutlined /> },
             ]}
             onChange={(value) => setMode(value as DirectoryMode)}
           />
@@ -228,7 +254,7 @@ export function SystemDirectoryView({
           <Input
             allowClear
             className="systems-search"
-            placeholder="Search nodes, data types, access, sources"
+            placeholder={t(locale, "directory.searchPlaceholder")}
             prefix={<SearchOutlined />}
             value={query}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -236,8 +262,8 @@ export function SystemDirectoryView({
           <Segmented
             value={searchAllLanguages ? "all" : "displayed"}
             options={[
-              { label: "Displayed", value: "displayed" },
-              { label: "All languages", value: "all" },
+              { label: t(locale, "directory.displayed"), value: "displayed" },
+              { label: t(locale, "directory.allLanguages"), value: "all" },
             ]}
             onChange={(value) => setSearchAllLanguages(value === "all")}
           />
@@ -247,11 +273,13 @@ export function SystemDirectoryView({
             type={filtersOpen ? "primary" : "default"}
             onClick={() => setFiltersOpen((open) => !open)}
           >
-            Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            {activeFilterCount > 0
+              ? t(locale, "directory.filtersCount", { count: activeFilterCount })
+              : t(locale, "directory.filters")}
           </Button>
           {activeFilterCount > 0 ? (
             <Button block={isRail} onClick={resetSearchFilters}>
-              Reset
+              {t(locale, "directory.reset")}
             </Button>
           ) : null}
         </Flex>
@@ -263,25 +291,25 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Language coverage"
+                placeholder={t(locale, "directory.languageCoverage")}
                 value={filters.localizationCoverage}
-                options={localizationCoverageFilterOptions}
+                options={localizationCoverageFilterOptions(locale)}
                 onChange={(value) => patchFilters({ localizationCoverage: value })}
               />
               <Select
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Review status"
+                placeholder={t(locale, "directory.reviewStatus")}
                 value={filters.reviewState}
-                options={reviewStateFilterOptions}
+                options={reviewStateFilterOptions(locale)}
                 onChange={(value) => patchFilters({ reviewState: value })}
               />
               <Select
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Role"
+                placeholder={t(locale, "directory.role")}
                 value={filters.role}
                 options={filterOptions.role}
                 onChange={(value) => patchFilters({ role: value })}
@@ -290,7 +318,7 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Operator country"
+                placeholder={t(locale, "directory.operatorCountry")}
                 value={filters.countryCode}
                 options={filterOptions.countryCode}
                 onChange={(value) => patchFilters({ countryCode: value })}
@@ -299,7 +327,7 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Discipline"
+                placeholder={t(locale, "details.discipline")}
                 value={filters.disciplineFamily}
                 options={filterOptions.disciplineFamily}
                 onChange={(value) => patchFilters({ disciplineFamily: value })}
@@ -310,7 +338,7 @@ export function SystemDirectoryView({
                   allowClear
                   mode="multiple"
                   maxTagCount="responsive"
-                  placeholder={claimFilterLabels[key]}
+                  placeholder={claimFilterLabel(locale, key)}
                   value={filters.dataClaims[key]}
                   options={filterOptions.dataClaims[key]}
                   onChange={(value) => patchClaimFilter(key, value)}
@@ -320,7 +348,7 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Access types"
+                placeholder={t(locale, "directory.accessTypes")}
                 value={filters.accessTypes}
                 options={filterOptions.accessTypes}
                 onChange={(value) => patchFilters({ accessTypes: value })}
@@ -329,7 +357,7 @@ export function SystemDirectoryView({
                 allowClear
                 mode="multiple"
                 maxTagCount="responsive"
-                placeholder="Access methods"
+                placeholder={t(locale, "directory.accessMethods")}
                 value={filters.accessMethods}
                 options={filterOptions.accessMethods}
                 onChange={(value) => patchFilters({ accessMethods: value })}
@@ -339,7 +367,7 @@ export function SystemDirectoryView({
         ) : null}
 
         {filteredRecords.length === 0 ? (
-          <Empty description="No systems match the current search and filters." />
+          <Empty description={t(locale, "directory.noSystemsMatch")} />
         ) : displayMode === "cards" ? (
           <div className="systems-card-grid">
             {filteredRecords.map((record) => (
@@ -358,17 +386,25 @@ export function SystemDirectoryView({
                     <Flex vertical gap={2}>
                       <Typography.Text strong>{record.title}</Typography.Text>
                       <Typography.Text type="secondary">
-                        {record.operatorName || "Unknown operator"}
+                        {record.operatorName || t(locale, "directory.unknownOperator")}
                       </Typography.Text>
                     </Flex>
                     {record.localization.isLocaleFallback ? (
-                      <Tag bordered={false}>Showing {record.localization.displayLocale}</Tag>
+                      <Tag bordered={false}>
+                        {record.localization.displayLocale
+                          ? t(locale, "common.showingLocale", {
+                              locale: localeName(record.localization.displayLocale, locale),
+                            })
+                          : t(locale, "common.noLocalization")}
+                      </Tag>
                     ) : null}
                     <Tag bordered={false}>
-                      {record.hasCurrentLocale ? locale : `Missing ${locale}`}
+                      {record.hasCurrentLocale
+                        ? localeName(locale, locale)
+                        : t(locale, "common.missingLocale", { locale: localeName(locale, locale) })}
                     </Tag>
                     {record.currentLocaleReviewState ? (
-                      <Tag bordered={false}>{labelize(record.currentLocaleReviewState)}</Tag>
+                      <Tag bordered={false}>{facetLabel(locale, "reviewState", record.currentLocaleReviewState)}</Tag>
                     ) : null}
                   </Flex>
                   {record.summary ? (
@@ -378,22 +414,32 @@ export function SystemDirectoryView({
                   ) : null}
                   <MatchReasons reasons={record.matchReasons} />
                   <div className="systems-card-meta">
-                    <span>{record.countryCode || "No operator country"}</span>
-                    <span>{record.role ? labelize(record.role) : "No role"}</span>
+                    <span>{record.countryCode || t(locale, "directory.noOperatorCountry")}</span>
+                    <span>
+                      {record.role
+                        ? facetLabel(locale, "systemRole", record.role)
+                        : t(locale, "directory.noRole")}
+                    </span>
                     <span>
                       {record.disciplineFamily
-                        ? labelize(record.disciplineFamily)
-                        : "No discipline"}
+                        ? facetLabel(locale, "disciplineFamily", record.disciplineFamily)
+                        : t(locale, "directory.noDiscipline")}
                     </span>
-                    <span>{record.relationships.length} relationships</span>
+                    <span>
+                      {t(locale, "directory.relationshipCount", {
+                        count: record.relationships.length,
+                      })}
+                    </span>
                   </div>
                   <Flex vertical gap={8}>
-                    <CompactTags values={record.dataTypes} />
+                    <CompactTags values={record.dataTypes} facetGroup="descriptorLabel" />
                     <CompactTags values={record.accessLabels} />
                   </Flex>
                   <Flex align="center" justify="space-between" gap={8}>
                     <Typography.Text type="secondary">
-                      {record.sourceTitles.length} sources
+                      {t(locale, "directory.sourceCount", {
+                        count: record.sourceTitles.length,
+                      })}
                     </Typography.Text>
                   </Flex>
                 </Flex>

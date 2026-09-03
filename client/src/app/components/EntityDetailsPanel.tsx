@@ -25,30 +25,35 @@ import type {
   ReviewState,
   RyuRoute,
   SourceRef,
-  SystemDataDescriptor,
+  SupportedLocale,
+  SystemDataDescriptorCategory,
 } from "../../../../shared/domain";
 import { updateNodeLocalizationReview } from "../api";
 import { appPath, canReviewNodes } from "../config";
+import {
+  facetLabel,
+  formatDateTime,
+  formatNumber,
+  humanizeCode,
+  localeName,
+  t,
+} from "../i18n";
 import {
   localizedMetricById,
   nodeTitle,
   resolveMetric,
   resolveNodeDisplay,
   systemAccessPaths,
+  systemDataDescriptors,
   systemGallery,
   type ResolvedSourcedMetric,
   type ResolvedSystemAccessPath,
+  type ResolvedSystemDataDescriptor,
   type ResolvedSystemGalleryItem,
 } from "../localization";
 import { useGraphStore } from "../state/graphStore";
 
 type DetailTabKey = "user" | "raw";
-
-function labelize(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (match) => match.toUpperCase());
-}
 
 function tagColor(value: string): string | undefined {
   if (value === "rich" || value === "human_reviewed") {
@@ -77,20 +82,6 @@ const reviewStates: ReviewState[] = [
   "human_reviewed",
   "needs_revision",
 ];
-const reviewStateOptions = reviewStates.map((value) => ({ label: labelize(value), value }));
-
-function formatDateTime(value: string | null): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString();
-}
 
 function InlineField({
   label,
@@ -107,8 +98,9 @@ function InlineField({
   );
 }
 
-function EmptyValue({ children = "Not recorded" }: { children?: ReactNode }) {
-  return <Typography.Text type="secondary">{children}</Typography.Text>;
+function EmptyValue({ children }: { children?: ReactNode }) {
+  const locale = useGraphStore((state) => state.locale);
+  return <Typography.Text type="secondary">{children ?? t(locale, "common.notRecorded")}</Typography.Text>;
 }
 
 function DetailSection({
@@ -127,30 +119,35 @@ function DetailSection({
 }
 
 function SourceLink({ source }: { source: SourceRef }) {
+  const locale = useGraphStore((state) => state.locale);
   const fullSource = useGraphStore((state) => state.graph?.sourceById[source.id]);
   const sourceUrl = fullSource?.url ?? source.url;
   const tooltip = fullSource ? (
     <Flex className="source-record-tooltip" vertical gap={2}>
       <Typography.Text strong>{fullSource.title}</Typography.Text>
-      <Typography.Text>ID: {fullSource.id}</Typography.Text>
-      <Typography.Text>Type: {labelize(fullSource.sourceType)}</Typography.Text>
+      <Typography.Text>{t(locale, "source.id")}: {fullSource.id}</Typography.Text>
+      <Typography.Text>
+        {t(locale, "source.type")}: {facetLabel(locale, "sourceType", fullSource.sourceType)}
+      </Typography.Text>
       {fullSource.publisher ? (
-        <Typography.Text>Publisher: {fullSource.publisher}</Typography.Text>
+        <Typography.Text>{t(locale, "source.publisher")}: {fullSource.publisher}</Typography.Text>
       ) : null}
       {fullSource.publishedAt ? (
-        <Typography.Text>Published: {fullSource.publishedAt}</Typography.Text>
+        <Typography.Text>{t(locale, "source.published")}: {fullSource.publishedAt}</Typography.Text>
       ) : null}
       {fullSource.accessedAt ? (
-        <Typography.Text>Accessed: {fullSource.accessedAt}</Typography.Text>
+        <Typography.Text>{t(locale, "source.accessed")}: {fullSource.accessedAt}</Typography.Text>
       ) : null}
-      {fullSource.url ? <Typography.Text>URL: {fullSource.url}</Typography.Text> : null}
+      {fullSource.url ? (
+        <Typography.Text>{t(locale, "source.url")}: {fullSource.url}</Typography.Text>
+      ) : null}
       {fullSource.localPath ? (
-        <Typography.Text>Local path: {fullSource.localPath}</Typography.Text>
+        <Typography.Text>{t(locale, "source.localPath")}: {fullSource.localPath}</Typography.Text>
       ) : null}
       {fullSource.note ? <Typography.Text>{fullSource.note}</Typography.Text> : null}
     </Flex>
   ) : (
-    `Source record ${source.id} is not loaded.`
+    t(locale, "source.notLoaded", { id: source.id })
   );
 
   return (
@@ -166,13 +163,15 @@ function SourceLink({ source }: { source: SourceRef }) {
 }
 
 function descriptorList(
-  descriptors: SystemDataDescriptor[],
-  category: SystemDataDescriptor["category"],
+  descriptors: ResolvedSystemDataDescriptor[],
+  category: SystemDataDescriptorCategory,
 ) {
   return descriptors.filter((descriptor) => descriptor.category === category);
 }
 
-function DescriptorTags({ descriptors }: { descriptors: SystemDataDescriptor[] }) {
+function DescriptorTags({ descriptors }: { descriptors: ResolvedSystemDataDescriptor[] }) {
+  const locale = useGraphStore((state) => state.locale);
+
   if (descriptors.length === 0) {
     return <EmptyValue />;
   }
@@ -181,14 +180,14 @@ function DescriptorTags({ descriptors }: { descriptors: SystemDataDescriptor[] }
     <Flex gap={4} wrap>
       {descriptors.map((descriptor) => (
         <Tag key={descriptor.id} bordered={false}>
-          {labelize(descriptor.label)}
+          {descriptor.localizedLabel ?? facetLabel(locale, "descriptorLabel", descriptor.label)}
         </Tag>
       ))}
     </Flex>
   );
 }
 
-function formatBytes(value: number) {
+function formatBytes(value: number, locale: SupportedLocale) {
   const units = ["B", "KB", "MB", "GB", "TB", "PB"];
   let size = value;
   let unitIndex = 0;
@@ -196,78 +195,90 @@ function formatBytes(value: number) {
     size /= 1024;
     unitIndex += 1;
   }
-  return `${size.toLocaleString(undefined, { maximumFractionDigits: unitIndex === 0 ? 0 : 1 })} ${units[unitIndex]}`;
+  return `${new Intl.NumberFormat(locale, {
+    maximumFractionDigits: unitIndex === 0 ? 0 : 1,
+  }).format(size)} ${units[unitIndex]}`;
 }
 
-function formatMetricValue(metric: ResolvedSourcedMetric) {
+function formatMetricValue(metric: ResolvedSourcedMetric, locale: SupportedLocale) {
   if (metric.key === "storage_size_bytes" || metric.unit === "bytes") {
-    return formatBytes(metric.value);
+    return formatBytes(metric.value, locale);
   }
 
-  return `${metric.value.toLocaleString()} ${metric.unit}`;
+  return `${formatNumber(metric.value, locale)} ${facetLabel(locale, "unit", metric.unit)}`;
 }
 
 function MetricValue({ metric }: { metric: ResolvedSourcedMetric | null }) {
+  const locale = useGraphStore((state) => state.locale);
   if (!metric) {
     return <EmptyValue />;
   }
 
   return (
     <Flex vertical gap={2}>
-      <Typography.Text>{formatMetricValue(metric)}</Typography.Text>
+      <Typography.Text>{formatMetricValue(metric, locale)}</Typography.Text>
       {metric.description ? (
         <Typography.Text type="secondary">{metric.description}</Typography.Text>
       ) : null}
       <Typography.Text type="secondary">
-        Source: <SourceLink source={metric.source} />
-        {metric.observedAt ? ` · observed ${metric.observedAt}` : ""}
+        {t(locale, "common.source")}: <SourceLink source={metric.source} />
+        {metric.observedAt
+          ? ` · ${t(locale, "common.observed", { date: metric.observedAt })}`
+          : ""}
       </Typography.Text>
     </Flex>
   );
 }
 
 function AccessDescription({ path }: { path: ResolvedSystemAccessPath }) {
+  const locale = useGraphStore((state) => state.locale);
+  const label = path.label === path.method
+    ? facetLabel(locale, "accessMethod", path.method)
+    : path.label;
+
   return (
     <Flex vertical gap={4}>
       <Flex align="center" gap={6} wrap>
-        <Typography.Text>{labelize(path.label)}</Typography.Text>
-        <Tag bordered={false}>{labelize(path.type)}</Tag>
-        <Tag bordered={false}>{labelize(path.method)}</Tag>
+        <Typography.Text>{label}</Typography.Text>
+        <Tag bordered={false}>{facetLabel(locale, "accessType", path.type)}</Tag>
+        <Tag bordered={false}>{facetLabel(locale, "accessMethod", path.method)}</Tag>
       </Flex>
       <Typography.Text type="secondary">{path.description}</Typography.Text>
       <Typography.Link href={path.url} target="_blank" rel="noreferrer">
         {path.url}
       </Typography.Link>
       <Typography.Text type="secondary">
-        Source: <SourceLink source={path.source} />
+        {t(locale, "common.source")}: <SourceLink source={path.source} />
       </Typography.Text>
     </Flex>
   );
 }
 
 function RyuRouteDescription({ route }: { route: RyuRoute }) {
+  const locale = useGraphStore((state) => state.locale);
+
   return (
     <Flex vertical gap={4}>
       <Flex align="center" gap={6} wrap>
         <Typography.Text>{route.id}</Typography.Text>
-        <Tag bordered={false}>{labelize(route.status)}</Tag>
-        <Tag bordered={false}>{labelize(route.mode)}</Tag>
-        <Tag bordered={false}>Priority {route.priority}</Tag>
+        <Tag bordered={false}>{humanizeCode(route.status)}</Tag>
+        <Tag bordered={false}>{humanizeCode(route.mode)}</Tag>
+        <Tag bordered={false}>{t(locale, "details.priority", { priority: route.priority })}</Tag>
         {route.capabilities.map((capability) => (
-          <Tag key={capability} bordered={false}>{labelize(capability)}</Tag>
+          <Tag key={capability} bordered={false}>{humanizeCode(capability)}</Tag>
         ))}
       </Flex>
       {route.target ? (
-        <Typography.Text type="secondary">Target: {route.target}</Typography.Text>
+        <Typography.Text type="secondary">{t(locale, "details.target")}: {route.target}</Typography.Text>
       ) : null}
       {route.upstream ? (
-        <Typography.Text type="secondary">Upstream: {route.upstream}</Typography.Text>
+        <Typography.Text type="secondary">{t(locale, "details.upstream")}: {route.upstream}</Typography.Text>
       ) : null}
       {route.format ? (
-        <Typography.Text type="secondary">Format: {route.format}</Typography.Text>
+        <Typography.Text type="secondary">{t(locale, "details.format")}: {route.format}</Typography.Text>
       ) : null}
       {route.contractRef ? (
-        <Typography.Text type="secondary">Contract: {route.contractRef}</Typography.Text>
+        <Typography.Text type="secondary">{t(locale, "details.contract")}: {route.contractRef}</Typography.Text>
       ) : null}
       {route.caveat ? (
         <Typography.Text type="secondary">{route.caveat}</Typography.Text>
@@ -277,10 +288,11 @@ function RyuRouteDescription({ route }: { route: RyuRoute }) {
 }
 
 function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
+  const locale = useGraphStore((state) => state.locale);
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (items.length === 0) {
-    return <EmptyValue>No gallery item recorded</EmptyValue>;
+    return <EmptyValue>{t(locale, "details.noGalleryItem")}</EmptyValue>;
   }
 
   const activeItem = items[Math.min(activeIndex, items.length - 1)];
@@ -308,7 +320,7 @@ function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
           >
             <img
               src={activeItemThumbnailUrl}
-              alt={activeItem.title ?? activeItem.caption ?? "Database sample"}
+              alt={activeItem.altText ?? activeItem.title ?? activeItem.caption ?? t(locale, "details.galleryImageAlt")}
               loading="lazy"
             />
           </a>
@@ -325,14 +337,14 @@ function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
             <Typography.Text type="secondary">{activeItem.caption}</Typography.Text>
           ) : null}
           <Typography.Text type="secondary">
-            Source: <SourceLink source={activeItem.source} />
+            {t(locale, "common.source")}: <SourceLink source={activeItem.source} />
           </Typography.Text>
         </figcaption>
       </figure>
       {hasMultipleItems ? (
         <Flex className="entity-gallery-controls" align="center" justify="space-between">
           <Button
-            aria-label="Previous gallery image"
+            aria-label={t(locale, "details.previousGalleryImage")}
             icon={<LeftOutlined />}
             size="small"
             type="text"
@@ -342,7 +354,7 @@ function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
             {Math.min(activeIndex, items.length - 1) + 1} / {items.length}
           </Typography.Text>
           <Button
-            aria-label="Next gallery image"
+            aria-label={t(locale, "details.nextGalleryImage")}
             icon={<RightOutlined />}
             size="small"
             type="text"
@@ -365,10 +377,16 @@ function SystemIntro({ system }: { system: GraphNode }) {
           {localization.title}
         </Typography.Title>
         <Typography.Text className="entity-system-operator">
-          {system.properties.operator?.name ?? "Operator not recorded"}
+          {system.properties.operator?.name ?? t(locale, "details.operatorNotRecorded")}
         </Typography.Text>
         {localization.isLocaleFallback ? (
-          <Tag bordered={false}>Showing {localization.displayLocale}</Tag>
+          <Tag bordered={false}>
+            {localization.displayLocale
+              ? t(locale, "common.showingLocale", {
+                  locale: localeName(localization.displayLocale, locale),
+                })
+              : t(locale, "common.noLocalization")}
+          </Tag>
         ) : null}
         {system.url ? (
           <Typography.Link
@@ -381,7 +399,7 @@ function SystemIntro({ system }: { system: GraphNode }) {
           </Typography.Link>
         ) : (
           <Typography.Text className="entity-system-url" type="secondary">
-            Main URL not recorded
+            {t(locale, "details.mainUrlNotRecorded")}
           </Typography.Text>
         )}
       </Flex>
@@ -400,10 +418,14 @@ function SystemIntro({ system }: { system: GraphNode }) {
   );
 }
 
-function relationshipLabel(relationship: GraphEdge, currentEntityId: string) {
+function relationshipLabel(
+  relationship: GraphEdge,
+  currentEntityId: string,
+  locale: SupportedLocale,
+) {
   const direction =
     relationship.sourceNodeId === currentEntityId ? "outgoing" : "incoming";
-  return `${labelize(relationship.kind)} (${direction})`;
+  return `${facetLabel(locale, "edgeKind", relationship.kind)} (${facetLabel(locale, "relationshipDirection", direction)})`;
 }
 
 function ReviewSection({ entity }: { entity: GraphNode }) {
@@ -428,6 +450,10 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
   const hasChanges =
     reviewState !== currentReviewState ||
     normalizedReviewerNote !== (localization.reviewerNote ?? null);
+  const reviewStateOptions = reviewStates.map((value) => ({
+    label: facetLabel(locale, "reviewState", value),
+    value,
+  }));
 
   async function saveReview() {
     if (!hasChanges || !reviewLocale) {
@@ -447,23 +473,23 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
       );
       updateNode(updatedNode);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Review update failed");
+      setError(caughtError instanceof Error ? caughtError.message : t(locale, "details.reviewUpdateFailed"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <DetailSection title="Review">
+    <DetailSection title={t(locale, "details.review")}>
       <div className="entity-detail-grid">
-        <InlineField label="Displayed locale">
+        <InlineField label={t(locale, "details.displayedLocale")}>
           {reviewLocale ? (
-            <Tag bordered={false}>{reviewLocale}</Tag>
+            <Tag bordered={false}>{localeName(reviewLocale, locale)}</Tag>
           ) : (
-            <EmptyValue>No localization</EmptyValue>
+            <EmptyValue>{t(locale, "common.noLocalization")}</EmptyValue>
           )}
         </InlineField>
-        <InlineField label="Review state">
+        <InlineField label={t(locale, "details.reviewState")}>
           {canReviewNodes ? (
             <Select
               className="entity-review-control"
@@ -474,12 +500,12 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
             />
           ) : (
             <Tag bordered={false} color={tagColor(currentReviewState)}>
-              {labelize(currentReviewState)}
+              {facetLabel(locale, "reviewState", currentReviewState)}
             </Tag>
           )}
         </InlineField>
         {canReviewNodes ? (
-          <InlineField label="Reviewer note">
+          <InlineField label={t(locale, "details.reviewerNote")}>
             <Input.TextArea
               autoSize={{ minRows: 3, maxRows: 7 }}
               className="entity-review-note"
@@ -489,13 +515,13 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
           </InlineField>
         ) : null}
         {canReviewNodes ? (
-          <InlineField label="Reviewer">
+          <InlineField label={t(locale, "details.reviewer")}>
             {localization.reviewer ?? <EmptyValue />}
           </InlineField>
         ) : null}
         {canReviewNodes ? (
-          <InlineField label="Last reviewed">
-            {formatDateTime(localization.lastReviewed) ?? <EmptyValue />}
+          <InlineField label={t(locale, "details.lastReviewed")}>
+            {formatDateTime(localization.lastReviewed, locale) ?? <EmptyValue />}
           </InlineField>
         ) : null}
       </div>
@@ -511,7 +537,7 @@ function ReviewSection({ entity }: { entity: GraphNode }) {
             type="primary"
             onClick={saveReview}
           >
-            Save review
+            {t(locale, "details.saveReview")}
           </Button>
         </Flex>
       ) : null}
@@ -614,10 +640,12 @@ export function EntityDetailsPanel({
     ? localizedMetricById(systemLocalization.details.usage)
     : {};
   const systemData = system?.properties.data ?? {
-    descriptors: [],
     recordCount: null,
     storageSize: null,
   };
+  const resolvedDescriptors = system && systemLocalization
+    ? systemDataDescriptors(system, systemLocalization)
+    : [];
   const resolvedAccessPaths = system && systemLocalization
     ? systemAccessPaths(system, systemLocalization)
     : [];
@@ -640,12 +668,12 @@ export function EntityDetailsPanel({
         items={[
           {
             key: "user",
-            label: "User view",
+            label: t(locale, "details.userView"),
             children: null,
           },
           {
             key: "raw",
-            label: "Raw fields",
+            label: t(locale, "details.rawFields"),
             children: null,
           },
         ]}
@@ -659,46 +687,48 @@ export function EntityDetailsPanel({
     <Flex vertical gap={16}>
       {isSystem && system ? <SystemIntro system={system} /> : null}
 
-      <DetailSection title="Profile">
+      <DetailSection title={t(locale, "details.profile")}>
         <div className="entity-detail-grid">
-          <InlineField label="Entity type">
-            <Tag bordered={false}>{labelize(entity.kind)}</Tag>
+          <InlineField label={t(locale, "details.entityType")}>
+            <Tag bordered={false}>{facetLabel(locale, "nodeKind", entity.kind)}</Tag>
           </InlineField>
-          <InlineField label="Record depth">
+          <InlineField label={t(locale, "details.recordDepth")}>
             <Tag bordered={false} color={tagColor(entity.recordDepth)}>
-              {labelize(entity.recordDepth)}
+              {facetLabel(locale, "recordDepth", entity.recordDepth)}
             </Tag>
           </InlineField>
           {isSystem && system ? (
             <>
-              <InlineField label="Role">
-                {system.properties.role ? labelize(system.properties.role) : <EmptyValue />}
+              <InlineField label={t(locale, "details.role")}>
+                {system.properties.role
+                  ? facetLabel(locale, "systemRole", system.properties.role)
+                  : <EmptyValue />}
               </InlineField>
-              <InlineField label="Operator country">
+              <InlineField label={t(locale, "details.operatorCountry")}>
                 {system.properties.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
               </InlineField>
-              <InlineField label="Discipline">
+              <InlineField label={t(locale, "details.discipline")}>
                 {system.properties.disciplineFamily ? (
-                  labelize(system.properties.disciplineFamily)
+                  facetLabel(locale, "disciplineFamily", system.properties.disciplineFamily)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
-              <InlineField label="Geographic scope">
+              <InlineField label={t(locale, "details.geographicScope")}>
                 {system.properties.geographicScope ? (
-                  labelize(system.properties.geographicScope)
+                  facetLabel(locale, "geographicScope", system.properties.geographicScope)
                 ) : (
                   <EmptyValue />
                 )}
               </InlineField>
-              <InlineField label="Part of">
+              <InlineField label={t(locale, "details.partOf")}>
                 {parentSystemId
                   ? graph.nodeById[parentSystemId]
                     ? nodeTitle(graph.nodeById[parentSystemId], locale)
                     : parentSystemId
                   : <EmptyValue />}
               </InlineField>
-              <InlineField label="Aliases">
+              <InlineField label={t(locale, "details.aliases")}>
                 {systemLocalization?.details.aliases.length
                   ? systemLocalization.details.aliases.join(", ")
                   : <EmptyValue />}
@@ -706,12 +736,12 @@ export function EntityDetailsPanel({
             </>
           ) : (
             <>
-              <InlineField label="Country">
+              <InlineField label={t(locale, "details.country")}>
                 {entity.countryCode ?? <EmptyValue />}
               </InlineField>
               {entity.kind === "organization" ? (
-                <InlineField label="Subtype">
-                  {entity.subtype ?? <EmptyValue />}
+                <InlineField label={t(locale, "details.subtype")}>
+                  {entity.subtype ? facetLabel(locale, "subtype", entity.subtype) : <EmptyValue />}
                 </InlineField>
               ) : null}
             </>
@@ -723,18 +753,18 @@ export function EntityDetailsPanel({
 
       {isSystem && system ? (
         <>
-          <DetailSection title="Data">
+          <DetailSection title={t(locale, "details.data")}>
             <div className="entity-detail-grid">
-              <InlineField label="Data types">
-                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "type")} />
+              <InlineField label={t(locale, "details.dataTypes")}>
+                <DescriptorTags descriptors={descriptorList(resolvedDescriptors, "type")} />
               </InlineField>
-              <InlineField label="Formats">
-                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "format")} />
+              <InlineField label={t(locale, "details.formats")}>
+                <DescriptorTags descriptors={descriptorList(resolvedDescriptors, "format")} />
               </InlineField>
-              <InlineField label="Standards">
-                <DescriptorTags descriptors={descriptorList(systemData.descriptors, "standard")} />
+              <InlineField label={t(locale, "details.standards")}>
+                <DescriptorTags descriptors={descriptorList(resolvedDescriptors, "standard")} />
               </InlineField>
-              <InlineField label="Records">
+              <InlineField label={t(locale, "details.records")}>
                 <MetricValue
                   metric={resolveMetric(
                     systemData.recordCount,
@@ -742,7 +772,7 @@ export function EntityDetailsPanel({
                   )}
                 />
               </InlineField>
-              <InlineField label="Database size">
+              <InlineField label={t(locale, "details.databaseSize")}>
                 <MetricValue
                   metric={resolveMetric(
                     systemData.storageSize,
@@ -753,11 +783,11 @@ export function EntityDetailsPanel({
             </div>
           </DetailSection>
 
-          <DetailSection title="Read access">
+          <DetailSection title={t(locale, "details.readAccess")}>
             <List<ResolvedSystemAccessPath>
               className="entity-detail-list"
               dataSource={readAccessPaths}
-              locale={{ emptyText: "No read access path recorded" }}
+              locale={{ emptyText: t(locale, "details.noReadAccess") }}
               renderItem={(path) => (
                 <List.Item><AccessDescription path={path} /></List.Item>
               )}
@@ -765,11 +795,11 @@ export function EntityDetailsPanel({
             />
           </DetailSection>
 
-          <DetailSection title="Write / contribution access">
+          <DetailSection title={t(locale, "details.writeAccess")}>
             <List<ResolvedSystemAccessPath>
               className="entity-detail-list"
               dataSource={writeAccessPaths}
-              locale={{ emptyText: "No write or contribution path recorded" }}
+              locale={{ emptyText: t(locale, "details.noWriteAccess") }}
               renderItem={(path) => (
                 <List.Item><AccessDescription path={path} /></List.Item>
               )}
@@ -778,7 +808,7 @@ export function EntityDetailsPanel({
           </DetailSection>
 
           {ryuRoutes.length > 0 ? (
-            <DetailSection title="Ryu">
+            <DetailSection title={t(locale, "details.ryu")}>
               <List<RyuRoute>
                 className="entity-detail-list"
                 dataSource={ryuRoutes}
@@ -790,17 +820,19 @@ export function EntityDetailsPanel({
             </DetailSection>
           ) : null}
 
-          <DetailSection title="Usage">
+          <DetailSection title={t(locale, "details.usage")}>
             <List<ResolvedSourcedMetric>
               className="entity-detail-list"
               dataSource={(system.properties.usage ?? []).map((metric) =>
                 resolveMetric(metric, localizedMetrics[metric.id]),
               ).filter((metric): metric is ResolvedSourcedMetric => Boolean(metric))}
-              locale={{ emptyText: "No usage metric recorded" }}
+              locale={{ emptyText: t(locale, "details.noUsageMetric") }}
               renderItem={(metric) => (
                 <List.Item>
                   <Flex vertical gap={2}>
-                    <Typography.Text>{labelize(metric.key)}</Typography.Text>
+                    <Typography.Text>
+                      {metric.label ?? facetLabel(locale, "metricKey", metric.key)}
+                    </Typography.Text>
                     <MetricValue metric={metric} />
                   </Flex>
                 </List.Item>
@@ -811,11 +843,11 @@ export function EntityDetailsPanel({
         </>
       ) : null}
 
-      <DetailSection title="Connections">
+      <DetailSection title={t(locale, "details.connections")}>
         <List<GraphEdge>
           className="entity-detail-list"
           dataSource={relationships}
-          locale={{ emptyText: "No relationship recorded" }}
+          locale={{ emptyText: t(locale, "details.noRelationship") }}
           renderItem={(relationship) => {
             const otherEntityId =
               relationship.sourceNodeId === entity.id
@@ -829,7 +861,7 @@ export function EntityDetailsPanel({
                     {otherEntity ? nodeTitle(otherEntity, locale) : otherEntityId}
                   </Typography.Text>
                   <Typography.Text type="secondary">
-                    {relationshipLabel(relationship, entity.id)}
+                    {relationshipLabel(relationship, entity.id, locale)}
                   </Typography.Text>
                 </Flex>
               </List.Item>
@@ -850,7 +882,7 @@ export function EntityDetailsPanel({
         extraActions ??
         (showCloseButton ? (
           <Button
-            aria-label="Close entity details"
+            aria-label={t(locale, "details.closeEntityDetails")}
             icon={<CloseOutlined />}
             size="small"
             type="text"

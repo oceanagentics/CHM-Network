@@ -1,6 +1,7 @@
 import type {
   GraphNode,
   LocalizedSystemAccessPath,
+  LocalizedSystemDataDescriptor,
   LocalizedSystemGalleryItem,
   LocalizedSourcedMetric,
   NodeLocalizationDetails,
@@ -8,6 +9,7 @@ import type {
   SourcedMetric,
   SupportedLocale,
   SystemAccessPath,
+  SystemDataDescriptor,
   SystemGalleryItem,
 } from "../../../shared/domain";
 import {
@@ -30,6 +32,12 @@ export type ResolvedSystemGalleryItem = SystemGalleryItem & {
 };
 
 export type ResolvedSourcedMetric = SourcedMetric & {
+  label: string | null;
+  description: string | null;
+};
+
+export type ResolvedSystemDataDescriptor = SystemDataDescriptor & {
+  localizedLabel: string | null;
   description: string | null;
 };
 
@@ -89,6 +97,24 @@ export function systemAccessPaths(
   });
 }
 
+export function systemDataDescriptors(
+  system: GraphNode,
+  localization: ResolvedNodeLocalization,
+): ResolvedSystemDataDescriptor[] {
+  const localizedById = byId<LocalizedSystemDataDescriptor>(
+    localizationDetails(localization).data.descriptors,
+  );
+
+  return (system.properties.data?.descriptors ?? []).map((descriptor) => {
+    const localized = localizedById[descriptor.id];
+    return {
+      ...descriptor,
+      localizedLabel: localized?.label ?? null,
+      description: localized?.description ?? null,
+    };
+  });
+}
+
 export function resolveMetric(
   metric: SourcedMetric | null | undefined,
   localizedMetric: LocalizedSourcedMetric | null | undefined,
@@ -99,6 +125,8 @@ export function resolveMetric(
 
   return {
     ...metric,
+    label: localizedMetric?.label ?? null,
+    unit: localizedMetric?.unit ?? metric.unit,
     description: localizedMetric?.description ?? null,
   };
 }

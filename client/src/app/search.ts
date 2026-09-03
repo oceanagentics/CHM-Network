@@ -10,8 +10,16 @@ import type {
 } from "../../../shared/domain";
 import type { IndexedGraph } from "./graph/indexGraph";
 import {
+  facetLabel,
+  humanizeCode,
+  t,
+  type FacetGroup,
+  type UiMessageKey,
+} from "./i18n";
+import {
   nodeTitle,
   resolveNodeDisplay,
+  systemDataDescriptors,
   systemAccessPaths,
   systemGallery,
 } from "./localization";
@@ -93,7 +101,7 @@ export type ResolvedGraphSearch = {
 
 type SearchFieldDefinition = {
   field: string;
-  label: string;
+  label: UiMessageKey;
   weight: number;
   getValues: (
     entity: GraphNode,
@@ -108,25 +116,37 @@ type SearchContext = {
   locale: SupportedLocale;
 };
 
-export const claimFilterLabels: Record<ClaimFilterKey, string> = {
-  type: "Data types",
-  format: "Data formats",
-  standard: "Data standards",
-};
+export const claimFilterKeys = ["type", "format", "standard"] as const;
 
-export const claimFilterKeys = Object.keys(claimFilterLabels) as ClaimFilterKey[];
-export const localizationCoverageFilterOptions: Array<{
+export function claimFilterLabel(locale: SupportedLocale, value: ClaimFilterKey): string {
+  return facetLabel(locale, "dataClaim", value);
+}
+
+export function localizationCoverageFilterOptions(locale: SupportedLocale): Array<{
   label: string;
   value: LocalizationCoverageFilter;
-}> = [
-  { label: "Current language only", value: "current_locale" },
-  { label: "Missing current language", value: "missing_current_locale" },
-];
-export const reviewStateFilterOptions: Array<{ label: string; value: ReviewState }> = [
-  { label: "Agent researched", value: "agent_researched" },
-  { label: "Human reviewed", value: "human_reviewed" },
-  { label: "Needs revision", value: "needs_revision" },
-];
+}> {
+  return [
+    {
+      label: facetLabel(locale, "localizationCoverage", "current_locale"),
+      value: "current_locale",
+    },
+    {
+      label: facetLabel(locale, "localizationCoverage", "missing_current_locale"),
+      value: "missing_current_locale",
+    },
+  ];
+}
+
+export function reviewStateFilterOptions(
+  locale: SupportedLocale,
+): Array<{ label: string; value: ReviewState }> {
+  return [
+    { label: facetLabel(locale, "reviewState", "agent_researched"), value: "agent_researched" },
+    { label: facetLabel(locale, "reviewState", "human_reviewed"), value: "human_reviewed" },
+    { label: facetLabel(locale, "reviewState", "needs_revision"), value: "needs_revision" },
+  ];
+}
 
 const countryAliasesByCode: Record<string, string[]> = {
   CAN: ["Canada", "Canadian"],
@@ -153,9 +173,7 @@ export const emptySearchFilters = (): GraphSearchFilters => ({
 });
 
 export function labelize(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (match) => match.toUpperCase());
+  return humanizeCode(value);
 }
 
 export function normalizeSearchValue(value: string): string {
@@ -202,9 +220,13 @@ function uniqueSorted(values: Array<string | null | undefined>): string[] {
     .sort((left, right) => left.localeCompare(right));
 }
 
-export function selectOptions(values: Array<string | null | undefined>) {
+export function selectOptions(
+  values: Array<string | null | undefined>,
+  locale: SupportedLocale,
+  facetGroup?: FacetGroup,
+) {
   return uniqueSorted(values).map((value) => ({
-    label: labelize(value),
+    label: facetGroup ? facetLabel(locale, facetGroup, value) : labelize(value),
     value,
   }));
 }
@@ -284,12 +306,17 @@ function sourceRefs(system: GraphNode): SourceRef[] {
   ];
 }
 
-function sourceValues(source: SourceRef, graph: IndexedGraph): string[] {
+function sourceValues(
+  source: SourceRef,
+  graph: IndexedGraph,
+  locale: SupportedLocale,
+): string[] {
   const fullSource = graph.sourceById[source.id];
   return [
     source.title,
     source.url,
     fullSource?.sourceType,
+    fullSource?.sourceType ? facetLabel(locale, "sourceType", fullSource.sourceType) : null,
     fullSource?.publisher,
     fullSource?.note,
   ].filter((value): value is string => Boolean(value));
@@ -308,12 +335,22 @@ function descriptorLabels(
 
 function descriptorValues(
   system: GraphNode | undefined,
+  localization: ResolvedNodeLocalization,
   category: SystemDataDescriptorCategory,
+  locale: SupportedLocale,
 ): string[] {
-  return system?.properties.data?.descriptors
+  return system
+    ? systemDataDescriptors(system, localization)
     .filter((descriptor) => descriptor.category === category)
-    .flatMap((descriptor) => [descriptor.label, descriptor.source?.title])
-    .filter((value): value is string => Boolean(value)) ?? [];
+    .flatMap((descriptor) => [
+      descriptor.label,
+      descriptor.localizedLabel,
+      descriptor.description,
+      facetLabel(locale, "descriptorLabel", descriptor.label),
+      descriptor.source?.title,
+    ])
+    .filter((value): value is string => Boolean(value))
+    : [];
 }
 
 function buildSystemRecord(
@@ -352,7 +389,11 @@ function buildSystemRecord(
     dataStandards,
     accessTypes: uniqueSorted(accessPaths.map((path) => path.type)),
     accessMethods: uniqueSorted(accessPaths.map((path) => path.method)),
-    accessLabels: uniqueSorted(accessPaths.map((path) => path.label)),
+    accessLabels: uniqueSorted(accessPaths.map((path) =>
+      path.label === path.method
+        ? facetLabel(locale, "accessMethod", path.method)
+        : path.label,
+    )),
     hasCurrentLocale: Boolean(currentLocalization),
     currentLocaleReviewState: currentLocalization?.reviewState ?? null,
     sourceTitles: uniqueSorted(sourceRefs(system).map((source) => source.title)),
@@ -383,27 +424,33 @@ function withCommonFields(
   return [
     {
       field: "name",
-      label: "Name",
+      label: "search.field.name",
       weight: 100,
       getValues: (_entity, _graph, _context, localization) => [localization.title],
     },
     {
       field: "kind",
-      label: "Node type",
+      label: "search.field.nodeType",
       weight: 80,
-      getValues: (entity) => [entity.kind, labelize(entity.kind)],
+      getValues: (entity, _graph, context) => [
+        entity.kind,
+        facetLabel(context.locale, "nodeKind", entity.kind),
+      ],
     },
     {
       field: "country",
-      label: "Country",
+      label: "search.field.country",
       weight: 90,
       getValues: (entity, graph, context) => getCountryValues(entity, graph, context.locale),
     },
     {
       field: "subtype",
-      label: "Subtype",
+      label: "search.field.subtype",
       weight: 60,
-      getValues: (entity) => [entity.subtype, entity.subtype ? labelize(entity.subtype) : null],
+      getValues: (entity, _graph, context) => [
+        entity.subtype,
+        entity.subtype ? facetLabel(context.locale, "subtype", entity.subtype) : null,
+      ],
     },
     ...definitions,
   ];
@@ -412,21 +459,24 @@ function withCommonFields(
 const organizationFieldDefinitions = withCommonFields([
   {
     field: "relationships.connectedNames",
-    label: "Connected node",
+    label: "search.field.connectedNode",
     weight: 35,
     getValues: (entity, graph, context) =>
       getConnectedNames(entity, graph, context.locale),
   },
   {
     field: "relationships.type",
-    label: "Relationship",
+    label: "search.field.relationship",
     weight: 35,
-    getValues: (entity, graph) =>
-      getRelationships(entity.id, graph).map((relationship) => relationship.kind),
+    getValues: (entity, graph, context) =>
+      getRelationships(entity.id, graph).flatMap((relationship) => [
+        relationship.kind,
+        facetLabel(context.locale, "edgeKind", relationship.kind),
+      ]),
   },
   {
     field: "relationships.note",
-    label: "Relationship note",
+    label: "search.field.relationshipNote",
     weight: 20,
     getValues: (entity, graph) =>
       getRelationships(entity.id, graph).map((relationship) => relationship.note),
@@ -436,7 +486,7 @@ const organizationFieldDefinitions = withCommonFields([
 const countryFieldDefinitions = withCommonFields([
   {
     field: "children",
-    label: "Contained node",
+    label: "search.field.containedNode",
     weight: 30,
     getValues: (entity, graph, context) =>
       graph.nodes
@@ -448,7 +498,7 @@ const countryFieldDefinitions = withCommonFields([
 const systemFieldDefinitions = withCommonFields([
   {
     field: "operator",
-    label: "Operator",
+    label: "search.field.operator",
     weight: 75,
     getValues: (entity, _graph, context) => [
       context.systemRecordById[entity.id]?.operatorName,
@@ -456,66 +506,75 @@ const systemFieldDefinitions = withCommonFields([
   },
   {
     field: "system.aliases",
-    label: "Alias",
+    label: "search.field.alias",
     weight: 90,
     getValues: (_entity, _graph, _context, localization) => localization.details.aliases,
   },
   {
     field: "system.role",
-    label: "Role",
+    label: "search.field.role",
     weight: 65,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.role],
+    getValues: (entity, graph, context) => {
+      const value = graph.nodeById[entity.id]?.properties.role;
+      return [value, value ? facetLabel(context.locale, "systemRole", value) : null];
+    },
   },
   {
     field: "system.disciplineFamily",
-    label: "Discipline",
+    label: "search.field.discipline",
     weight: 62,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.disciplineFamily],
+    getValues: (entity, graph, context) => {
+      const value = graph.nodeById[entity.id]?.properties.disciplineFamily;
+      return [value, value ? facetLabel(context.locale, "disciplineFamily", value) : null];
+    },
   },
   {
     field: "system.geographicScope",
-    label: "Geographic scope",
+    label: "search.field.geographicScope",
     weight: 58,
-    getValues: (entity, graph) => [graph.nodeById[entity.id]?.properties.geographicScope],
+    getValues: (entity, graph, context) => {
+      const value = graph.nodeById[entity.id]?.properties.geographicScope;
+      return [value, value ? facetLabel(context.locale, "geographicScope", value) : null];
+    },
   },
   {
     field: "system.shortDescription",
-    label: "Summary",
+    label: "search.field.summary",
     weight: 48,
     getValues: (_entity, _graph, _context, localization) => [localization.summary],
   },
   {
     field: "system.longDescription",
-    label: "Description",
+    label: "search.field.description",
     weight: 24,
     getValues: (_entity, _graph, _context, localization) => [localization.description],
   },
   {
     field: "data.descriptors.type",
-    label: "Data type",
+    label: "search.field.dataType",
     weight: 74,
-    getValues: (entity, graph) =>
-      descriptorValues(graph.nodeById[entity.id], "type"),
+    getValues: (entity, graph, context, localization) =>
+      descriptorValues(graph.nodeById[entity.id], localization, "type", context.locale),
   },
   {
     field: "data.descriptors.format",
-    label: "Data format",
+    label: "search.field.dataFormat",
     weight: 72,
-    getValues: (entity, graph) =>
-      descriptorValues(graph.nodeById[entity.id], "format"),
+    getValues: (entity, graph, context, localization) =>
+      descriptorValues(graph.nodeById[entity.id], localization, "format", context.locale),
   },
   {
     field: "data.descriptors.standard",
-    label: "Data standard",
+    label: "search.field.dataStandard",
     weight: 68,
-    getValues: (entity, graph) =>
-      descriptorValues(graph.nodeById[entity.id], "standard"),
+    getValues: (entity, graph, context, localization) =>
+      descriptorValues(graph.nodeById[entity.id], localization, "standard", context.locale),
   },
   {
     field: "data.metrics",
-    label: "Metric",
+    label: "search.field.metric",
     weight: 55,
-    getValues: (entity, graph) => {
+    getValues: (entity, graph, context) => {
       const system = graph.nodeById[entity.id];
       return [
         system?.properties.data?.recordCount,
@@ -525,9 +584,10 @@ const systemFieldDefinitions = withCommonFields([
         metric
           ? [
               metric.key,
-              labelize(metric.key),
+              facetLabel(context.locale, "metricKey", metric.key),
               String(metric.value),
               metric.unit,
+              facetLabel(context.locale, "unit", metric.unit),
             ]
           : [],
       );
@@ -535,32 +595,32 @@ const systemFieldDefinitions = withCommonFields([
   },
   {
     field: "access.type",
-    label: "Access type",
+    label: "search.field.accessType",
     weight: 62,
-    getValues: (entity, graph, _context, localization) => {
+    getValues: (entity, graph, context, localization) => {
       const system = graph.nodeById[entity.id];
       return systemAccessPaths(system, localization).flatMap((path) => [
         path.type,
-        labelize(path.type),
+        facetLabel(context.locale, "accessType", path.type),
       ]);
     },
   },
   {
     field: "access.method",
-    label: "Access method",
+    label: "search.field.accessMethod",
     weight: 64,
-    getValues: (entity, graph, _context, localization) => {
+    getValues: (entity, graph, context, localization) => {
       const system = graph.nodeById[entity.id];
       return systemAccessPaths(system, localization).flatMap((path) => [
         path.method,
-        labelize(path.method),
+        facetLabel(context.locale, "accessMethod", path.method),
         path.label,
       ]);
     },
   },
   {
     field: "access.detail",
-    label: "Access detail",
+    label: "search.field.accessDetail",
     weight: 36,
     getValues: (entity, graph, _context, localization) => {
       const system = graph.nodeById[entity.id];
@@ -573,39 +633,42 @@ const systemFieldDefinitions = withCommonFields([
   },
   {
     field: "relationships.connectedNames",
-    label: "Connected node",
+    label: "search.field.connectedNode",
     weight: 32,
     getValues: (entity, _graph, context) =>
       context.systemRecordById[entity.id]?.connectedNames ?? [],
   },
   {
     field: "relationships.type",
-    label: "Relationship",
+    label: "search.field.relationship",
     weight: 35,
-    getValues: (entity, graph) =>
-      getRelationships(entity.id, graph).map((relationship) => relationship.kind),
+    getValues: (entity, graph, context) =>
+      getRelationships(entity.id, graph).flatMap((relationship) => [
+        relationship.kind,
+        facetLabel(context.locale, "edgeKind", relationship.kind),
+      ]),
   },
   {
     field: "relationships.note",
-    label: "Relationship note",
+    label: "search.field.relationshipNote",
     weight: 20,
     getValues: (entity, graph) =>
       getRelationships(entity.id, graph).map((relationship) => relationship.note),
   },
   {
     field: "sources",
-    label: "Source",
+    label: "search.field.source",
     weight: 18,
-    getValues: (entity, graph) => {
+    getValues: (entity, graph, context) => {
       const system = graph.nodeById[entity.id];
       return system
-        ? sourceRefs(system).flatMap((source) => sourceValues(source, graph))
+        ? sourceRefs(system).flatMap((source) => sourceValues(source, graph, context.locale))
         : [];
     },
   },
   {
     field: "gallery",
-    label: "Gallery",
+    label: "search.field.gallery",
     weight: 28,
     getValues: (entity, graph, _context, localization) => {
       const system = graph.nodeById[entity.id];
@@ -618,7 +681,7 @@ const systemFieldDefinitions = withCommonFields([
   },
   {
     field: "ryu.routes",
-    label: "Agent route",
+    label: "search.field.agentRoute",
     weight: 40,
     getValues: (entity, graph) =>
       (graph.ryuRoutesByNodeId[entity.id] ?? []).flatMap((route) => [
@@ -748,7 +811,7 @@ function scoreEntity(
         if (!currentBestReason || score > currentBestReason.score) {
           bestReasonByToken.set(token, {
             field: definition.field,
-            label: definition.label,
+            label: t(context.locale, definition.label),
             value,
             token,
             score,
@@ -881,18 +944,25 @@ function matchesSystemFilters(
   );
 }
 
-export function getSystemFilterOptions(records: SystemSearchRecord[]) {
+export function getSystemFilterOptions(
+  records: SystemSearchRecord[],
+  locale: SupportedLocale,
+) {
   return {
-    role: selectOptions(records.map((record) => record.role)),
-    countryCode: selectOptions(records.map((record) => record.countryCode)),
-    disciplineFamily: selectOptions(records.map((record) => record.disciplineFamily)),
+    role: selectOptions(records.map((record) => record.role), locale, "systemRole"),
+    countryCode: selectOptions(records.map((record) => record.countryCode), locale),
+    disciplineFamily: selectOptions(
+      records.map((record) => record.disciplineFamily),
+      locale,
+      "disciplineFamily",
+    ),
     dataClaims: {
-      type: selectOptions(records.flatMap((record) => record.dataTypes)),
-      format: selectOptions(records.flatMap((record) => record.dataFormats)),
-      standard: selectOptions(records.flatMap((record) => record.dataStandards)),
+      type: selectOptions(records.flatMap((record) => record.dataTypes), locale, "descriptorLabel"),
+      format: selectOptions(records.flatMap((record) => record.dataFormats), locale, "descriptorLabel"),
+      standard: selectOptions(records.flatMap((record) => record.dataStandards), locale, "descriptorLabel"),
     },
-    accessTypes: selectOptions(records.flatMap((record) => record.accessTypes)),
-    accessMethods: selectOptions(records.flatMap((record) => record.accessMethods)),
+    accessTypes: selectOptions(records.flatMap((record) => record.accessTypes), locale, "accessType"),
+    accessMethods: selectOptions(records.flatMap((record) => record.accessMethods), locale, "accessMethod"),
   };
 }
 

@@ -21,12 +21,12 @@ import {
   Spin,
 } from "antd";
 
-import type { SupportedLocale } from "../../../shared/domain";
 import { supportedLocales } from "../../../shared/localization";
 import { fetchBootstrap } from "./api";
 import { EntityDetailsPanel } from "./components/EntityDetailsPanel";
 import { SystemDirectoryView } from "./components/SystemDirectoryView";
 import type { NodeMap3dArrangement } from "./graph/nodeMap3dLayout";
+import { facetLabel, localeNativeNames, t } from "./i18n";
 import { useGraphStore } from "./state/graphStore";
 
 const ForceGraphCanvas = lazy(() =>
@@ -55,39 +55,16 @@ const graphMinWidth = 188;
 
 const nodeMap3dArrangementOptions: Array<{
   icon: ReactNode;
-  label: string;
   value: NodeMap3dArrangement;
 }> = [
-  { icon: <DeploymentUnitOutlined />, label: "Graph", value: "current" },
-  { icon: <PartitionOutlined />, label: "Tree", value: "flat" },
-  { icon: <GlobalOutlined />, label: "Globe", value: "globe" },
+  { icon: <DeploymentUnitOutlined />, value: "current" },
+  { icon: <PartitionOutlined />, value: "flat" },
+  { icon: <GlobalOutlined />, value: "globe" },
 ];
 
-const paneLabels: Record<PaneId, string> = {
-  search: "Search",
-  graph: "Graph",
-  details: "Details",
-};
-
 const nodeRouteParam = "node";
-const localeLabels = {
-  ar: "Arabic",
-  zh: "Chinese",
-  en: "English",
-  fr: "French",
-  ru: "Russian",
-  es: "Spanish",
-} satisfies Record<SupportedLocale, string>;
-const localeDirections = {
-  ar: "rtl",
-  zh: "ltr",
-  en: "ltr",
-  fr: "ltr",
-  ru: "ltr",
-  es: "ltr",
-} satisfies Record<SupportedLocale, "ltr" | "rtl">;
 const localeOptions = supportedLocales.map((locale) => ({
-  label: localeLabels[locale],
+  label: localeNativeNames[locale],
   value: locale,
 }));
 
@@ -162,7 +139,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    document.documentElement.dir = localeDirections[locale];
+    document.title = t(locale, "app.title");
   }, [locale]);
 
   useEffect(() => {
@@ -386,13 +363,15 @@ export function App() {
   }
 
   function renderPaneHeader(paneId: PaneId) {
+    const paneLabel = facetLabel(locale, "pane", paneId);
+
     return (
       <div className="workspace-pane-header">
         <Flex align="center" gap={8} style={{ minWidth: 0 }}>
           {paneId === "graph" ? (
             renderGraphViewControls()
           ) : (
-            <span className="workspace-pane-title">{paneLabels[paneId]}</span>
+            <span className="workspace-pane-title">{paneLabel}</span>
           )}
           {paneId === "search" ? renderLocaleControl() : null}
         </Flex>
@@ -404,7 +383,7 @@ export function App() {
   function renderLocaleControl() {
     return (
       <Select
-        aria-label="Language"
+        aria-label={t(locale, "app.language")}
         className="app-locale-select"
         options={localeOptions}
         size="small"
@@ -419,58 +398,59 @@ export function App() {
       <div
         className={`graph-view-controls${collapsed ? " is-collapsed" : ""}`}
         role="group"
-        aria-label="Graph view"
+        aria-label={t(locale, "app.graphView")}
       >
-        {nodeMap3dArrangementOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-label={
-              collapsed
-                ? `Open graph pane in ${option.label.toLowerCase()} view`
-                : option.label
-            }
-            aria-pressed={nodeMap3dArrangement === option.value}
-            className="graph-view-button"
-            title={
-              collapsed
-                ? `Open graph pane in ${option.label.toLowerCase()} view`
-                : option.label
-            }
-            onClick={() => {
-              setNodeMap3dArrangement(option.value);
-              if (collapsed) {
-                setPaneOpen("graph", true);
-              }
-            }}
-          >
-            <span className="graph-view-icon" aria-hidden="true">
-              {option.icon}
-            </span>
-          </button>
-        ))}
+        {nodeMap3dArrangementOptions.map((option) => {
+          const optionLabel = facetLabel(locale, "graphArrangement", option.value);
+          const collapsedLabel = t(locale, "app.openGraphPaneInView", {
+            view: optionLabel,
+          });
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-label={collapsed ? collapsedLabel : optionLabel}
+              aria-pressed={nodeMap3dArrangement === option.value}
+              className="graph-view-button"
+              title={collapsed ? collapsedLabel : optionLabel}
+              onClick={() => {
+                setNodeMap3dArrangement(option.value);
+                if (collapsed) {
+                  setPaneOpen("graph", true);
+                }
+              }}
+            >
+              <span className="graph-view-icon" aria-hidden="true">
+                {option.icon}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   }
 
   function renderPaneActions(paneId: PaneId) {
     const canExpand = openPaneCount > 1;
+    const paneLabel = facetLabel(locale, "pane", paneId);
+
     return (
       <div className="workspace-pane-actions">
         <Button
-          aria-label={`Expand ${paneLabels[paneId].toLowerCase()} pane`}
+          aria-label={t(locale, "app.expandPane", { pane: paneLabel })}
           disabled={!canExpand}
           icon={<ArrowsAltOutlined />}
           size="small"
-          title={canExpand ? "Expand pane" : "Pane is already expanded"}
+          title={canExpand ? t(locale, "app.expandPaneTitle") : t(locale, "app.paneAlreadyExpanded")}
           type="text"
           onClick={() => expandPane(paneId)}
         />
         <Button
-          aria-label={`Close ${paneLabels[paneId].toLowerCase()} pane`}
+          aria-label={t(locale, "app.closePane", { pane: paneLabel })}
           icon={<CloseOutlined />}
           size="small"
-          title={paneId === "details" ? "Close details" : "Close pane"}
+          title={paneId === "details" ? t(locale, "app.closeDetailsTitle") : t(locale, "app.closePaneTitle")}
           type="text"
           onClick={() => closePane(paneId)}
         />
@@ -481,6 +461,7 @@ export function App() {
   function renderPane(paneId: PaneId, children: ReactNode) {
     const isResizable = resizablePaneIds.has(paneId);
     const resizeEdge = paneId === "details" ? "left" : "right";
+    const paneLabel = facetLabel(locale, "pane", paneId);
 
     return (
       <section
@@ -494,7 +475,7 @@ export function App() {
         <div className="workspace-pane-body">{children}</div>
         {isResizable ? (
           <div
-            aria-label={`Resize ${paneLabels[paneId].toLowerCase()} pane`}
+            aria-label={t(locale, "app.resizePane", { pane: paneLabel })}
             aria-orientation="vertical"
             aria-valuemax={paneSize[paneId as ResizablePaneId].maxWidth}
             aria-valuemin={paneSize[paneId as ResizablePaneId].minWidth}
@@ -533,13 +514,19 @@ export function App() {
     return (
       <button
         key={paneId}
-        aria-label={`Open ${paneLabels[paneId].toLowerCase()} pane`}
+        aria-label={t(locale, "app.openPane", {
+          pane: facetLabel(locale, "pane", paneId),
+        })}
         className={`workspace-pane-collapsed workspace-pane-collapsed-${paneId}`}
-        title={`Open ${paneLabels[paneId]}`}
+        title={t(locale, "app.openPaneTitle", {
+          pane: facetLabel(locale, "pane", paneId),
+        })}
         type="button"
         onClick={() => setPaneOpen(paneId, true)}
       >
-        <span className="workspace-pane-collapsed-title">{paneLabels[paneId]}</span>
+        <span className="workspace-pane-collapsed-title">
+          {facetLabel(locale, "pane", paneId)}
+        </span>
       </button>
     );
   }
@@ -551,7 +538,7 @@ export function App() {
   if (loading) {
     return (
       <Flex className="app-shell" align="center" justify="center">
-        <Spin size="large" tip="Loading graph data..." />
+        <Spin size="large" tip={t(locale, "app.loadingGraphData")} />
       </Flex>
     );
   }
@@ -560,7 +547,7 @@ export function App() {
     return (
       <Flex className="app-shell app-state" align="center" justify="center">
         <Alert
-          message="Graph load failed"
+          message={t(locale, "app.graphLoadFailed")}
           description={error}
           type="error"
           showIcon
@@ -585,7 +572,7 @@ export function App() {
             <Suspense
               fallback={
                 <Flex className="graph-canvas" align="center" justify="center">
-                  <Spin size="large" tip="Loading 3D view..." />
+                  <Spin size="large" tip={t(locale, "app.loading3dView")} />
                 </Flex>
               }
             >

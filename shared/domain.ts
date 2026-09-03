@@ -56,6 +56,7 @@ export interface SystemDataDescriptor {
 
 export interface LocalizedSystemDataDescriptor {
   id: string;
+  label?: string | null;
   description: string | null;
 }
 
@@ -115,6 +116,8 @@ export interface SourcedMetric {
 
 export interface LocalizedSourcedMetric {
   id: string;
+  label?: string | null;
+  unit?: string | null;
   description: string | null;
 }
 

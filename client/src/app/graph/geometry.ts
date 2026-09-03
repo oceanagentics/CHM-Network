@@ -2,6 +2,7 @@
  * Geometry defines intrinsic node labels, box sizes, and stable layout hints.
  */
 import type { GraphNode, SupportedLocale } from "../../../../shared/domain";
+import { facetLabel } from "../i18n";
 import { nodeTitle } from "../localization";
 
 export interface NodeGeometry {
@@ -60,7 +61,9 @@ function italicSansDisplayText(value: string): string {
 }
 
 export function buildLabel(node: GraphNode, locale: SupportedLocale): string {
-  const typeLabel = node.subtype ?? node.kind;
+  const typeLabel = node.subtype
+    ? facetLabel(locale, "subtype", node.subtype)
+    : facetLabel(locale, "nodeKind", node.kind);
   return `${boldSansDisplayText(nodeTitle(node, locale))}\n${italicSansDisplayText(typeLabel)}`;
 }
 
