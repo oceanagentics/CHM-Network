@@ -99,13 +99,14 @@ ID do not need a separate idempotency table. Applied writes require a
 
 Last verified on 2026-09-03:
 
-- Source commit: `d6b6992`
+- Public/admin source commit: `d6b6992`
+- API source commit: `7bb5257`
 - Public image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-public@sha256:25e761049522571b0f0fb0521830c54418b8d12dca5ee91a9842d200bfe40ab5`
 - Admin image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-admin@sha256:09c40f273c50c00d13b9a30ec1109a16da224b3729a054b22b0ec01b5a56d07f`
-- API image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api@sha256:0f6c8ae7c27e8d97964c571d40b418d04722afdd5e0364757424956e747a6c6e`
+- API image: `us-east4-docker.pkg.dev/chm-network/chm-apps/explorer-api@sha256:140b4da31e24142adb2a8043fce09cf1b04feb054ef43ac9f5e050e6acc1b86c`
 - Public Cloud Run revision: `explorer-00018-7qw`
 - Admin Cloud Run revision: `explorer-admin-00008-qz9`
-- API Cloud Run revision: `explorer-api-00016-bpt`
+- API Cloud Run revision: `explorer-api-00017-2gh`
 - Admin IAP backend service ID: `5570063593656309274`
 - Cloud SQL rows after language migration: `102` sources, `117` nodes, `117`
   node localizations, `139` edges, `10` routes, and `2` saved views
@@ -122,6 +123,9 @@ Last verified on 2026-09-03:
   invalid bearer returned `403 invalid_bearer_token`, writer-token list returned
   `200`, `validateOnly` patch returned `200`, and a throwaway record
   create/delete cycle returned `200` then `404` after cleanup.
+- API-only fast deploy `7bb5257` fixed `localeAvailability=available` and
+  `localeAvailability=missing` SQL parameter binding. Live checks for
+  `available`, `missing`, `partial`, and `complete` all returned `200`.
 - Three-state review schema normalization completed on 2026-08-31. Before:
   `99` `unreviewed`, `16` `agent_researched`, and `2`
   `needs_human_review`. After normalization and smoke probes, the public
