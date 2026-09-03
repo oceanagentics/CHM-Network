@@ -111,7 +111,6 @@ nodes.properties_json
 
 ```text
 aliases
-operator
 role
 disciplineFamily
 geographicScope
@@ -602,7 +601,7 @@ Recommended field split:
 | Current `details_json` key | Recommended home | Notes |
 | --- | --- | --- |
 | `aliases` | `node_localizations.details_json.aliases` | Localize aliases by default. Acronyms and stable names are not always language-neutral. |
-| `operator` | `nodes.properties_json.operator` | Organization identity is an operational fact. |
+| `operator` | `edges.kind = 'operates'` plus organization `node_localizations.title` | The relationship is language-neutral graph structure; the displayed organization name is localized record text. Do not store or read `nodes.properties_json.operator.name`. |
 | `role` | `nodes.properties_json.role` | Stable classification/facet. |
 | `disciplineFamily` | `nodes.properties_json.disciplineFamily` | Stable classification/facet. |
 | `geographicScope` | `nodes.properties_json.geographicScope` or structured node fields | Location/scope is an operational fact; UI labels can be localized separately. |
@@ -1056,7 +1055,7 @@ The migration runner should:
 - Move `name`, `summary`, `description`, `details_json`, and review fields into that localization row.
 - Remove `details_json.identifiers` during the backfill.
 - Normalize access type values during the backfill.
-- Move language-neutral `operator`, `role`, `disciplineFamily`, `geographicScope`, gallery asset refs, data descriptors, access mechanics, and usage metrics into `nodes.properties_json` unless they already have a better existing table.
+- Move language-neutral `role`, `disciplineFamily`, `geographicScope`, gallery asset refs, data descriptors, access mechanics, and usage metrics into `nodes.properties_json` unless they already have a better existing table. Model operator relationships with `operates` edges.
 - Drop obsolete `nodes.name`, `nodes.summary`, `nodes.description`, `nodes.details_json`, `nodes.review_state`, and `nodes.review_json`.
 - Leave `edges`, `ryu_routes`, `saved_views`, and `sources` unchanged unless a preflight-verified bug requires a fix.
 - Print postflight counts.

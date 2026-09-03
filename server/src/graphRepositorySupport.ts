@@ -97,7 +97,6 @@ const reviewStates = [
 
 export function emptyNodeProperties(): NodeProperties {
   return {
-    operator: null,
     role: null,
     disciplineFamily: null,
     geographicScope: null,
@@ -189,16 +188,11 @@ export function normalizeNodeProperties(value: unknown): NodeProperties {
   }
 
   const data = isRecord(value.data) ? value.data : {};
+  const properties = { ...value };
+  delete properties.operator;
 
   return {
-    ...value,
-    operator: isRecord(value.operator)
-      ? {
-          id: String(value.operator.id ?? ""),
-          name: String(value.operator.name ?? ""),
-          countryCode: normalizeString(value.operator.countryCode),
-        }
-      : null,
+    ...properties,
     role: normalizeString(value.role),
     disciplineFamily: normalizeString(value.disciplineFamily),
     geographicScope: normalizeString(value.geographicScope),

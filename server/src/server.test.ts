@@ -109,7 +109,6 @@ function createFakeNode(overrides: Partial<GraphNode> = {}): GraphNode {
     url: null,
     recordDepth: "stub",
     properties: {
-      operator: null,
       role: null,
       disciplineFamily: null,
       geographicScope: null,

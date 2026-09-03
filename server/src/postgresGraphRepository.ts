@@ -79,6 +79,14 @@ function jsonText(value: unknown): string | null {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+function stripRetiredNodeProperties(
+  value: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  const properties = { ...(value ?? {}) };
+  delete properties.operator;
+  return properties;
+}
+
 function timestampText(value: unknown): string {
   return value instanceof Date ? value.toISOString() : String(value);
 }
@@ -302,7 +310,7 @@ export class PostgresGraphRepository implements GraphRepository {
           input.record.subtype ?? null,
           input.record.url ?? null,
           input.record.recordDepth ?? "stub",
-          stringifyJson(input.record.properties ?? {}),
+          stringifyJson(stripRetiredNodeProperties(input.record.properties)),
         ],
       );
 
@@ -724,7 +732,7 @@ export class PostgresGraphRepository implements GraphRepository {
           OR n.country_code ILIKE ANY(${patterns}::text[])
           OR n.subtype ILIKE ANY(${patterns}::text[])
           OR n.url ILIKE ANY(${patterns}::text[])
-          OR n.properties_json::text ILIKE ANY(${patterns}::text[])
+          OR (n.properties_json - 'operator')::text ILIKE ANY(${patterns}::text[])
           OR EXISTS (
             SELECT 1
             FROM ryu_routes search_r
@@ -1122,7 +1130,11 @@ export class PostgresGraphRepository implements GraphRepository {
       addField("record_depth", input.recordDepth);
     }
     if (input.propertiesReplace !== undefined) {
-      addField("properties_json", stringifyJson(input.propertiesReplace), "::jsonb");
+      addField(
+        "properties_json",
+        stringifyJson(stripRetiredNodeProperties(input.propertiesReplace)),
+        "::jsonb",
+      );
     }
     if (sets.length === 0) {
       return;
@@ -1399,7 +1411,12 @@ export class PostgresGraphRepository implements GraphRepository {
         return {
           ryuSystemId: node.id,
           title: localization.title,
-          operator: this.findSystemOperator(node, graph.edges, nodesById),
+          operator: this.findSystemOperator(
+            node,
+            graph.edges,
+            nodesById,
+            localization.requestedLocale,
+          ),
           summary: localization.summary,
           description: localization.description,
           requestedLocale: localization.requestedLocale,
@@ -1445,15 +1462,8 @@ export class PostgresGraphRepository implements GraphRepository {
     system: GraphNode,
     edges: GraphEdge[],
     nodesById: Map<string, GraphNode>,
+    locale: SupportedLocale,
   ): RyuSystemOperator | null {
-    if (system.properties.operator?.id && system.properties.operator.name) {
-      return {
-        id: system.properties.operator.id,
-        name: system.properties.operator.name,
-        countryCode: system.properties.operator.countryCode,
-      };
-    }
-
     const operatesEdge = edges.find((edge) =>
       edge.kind === "operates" && edge.targetNodeId === system.id,
     );
@@ -1464,7 +1474,7 @@ export class PostgresGraphRepository implements GraphRepository {
 
     return {
       id: operator.id,
-      name: resolveNodeLocalization(operator, defaultLocale).title,
+      name: resolveNodeLocalization(operator, locale).title,
       countryCode: operator.countryCode,
     };
   }

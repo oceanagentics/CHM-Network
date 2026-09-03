@@ -9,6 +9,7 @@ import type {
   SystemDataDescriptorCategory,
 } from "../../../shared/domain";
 import type { IndexedGraph } from "./graph/indexGraph";
+import { operatorNodesForSystem } from "./graph/indexGraph";
 import {
   facetLabel,
   humanizeCode,
@@ -368,6 +369,8 @@ function buildSystemRecord(
   const accessPaths = systemAccessPaths(system, localization);
   const relationships = getRelationships(entity.id, graph);
   const connectedNames = getConnectedNames(entity, graph, locale);
+  const operatorNodes = operatorNodesForSystem(graph, entity.id);
+  const operatorCountryCodes = uniqueSorted(operatorNodes.map((node) => node.countryCode));
   const dataTypes = descriptorLabels(system, "type");
   const dataFormats = descriptorLabels(system, "format");
   const dataStandards = descriptorLabels(system, "standard");
@@ -379,8 +382,8 @@ function buildSystemRecord(
     title: localization.title,
     summary: localization.summary,
     localization,
-    operatorName: system.properties.operator?.name ?? "",
-    countryCode: system.properties.operator?.countryCode ?? system.countryCode ?? entity.countryCode ?? "",
+    operatorName: uniqueSorted(operatorNodes.map((node) => nodeTitle(node, locale))).join(", "),
+    countryCode: operatorCountryCodes[0] ?? "",
     role: system.properties.role ?? "",
     disciplineFamily: system.properties.disciplineFamily ?? "",
     geographicScope: system.properties.geographicScope ?? "",

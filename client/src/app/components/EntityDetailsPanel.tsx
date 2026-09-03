@@ -39,6 +39,10 @@ import {
   t,
 } from "../i18n";
 import {
+  operatorNodesForSystem,
+  parentSystemNodeForSystem,
+} from "../graph/indexGraph";
+import {
   localizedMetricById,
   nodeTitle,
   resolveMetric,
@@ -366,9 +370,16 @@ function Gallery({ items }: { items: ResolvedSystemGalleryItem[] }) {
   );
 }
 
-function SystemIntro({ system }: { system: GraphNode }) {
+function SystemIntro({
+  operatorNodes,
+  system,
+}: {
+  operatorNodes: GraphNode[];
+  system: GraphNode;
+}) {
   const locale = useGraphStore((state) => state.locale);
   const localization = resolveNodeDisplay(system, locale);
+  const operatorNames = operatorNodes.map((operator) => nodeTitle(operator, locale));
 
   return (
     <section className="entity-system-intro">
@@ -377,7 +388,9 @@ function SystemIntro({ system }: { system: GraphNode }) {
           {localization.title}
         </Typography.Title>
         <Typography.Text className="entity-system-operator">
-          {system.properties.operator?.name ?? t(locale, "details.operatorNotRecorded")}
+          {operatorNames.length > 0
+            ? t(locale, "details.operatedBy", { operator: operatorNames.join(", ") })
+            : t(locale, "details.operatorNotRecorded")}
         </Typography.Text>
         {localization.isLocaleFallback ? (
           <Tag bordered={false}>
@@ -652,11 +665,11 @@ export function EntityDetailsPanel({
   const readAccessPaths = resolvedAccessPaths.filter((path) => path.type === "read");
   const writeAccessPaths = resolvedAccessPaths.filter((path) => path.type !== "read");
   const ryuRoutes = system ? graph.ryuRoutesByNodeId[entity.id] ?? [] : [];
-  const parentSystemId =
-    relationships.find(
-      (relationship) =>
-        relationship.kind === "part_of" && relationship.sourceNodeId === entity.id,
-    )?.targetNodeId ?? null;
+  const parentSystem = system ? parentSystemNodeForSystem(graph, system.id) : null;
+  const operatorNodes = system ? operatorNodesForSystem(graph, system.id) : [];
+  const operatorCountryCodes = [
+    ...new Set(operatorNodes.map((node) => node.countryCode).filter(Boolean)),
+  ];
   const isSystem = Boolean(system);
   const showRawFields = isSystem && canReviewNodes;
   const title = showRawFields ? (
@@ -685,7 +698,7 @@ export function EntityDetailsPanel({
   );
   const userView = (
     <Flex vertical gap={16}>
-      {isSystem && system ? <SystemIntro system={system} /> : null}
+      {isSystem && system ? <SystemIntro operatorNodes={operatorNodes} system={system} /> : null}
 
       <DetailSection title={t(locale, "details.profile")}>
         <div className="entity-detail-grid">
@@ -705,7 +718,7 @@ export function EntityDetailsPanel({
                   : <EmptyValue />}
               </InlineField>
               <InlineField label={t(locale, "details.operatorCountry")}>
-                {system.properties.operator?.countryCode ?? system.countryCode ?? <EmptyValue />}
+                {operatorCountryCodes.length > 0 ? operatorCountryCodes.join(", ") : <EmptyValue />}
               </InlineField>
               <InlineField label={t(locale, "details.discipline")}>
                 {system.properties.disciplineFamily ? (
@@ -722,11 +735,7 @@ export function EntityDetailsPanel({
                 )}
               </InlineField>
               <InlineField label={t(locale, "details.partOf")}>
-                {parentSystemId
-                  ? graph.nodeById[parentSystemId]
-                    ? nodeTitle(graph.nodeById[parentSystemId], locale)
-                    : parentSystemId
-                  : <EmptyValue />}
+                {parentSystem ? nodeTitle(parentSystem, locale) : <EmptyValue />}
               </InlineField>
               <InlineField label={t(locale, "details.aliases")}>
                 {systemLocalization?.details.aliases.length

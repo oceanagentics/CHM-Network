@@ -128,7 +128,7 @@ test("splits legacy node content into neutral properties and English localizatio
   assert.equal(content.localization.reviewerNote, "Private note");
   assert.equal(content.localization.contentUpdatedAt, baseRow.updated_at);
 
-  assert.equal(content.propertiesJson.operator?.id, "algaebase-operator");
+  assert.equal("operator" in content.propertiesJson, false);
   assert.equal(content.propertiesJson.role, "reference_backbone");
   assert.deepEqual(content.propertiesJson.domains, ["taxonomy"]);
   assert.deepEqual(content.propertiesJson.access?.map((row) => row.type), ["read"]);

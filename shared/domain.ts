@@ -39,12 +39,6 @@ export interface SourceRef {
   url: string;
 }
 
-export interface SystemOperatorRef {
-  id: string;
-  name: string;
-  countryCode: string | null;
-}
-
 export type SystemDataDescriptorCategory = "type" | "format" | "standard";
 
 export interface SystemDataDescriptor {
@@ -142,7 +136,6 @@ export interface NodeLocalizationDetails extends Record<string, unknown> {
 }
 
 export interface NodeProperties extends Record<string, unknown> {
-  operator?: SystemOperatorRef | null;
   role?: string | null;
   disciplineFamily?: string | null;
   geographicScope?: string | null;

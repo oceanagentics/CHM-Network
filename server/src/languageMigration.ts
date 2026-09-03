@@ -325,13 +325,6 @@ export function splitLegacyNodeContent(row: LegacyNodeRow): MigratedNodeContent 
   return {
     propertiesJson: {
       ...properties,
-      operator: isRecord(details.operator)
-        ? {
-            id: normalizeString(details.operator.id) ?? "",
-            name: normalizeString(details.operator.name) ?? "",
-            countryCode: normalizeString(details.operator.countryCode),
-          }
-        : null,
       role: normalizeString(details.role),
       disciplineFamily: normalizeString(details.disciplineFamily),
       geographicScope: normalizeString(details.geographicScope),
