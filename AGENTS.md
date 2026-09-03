@@ -24,6 +24,10 @@
 ### Record API
 - The canonical agent API is `/api/records`, exposed by the `explorer-api` service through the CHM load balancer.
 - Agents must authenticate with `Authorization: Bearer $RYU_API_TOKEN`.
+- To persist a team member or agent token locally, use
+  `scripts/setup-ryu-api-token.sh --secret <gsm-secret-name> --project chm-network`.
+  The script writes `~/.config/ryu/api.env`, sources it from `~/.zshenv`, and
+  verifies `/api/records` without printing the token.
 - Do not use CHM proxy routes or `x-chm-*` forwarded identity headers for Explorer authorization.
 - Human browser authoring goes directly through the IAP-protected Explorer admin app at `/explorer/admin`, which calls its own `/api/records` routes.
 - The details UI shows `recordDepth` plus the resolved localization's `reviewState` for all users. Authenticated/author mode renders the review state dropdown and reviewer-note form for that localization.
